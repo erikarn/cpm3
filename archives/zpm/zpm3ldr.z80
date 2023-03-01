@@ -1,0 +1,1994 @@
+; ----------------------------------------------------------------------
+;|				 ZPM3LDR				|
+;|									|
+;| ZPM3LDR is Simeon Cran's modified version of CPMLDR which is Digital	|
+;| Research's tertiary bootstrap program for CP/M Plus.			|
+;|									|
+;| According to Simeon's documentation he produced ZPM3LDR to overcome	|
+;| a problem with CPMLDR which would not load a CPM3.SYS file larger	|
+;| than 32 kilobytes because CPMLDR could not handle a file with more	|
+;| than one extent.							|
+;|									|
+;| Unfortunately ZPM3LDR has its own problems.  Andreas Gerlich could	|
+;| not get it to work in yaze-ag (a Z80 emulator) and subsequently I	|
+;| had problems on a real Z80 system where neither CPMLDR nor ZPM3LDR	|
+;| would boot CPM3.SYS.							|
+;|									|
+;| Simeon never released the source code for ZPM3LDR so addressing the	|
+;| problem meant disassembling the program.  It was not a difficult	|
+;| exercise because nearly all of the code is a direct copy from CPMLDR |
+;| and apart from some gross rearrangements, Simeon's changes affect	|
+;| only a few routines.							|
+;|									|
+;| Assembling with 'mods' set false generates a ZPM3LER.REL identical	|
+;| to the original (at least when assembled with Z80ASM).		|
+;|									|
+;| Jon Saxton								|
+;| January 2014								|
+;|----------------------------------------------------------------------|
+;| The CP/M Plus bootstrap process					|
+;| ===============================					|
+;|									|
+;| Starting CP/M Plus is a three-stage process.  The primary bootstrap	|
+;| resides in ROM.  It becomes visible and active when the computer is	|
+;| powered on or when the reset button is pressed.			|
+;|									|
+;| ROM code initialises memory, serial ports and video.  On a system	|
+;| with banked memory, bank 0 will be active.  The ROM code then loads	|
+;| the secondary bootstrap from the first sector of the system track of	|
+;| the first disk into memory at 100h and transfers control to it.	|
+;|									|
+;| The secondary bootstrap loads the tertiary bootstrap at address 400h	|
+;| and passes control to it.  The tertiary bootstrap usually resides on	|
+;| the remaining sectors of the system track(s) and comprises the	|
+;| loader and a minimal BIOS.						|
+;|									|
+;| The loader itself is a program which locates CPM3.SYS on the normal	|
+;| tracks of the disk and reads it into memory.  This activity requires	|
+;| functions provided by the CP/M BDOS but the BDOS is not in memory	|
+;| until after the loader has done its job so the loader has a minimal	|
+;| BDOS tacked onto the end of its code.				|
+;|									|
+;| The combination of loader, minimal BDOS and minimal BIOS is just	|
+;| enough to load the full CP/M Plus from CPM3.SYS.			|
+;|									|
+;| There are several minor variations of the scheme described above.	|
+; ----------------------------------------------------------------------
+
+	.Z80
+
+false	equ	0
+true	equ	not false
+
+mods	equ	false		; Allow modifications from original
+;		.....		; (disassembled) code.  Setting this
+				; false will generate ZPM3LDR.REL
+				; identical to the original distributed
+				; by Simeon Cran.
+				;
+				; When making any changes to this source
+				; then it is probably a very good idea
+				; to make them subject to conditional
+				; assembly.
+
+test	defl	false		; Subordinate conditionals
+tight	defl	false		;  /	(Leave these alone.  Set them
+fxGuard	defl	false		; /	 below if you want to.)
+
+   if	mods			; Selectively enable specific changes ...
+
+test	defl	true 		; . Load TEST.SYS rather than CPM3.SYS
+tight	defl	false		; . Optimise code and data space
+fxGuard	defl	true		; . Protect BDOS function number from being
+				;   overwritten.
+   endif
+
+cr	equ	13
+lf	equ	10
+
+;-------------------------------------------------------------------------
+
+loader:				; CODE XREF: sub_38+187-j
+	jp	start
+
+;-------------------------------------------------------------------------
+
+	; Just some binary file identification otherwise not used.
+	db	'ZPM3 Loader by Simeon Cran.'
+
+    if	not mods
+	db	0,0		; Two wasted bytes?
+    endif
+
+;-------------------------------------------------------------------------
+
+cpm3FCB:			; DATA XREF: sub_38+5C9-o
+	db	0		;	 readProc+2-o
+    if	test
+	db	'TEST    SYS'	; Load a trial CP/M 3 system
+    else
+	db	'CPM3    SYS'	; Default name for CP/M 3 system file
+    endif
+
+    if	tight
+tail	equ	24
+    else
+tail	equ	36		; So many?  24 should suffice.
+    endif
+	rept	tail
+	db	0
+	endm
+
+Copyright:
+	; This should match the notice in the first sector of CPM3.SYS
+	db	'Copyright (C) 1982, Digital Research',0,0
+
+cprtLen	equ	$ - Copyright	; jrs 27/1/2014
+
+	rept	10
+	db	0		; Space to allow for OEM patching.
+	endm
+
+;-------------------------------------------------------------------------
+
+; Patchable error messages (with lots of duplication).
+
+errBadCPM3_SYS:			; DATA XREF: sub_38+5FE-o
+	db	cr,lf
+	db	'ZPM3 system loader fatal error: '
+	db	'Invalid CPM3.SYS file'
+	db	cr,lf
+	db	'$$$$$$$'
+openErr:			; DATA XREF: sub_38+5D1-o
+	db	cr, lf
+	db	'ZPM3 system loader fatal error: '
+	db	'Could not open CPM3.SYS'
+	db	cr, lf
+	db	'$$$$$'
+readErrMsg:			; DATA XREF: readProc+9-o
+	db	cr,lf
+	db	'ZPM system loader fatal error: '
+	db	'Opened but could not read CPM3.SYS'
+	db	cr,lf
+	db	'$$$$$$$$$$$'
+errSelDsk:			; DATA XREF: curSelect:selErr-o
+	db	cr,lf
+	db	'ZPM system loader fatal error: '
+	db	'Could not select disk'
+	db	cr,lf
+	db	'$$$$$$$$'
+errReadDsk:			; DATA XREF: rdBuff:readErr-o
+	db	cr,lf
+	db	'ZPM system loader fatal error: '
+	db	'Could not read disk'
+	db	cr,lf
+	db	'$$$$$$$$$$'
+signon:				; DATA XREF: sub_38+5C1-o
+	db	cr, lf
+	db	' Loading ZPM3...'
+	db	'$$$$$$$$$$$$$$'
+
+;--------------------------------------------------------------------------
+; Program start
+;--------------------------------------------------------------------------
+
+start:				; CODE XREF: sub_38:loader-j
+	ld	sp, smallStack
+	call	coldbt
+	call	resetDiskSystem
+	ld	de, signon
+	call	print$DE
+	ld	c, 15		; Open file function
+	ld	de, cpm3FCB
+	call	ldrBDOS
+	cp	0FFh		; Test for error
+	ld	de, openErr
+	jp	z, errHalt
+	ld	de, 80h
+	call	setDMAproc
+	call	readProc
+	ld	hl, 80h		; Copy important loader parameters
+	ld	de, memTop	; from first six bytes of CPM3.SYS
+	ld	bc, 6
+	ldir
+	ld	de, 10		; Step pointer to 16th byte
+	add	hl, de
+	ld	de, Copyright
+	ld	bc, cprtLen	; Number of bytes to check
+
+checkCopyright:			; CODE XREF: sub_38+5FC-j
+	ld	a, (de)
+	cpi
+	jp	po, goodCopy
+	inc	de
+	jr	z, checkCopyright
+	ld	de, errBadCPM3_SYS
+	jp	errHalt
+
+;--------------------------------------------------------------------------
+
+goodCopy:			; CODE XREF: sub_38+5F8-j
+	call	readProc	; Read the memory map record
+	ld	de, 80h		; Display it
+	call	print$DE
+	ld	a, (resLen)	; Load resident	portion
+	ld	h, a
+	ld	a, (memTop)
+	call	loadPart	; A = page number of load top
+				; H = pages to load
+	ld	a, (bankLen)	; Is there a banked portion?
+	or	a
+	jp	z, execute	; No:- everything is loaded already
+	ld	h, a		; Yes:-	load banked portion
+	ld	a, (bankTop)
+	call	loadPart	; A = page number of load top
+				; H = pages to load
+
+execute:			; CODE XREF: sub_38+61B-j
+	ld	hl, 5Dh		; Check for $B at 5Dh
+	ld	a, (hl)
+	cp	'$'
+	jp	nz, goCPM3
+	inc	hl
+	ld	a, (hl)
+	cp	'B'
+	call	z, break	; Diagnostic?
+
+goCPM3:				; CODE XREF: sub_38+62B-j
+	ld	sp, osEntry
+	ret
+
+;--------------------------------------------------------------------------
+; loadPart
+;
+; Loads a section of CPM3.SYS into banked or common memory.
+;
+;	A = page number of load top
+;	H = pages to load
+;--------------------------------------------------------------------------
+
+loadPart:			; CODE XREF: sub_38+614-p sub_38+622-p
+	ld	d, a		; Load address to DE
+	ld	e, 0
+	sla	h		; Convert pages	to records
+
+loadLoop:			; CODE XREF: loadPart+16-j
+	ex	de, hl
+	ld	bc, 0FF80h	; -128
+	add	hl, bc		; Decrement DMA	address	by 128
+	ex	de, hl
+	push	de
+	push	hl
+	call	setDMAproc
+	call	readProc
+	pop	hl
+	pop	de
+	dec	h
+	jr	nz, loadLoop
+	ret
+; End of function loadPart
+
+
+readProc:			; CODE XREF: sub_38+5DD-p
+				;	sub_38:goodCopy-p ...
+	ld	c, 20		; Sequential read
+	ld	de, cpm3FCB
+	call	ldrBDOS
+	or	a
+	ld	de, readErrMsg
+	ret	z
+
+errHalt:			; CODE XREF: sub_38+5D4-j sub_38+601-j
+	ld	c, 9		; Emit message
+	call	ldrBDOS
+	di
+	halt			; wait for reset
+; End of function readProc
+
+
+
+break:				; CODE XREF: sub_38+632-p
+	rst	38h
+	ret
+; End of function break
+
+;--------------------------------------------------------------------------
+
+    if	not tight
+	dw	0		; This is a four-level stack used during
+	dw	0		; the early stages of ZPM3LDR. There are
+	dw	0		; two unused bytes following the smallStack
+	dw	0		; label which could be used to extend the
+				; stack to five levels.
+
+smallStack:			; DATA XREF: sub_38:start-o
+
+	db	0		; Useless bytes.
+	db	0
+    endif
+
+;--------------------------------------------------------------------------
+; The next six bytes are loaded from the beginning of CPM3.SYS and the
+; order of the declarations below is critical.
+;--------------------------------------------------------------------------
+memTop:				; DATA XREF: sub_38+5E3-o sub_38+611-r
+	db	0
+resLen:				; DATA XREF: sub_38+60D-r
+	db	0
+bankTop:			; DATA XREF: sub_38+61F-r
+	db	0
+bankLen:			; DATA XREF: sub_38+617-r
+	db	0
+osEntry:			; DATA XREF: sub_38:loc_66D-t
+	dw	0
+;-------------------------------------------------------------------------
+
+serial:				; CP/M 3 serial number
+	rept	6
+	db	0		; Not set or used anywhere.
+	endm
+				; Why not put the initial stack here
+				; so it could have another 3 levels?
+    if	tight
+	rept	5
+	defw	0		; 8-level stack with no cost in code size
+	endm
+smallStack:
+    endif
+
+;-------------------------------------------------------------------------
+;			Basic Disk Operating System
+;			===========================
+;
+; This is a very stripped-down version of the CP/M 3 BDOS, just sufficient
+; to handle the loading of CPM3.SYS from disk.
+;-------------------------------------------------------------------------
+
+; BDOS entry point
+ldrBDOS:			; CODE XREF: sub_38+5CC-p readProc+5-p ...
+
+	ex	de, hl		; Data pointer to HL
+	ld	(info),	hl	; Store	pointer
+	ex	de, hl		; Data pointer back to DE
+				;
+				; Note that we could use a single
+				; Z80 insruction, ld (info),de
+
+	ld	a, c		; BDOS function	code
+	cp	14		; Check	function range
+	jp	c, bdose2
+	ld	(fx), a		; Save disk function number
+	xor	a		; Make a zero
+	ld	(dircnt), a
+	ld	a, (sel_dsk)
+	ld	(olddsk), a
+
+bdose2:				; CODE XREF: ldrBDOS+8-j
+	ld	a, e
+	ld	(linfo), a	; linfo	= low(info)
+	ld	hl, 0
+	ld	(aRet),	hl	; Return value defaults	to 0
+	ld	(resel), hl	; Clear	resel, resel+1
+
+				; POSSIBLE BUG???
+				; Note that resel+1 is fx which	was
+				; just set a few instructions back.
+
+	ld	(entSP), sp	; Save caller's stack pointer
+	ld	sp, coldbt	; A.k.a. lstack
+	ld	hl, goBack
+	push	hl		; jp goBack equivalent to ret
+	ld	a, c		; Function number again
+	cp	50		; Check	range (0-49)
+	jp	nc, highFns	; Skip if high range (50+)
+	ld	c, e		; Possible output character to C
+	ld	hl, funcTab
+	jp	BDOSjp
+
+;--------------------------------------------------------------------------
+
+highFns:			; CODE XREF: ldrBDOS+33-j
+	sbc	a, 100		; Look for functions >=	100
+	jp	c, retFF	; Skip if function 50-99 inclusive
+
+				; Function numbers 100-149 are treated
+				; as identical to 0-49.
+
+BDOSjp:				; CODE XREF: ldrBDOS+3A-j
+	ld	e, a		; DE=function, HL=table	base
+	ld	d, 0
+	add	hl, de
+	add	hl, de
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)		; DE = funcTab[func]
+	ld	hl, (info)	; Data to HL
+	ex	de, hl		; Data to DE, function addr to HL
+	jp	(hl)
+; End of function ldrBDOS
+
+
+conout:				; CODE XREF: print+3-j print+8-p
+	push	bc		; Save output character
+	call	conoutf		; Write	to console
+	pop	bc		; Recall character
+	ld	a, c		; Copy to A
+	ld	hl, column
+	cp	7Fh		; DEL?
+	ret	z		; No column change if so
+	inc	(hl)		; Increment column
+	cp	' '
+	ret	nc		; Exit if graphic (20h-7Eh)
+	dec	(hl)		; Control char;	restore	column
+	ld	a, (hl)		; Check	for column 0
+	or	a
+	ret	z		; Exit if column = 0
+	ld	a, c
+	cp	8		; Test for BS
+	jr	nz, notBS
+	dec	(hl)		; Back up one column
+	ret
+notBS:				; CODE XREF: conout+17-j
+	cp	0Ah		; Check	for line feed
+	ret	nz		; Exit if not
+	ld	(hl), 0		; End of line; column := 0
+	ret
+; End of function conout
+
+
+print:				; CODE XREF: print$DE+9-p
+	ld	a, c
+	cp	9
+	jp	nz, conout
+
+tabExp:				; CODE XREF: print+10-j
+	ld	c, ' '
+	call	conout
+	ld	a, (column)
+	and	7
+	jr	nz, tabExp
+	ret
+; End of function print
+
+
+print$DE:			; CODE XREF: sub_38+5C4-p sub_38+60A-p
+				; DATA XREF: ...
+	ld	c, e
+	ld	b, d
+
+print$BC:			; CODE XREF: print$DE+D-j
+				; rdBuff:msgStop-p
+	ld	a, (bc)
+	cp	'$'
+	ret	z
+	inc	bc
+	push	bc
+	ld	c, a
+	call	print
+	pop	bc
+	jp	print$BC
+; End of function print$DE
+
+;--------------------------------------------------------------------------
+
+funcRet:			; CODE XREF: openReel-3AA-j
+				; ldrBDOS+3DE-j	...
+	ld	(aRet),	a
+
+justRet:			; DATA XREF: seg000:funcTab-t
+				; seg000:0D72-t	...
+	ret
+
+;--------------------------------------------------------------------------
+
+setLRet1:			; CODE XREF: openReel+28-j
+				;	seg000:0C15-j ...
+	ld	a, 1
+	jp	funcRet
+
+;--------------------------------------------------------------------------
+
+aRet:		dw 0		; DATA XREF: ldrBDOS+1F-w
+				; ldrBDOS:funcRet-w ...
+;--------------------------------------------------------------------------
+
+selErr:				; CODE XREF: curSelect+4-j
+				; curSelect+1B-j
+	ld	bc, errSelDsk
+	jr	msgStop
+
+;--------------------------------------------------------------------------
+
+readErr:			; CODE XREF: rdBuff+8-j
+	ld	bc, errReadDsk
+
+msgStop:			; CODE XREF: curSelect-3D8-j
+	call	print$BC
+	di
+	halt
+
+;-------------------------------------------------------------------------
+; Some utility subroutines.
+;-------------------------------------------------------------------------
+
+BDEmHL:				; CODE XREF: seek+23-p seek+49-p
+	ld	a, e
+	sub	l		; BDE := BDE - HL
+	ld	e, a
+	ld	a, d
+	sbc	a, h
+	ld	d, a
+	ret	nc
+	dec	b
+	ret
+; End of function BDEmHL
+
+
+BDEpHL:				; CODE XREF: seek+30-p
+	ld	a, e
+	add	a, l		; BDE := BDE + HL
+	ld	e, a
+	ld	a, d
+	adc	a, h
+	ld	d, a
+	ret	nc
+	inc	b
+	ret
+; End of function BDEpHL
+
+
+shl3bv:				; CODE XREF: shrPhyShF+55-p
+	inc	c
+
+shl3bv1:			; CODE XREF: shl3bv+5-j
+	dec	c
+	ret	z
+	add	hl, hl
+	adc	a, a
+	jp	shl3bv1
+; End of function shl3bv
+
+
+compare:			; CODE XREF: compare+7-j deblockDir+27-p
+	ld	a, (de)
+	cp	(hl)
+	ret	nz
+	inc	hl
+	inc	de
+	dec	c
+	ret	z
+	jp	compare
+; End of function compare
+
+;--------------------------------------------------------------------------
+; Select the disk drive given by register D, fill the base addresses
+; curtrka - alloca, fill in the values of the disk parameter block.
+;--------------------------------------------------------------------------
+
+selectDisk:			; CODE XREF: curSelect+17-p
+	ld	c, d		; Current disk number to C
+				; LSB of E is 0	if not logged in.
+	call	seldskf		; HL = 0 if errror, otherwise HL
+				; has pointer to DPH
+	ld	a, h
+	or	l
+	ret	z		; Exit with C flag off if select error
+				; Otherwise ...
+				; Disk header block address in HL
+	ld	e, (hl)		; Get sector translate table
+	inc	hl		; address in DE
+	ld	d, (hl)
+	inc	hl
+	inc	hl
+	inc	hl
+	ld	(curTrkA), hl
+	inc	hl
+	inc	hl
+	ld	(curRecA), hl
+	inc	hl
+	inc	hl
+	inc	hl
+	inc	hl
+	inc	hl
+	inc	hl
+	ex	de, hl		; Sector translate table to HL
+	ld	(tranVec), hl
+	ld	hl, dpbAddr
+	ld	c, 13
+	call	move
+	ld	hl, (dpbAddr)
+	ex	de, hl
+	ld	hl, sectpt
+	ld	c, 17
+	call	move
+	; Now set single/double map mode
+	ld	hl, (maxAll)	; Largest allocation number
+	ld	a, h		; 0 indicates <	255
+	ld	hl, single
+	ld	(hl), 0FFh	; Assume single
+	or	a		; Now check
+	jp	z, retSelect	; Skip if it really is single
+	ld	(hl), 0		; Otherwise set	double
+
+retSelect:			; CODE XREF: selectDisk+3D-j
+	scf			; Signal that seldsk worked
+	ret
+; End of function selectDisk
+
+home:				; CODE XREF: search+F-p
+	call	homef
+	xor	a
+	ld	hl, (curTrkA)
+	ld	(hl), a
+	inc	hl
+	ld	(hl), a		; Set current track = 0
+	ld	hl, (curRecA)
+	ld	(hl), a
+	inc	hl
+	ld	(hl), a
+	inc	hl
+	ld	(hl), a		; Set current record = 0
+	ret
+; End of function home
+
+passARecord:			; CODE XREF: rdBuff-p
+	ld	hl, aRecord
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)
+	inc	hl
+	ld	b, (hl)		; BDE =	record number
+	ret
+; End of function passARecord
+
+rdBuff:				; CODE XREF: rdDir+1E-p	seg000:0C36-p ...
+
+	call	passARecord
+	call	readf
+	or	a		; This code is different from CPMLDR
+	ret	z
+	jp	readErr
+; End of function rdBuff
+
+; Seek the record containing the current directory entry
+
+
+seekDir:			; CODE XREF: rdDir-p
+	ld	hl, (dCnt)	; Directory counter to HL
+	srl	h		; This is diffeent from	CPMLDR
+	rr	l		; Explicit two-bit shift.
+	srl	h		; CPMLDR has shift count in C.
+	rr	l
+	ld	b, 0
+	ex	de, hl
+	ld	hl, aRecord
+	ld	(hl), e		; Update actual	record number
+	inc	hl
+	ld	(hl), d
+	inc	hl
+	ld	(hl), b
+	ret
+; End of function seekDir
+
+; Seek the track given by aRecord (actual record)
+
+seek:				; CODE XREF: rdDir+1B-p	seg000:0C33-p ...
+	ld	hl, (curTrkA)
+	ld	c, (hl)
+	inc	hl
+	ld	b, (hl)		; BC = curtrk
+	push	bc
+	ld	hl, (curRecA)
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)
+	inc	hl
+	ld	b, (hl)		; BDE =	current	record
+	ld	hl, (aRecord)	; Low 16 bits
+	ld	a, (aRecord+2)	; High 8 bits
+	ld	c, a		; CHL =	actual record
+
+seek0:				; CODE XREF: seek+2A-j
+	ld	a, l		; Trial	subtract aRecord-curRec
+	sub	e
+	ld	a, h
+	sbc	a, d
+	ld	a, c
+	sbc	a, b
+	push	hl		; Save low order (aRecord)
+	jp	nc, seek1	; if aRecord >=	curRecA	then seek1
+	ld	hl, (sectpt)
+	call	BDEmHL		; curRec -= sectpt
+	pop	hl
+	ex	(sp), hl
+	dec	hl
+	ex	(sp), hl	; --curTrkA
+	jp	seek0		; Loop
+
+;--------------------------------------------------------------------------
+
+seek1:				; CODE XREF: seek+1D-j seek+41-j
+	ld	hl, (sectpt)
+	call	BDEpHL		; curRecA += sectpt
+	pop	hl		; Retrieve low(aRecord)
+	ld	a, l
+	sub	e
+	ld	a, h
+	sbc	a, d
+	ld	a, c
+	sbc	a, b
+	jp	c, seek2	; seek2	if aRecord < curRecA
+	ex	(sp), hl
+	inc	hl
+	ex	(sp), hl	; ++curTrkA
+	push	hl		; Save low(aRecord)
+	jp	seek1		; Loop
+
+;--------------------------------------------------------------------------
+
+seek2:				; CODE XREF: seek+3A-j
+	ex	(sp), hl
+	push	hl		; hl,s0	= curTrkA, s1 =	low(aRecord)
+	ld	hl, (sectpt)
+	call	BDEmHL
+	pop	hl
+	push	de
+	push	bc
+	push	hl		; HL,s0	= curTrkA,
+				; s1 = high(aRecord,curRecA),
+				; S2 = low(curRecA),
+				; s3 = low(aRecord)
+	ex	de, hl
+	ld	hl, (offset)
+	add	hl, de
+	ld	b, h
+	ld	c, l
+	ld	(track), hl
+	call	setTrkF		; Call BIOS set	track
+				; Store	curTrkA
+	pop	de
+	ld	hl, (curTrkA)
+	ld	(hl), e
+	inc	hl
+	ld	(hl), d
+
+	; Store	current	record number
+
+	pop	bc
+	pop	de
+	ld	hl, (curRecA)
+	ld	(hl), e
+	inc	hl
+	ld	(hl), d
+	inc	hl
+	ld	(hl), b		; CurRecA := BDE
+	pop	bc		; BC = low(aRecord), DE	= low(curRecA)
+	ld	a, c
+	sub	e
+	ld	l, a		; HL :=	BC - DE
+	ld	a, b
+	sbc	a, d
+	ld	h, a
+	call	shrPhyShF
+	ld	b, h
+	ld	c, l
+	ld	hl, (tranVec)
+	ex	de, hl
+	call	sectran
+	ld	c, l
+	ld	b, h
+	ld	(sector), hl
+	call	setSecF
+	ld	hl, (curDMA)
+	ld	c, l
+	ld	b, h
+	jp	setDMAf
+; End of function seek
+
+
+shrPhyShF:			; CODE XREF: seek+75-p
+	ld	a, (phyShF)
+	ld	c, a
+	jp	hlrotr
+
+;--------------------------------------------------------------------------
+
+getDMaddr:			; CODE XREF: shrPhyShF:getDiskMap-p
+	ld	hl, (info)	; Presumably an	FCB
+				; or directory record
+	ld	de, 16		; Offset to disk map
+	add	hl, de		; Return disk map address
+	ret
+
+;--------------------------------------------------------------------------
+; Return disk map value	from position given by BC.  In other words, BC
+; is an index into the disk map and we need to fetch the value at that
+; position.
+;--------------------------------------------------------------------------
+
+getDiskMap:			; CODE XREF: shrPhyShF+44-p
+	call	getDMaddr
+	add	hl, bc
+	ld	a, (single)	; Single byte per map entry?
+	or	a
+	jr	z, getDMdbl	; No: retrieve a 2-byte	value
+	ld	l, (hl)		; Yes, return 1-byte value
+	ld	h, b		; (Shouldn't A:=L:=0 too?)
+	ret
+
+;--------------------------------------------------------------------------
+
+getDMdbl:			; CODE XREF: shrPhyShF+17-j
+	add	hl, bc
+	ld	a, (hl)
+	inc	hl
+	ld	h, (hl)
+	ld	l, a
+	ret
+;--------------------------------------------------------------------------
+
+dmPosition:			; CODE XREF: seg000:recordOK-p
+	ld	hl, blkShF	; Point	at block shift factor
+	ld	c, (hl)		; Shift	count to C
+	ld	a, (vRecord)	; Current virtual record to A
+
+dmpos0:				; CODE XREF: shrPhyShF+2C-j
+	or	a		; Clear	carry
+	rra			; Shift	1 bit left
+	dec	c		; Count	down
+	jr	nz, dmpos0
+
+	; A = shr(vRecord, blkShF)
+	;   = vRecord/(2**(sectors per block))
+
+	ld	b, a		; Save for later addition
+	ld	a, 8
+	sub	(hl)		; A := 8 - blkShF
+	ld	c, a		; Extent shift count in	C
+	ld	a, (extVal)
+
+	; blkShF = 3,4,5,6,7   C = 5,4,3,2,1
+	; Shift	is 4,3,2,1,0
+
+dmpos1:				; CODE XREF: shrPhyShF+3B-j
+	dec	c
+	jr	z, dmpos2
+	or	a
+	rla
+	jr	dmpos1
+;--------------------------------------------------------------------------
+; Arrive here with A = shl(ext and extmsk, 7 - blkShF)
+
+dmpos2:				; CODE XREF: shrPhyShF+37-j
+	add	a, b		; Add the previous value
+				; shr(vRecord, blkShF)
+
+	; A is one of the following values depending on	alloc
+	; bks  blkShF
+	;  1k	 3	 v/8 + extVal *	16
+	;  2k	 4	v/16 + extVal *	 8
+	;  4k	 5	v/32 + extVal *	 4
+	;  8k	 6	v/64 + extVal *	 2
+	; 16k	 7     v/128 + extVal *	 1
+
+	ld	(dMinX), a	; This is all new code
+	ld	c, a
+	ld	b, 0
+	call	getDiskMap
+	ld	(aRecord), hl
+	ld	a, l
+	or	h
+	ret
+;--------------------------------------------------------------------------
+; Compute actual record	address, assuming index	called
+;
+; aRecord := aRecord >>	blkShF
+;--------------------------------------------------------------------------
+
+aTran:				; CODE XREF: seg000:0C28-p
+	ld	a, (blkShF)
+	ld	c, a
+	ld	hl, (aRecord)
+	xor	a
+	call	shl3bv
+	ld	(aRecord), hl
+	ld	(aRecord+2), a
+
+; The original CPMLDR had the following instruction here
+;
+;	ld	(arecord1),hl	; Save low(aRecord)
+
+	; aRecord := aRecord or	(vRecord and blkMsk)
+
+	ld	a, (blkMsk)
+	ld	c, a
+	ld	a, (vRecord)
+	and	c
+	ld	b, a		; Save vRecord & blkMsk	in B
+	ld	(blkOff), a	; and in blkOff
+	ld	hl, aRecord
+	or	(hl)
+	ld	(hl), a
+	ret
+
+;--------------------------------------------------------------------------
+
+getExtA:			; CODE XREF: shrPhyShF+95-p
+				; getDirExt+3A-p ...
+	ld	hl, (info)
+	ld	de, 12		; Offset to extent number
+	add	hl, de
+	ret
+
+;--------------------------------------------------------------------------
+
+getRecentAddr:			; CODE XREF: shrPhyShF:getFCBa-p
+				;	reselect+22-p	...
+	ld	hl, (info)
+	ld	de, 15		; Offset to recent address
+	add	hl, de
+	ret
+
+;--------------------------------------------------------------------------
+; Compute recCnt and nxtRec addresses for get/set FCB
+
+getFCBa:			; CODE XREF: shrPhyShF:getFCB-p
+				; shrPhyShF:setFCB-p ...
+	call	getRecentAddr
+	ex	de, hl		; DE :=	fcb.recCnt
+	ld	hl, 17		; nextRec - recCnt
+	add	hl, de		; HL :=	fcb.nxtRec
+	ret
+
+;--------------------------------------------------------------------------
+; Set variables	from currently addressed FCB
+
+getFCB:				; CODE XREF: openReel:openReel2-p
+				;	seg000:0C07-p
+	call	getFCBa		; Addresses in DE, HL
+	ld	a, (hl)
+	ld	(vRecord), a	; vRecord := fcb.nxtRec
+	ex	de, hl
+	ld	a, (hl)
+	ld	(rCount), a	; rCount := fcb.recCnt
+	call	getExtA		; HL = fcb.extNum
+	ld	a, (extMsk)	; Extent mask to A
+	and	(hl)		; A := fcb.extNum and extMsk
+	ld	(extVal), a
+	ret
+
+;--------------------------------------------------------------------------
+; Place	values back into current FCB
+
+setFCB:				; CODE XREF: seg000:0C2B-j
+				;	seg000:0C39-j ...
+	call	getFCBa
+	ld	c, 1
+	ld	a, (vRecord)
+	add	a, c
+	ld	(hl), a		; fcb.ndtRec :=	vRecord	+ seqio
+	ex	de, hl
+	ld	a, (rCount)
+	ld	(hl), a		; fcb.recCnt :=	rCount
+	ret
+
+;--------------------------------------------------------------------------
+; Rotate HL right by C bit positions
+
+hlrotr:				; CODE XREF: shrPhyShF+4-j
+				;	testVector+4-p ...
+	inc	c
+
+hlrotr0:			; CODE XREF: shrPhyShF+B7-j
+	dec	c
+	ret	z
+	srl	h
+	rr	l
+	jp	hlrotr0
+; End of function shrPhyShF
+
+; Set a	1 in current disk position of BC
+
+testVector:			; CODE XREF: curSelect+12-p
+	ld	a, (sel_dsk)
+	ld	c, a		; Shift counter to C
+	call	hlrotr		; Shift left by C bits
+	ld	a, l		; Current disk's bit should now be at pos 0
+	and	1
+	ret			; NZ if	curDsk bit is on
+; End of function testVector
+
+; Compute the address of a directory element at	position dPtr in the buffer
+
+getDPtrAddr:			; CODE XREF: search+20-p open+D-p
+	ld	hl, (buffa)
+	ld	a, (dPtr)
+	add	a, l		; HL +=	A
+	ld	l, a
+	ret	nc
+	inc	h
+	ret
+; End of function getDPtrAddr
+
+
+getBuffAddr:			; CODE XREF: setDir+3-p	deblockDir+17-p
+	push	de
+	ld	de, 10
+	add	hl, de
+	ld	e, (hl)
+	inc	hl
+	ld	d, (hl)
+	ex	de, hl
+	pop	de
+	ret
+; End of function getBuffAddr
+
+; Read a directory entry into the directory buffer
+
+rdDir:				; CODE XREF: readDir+24-p
+	call	seekDir
+	ld	a, (phyMsk)
+	or	a
+	jp	z, rdDir1
+	ld	a, 3
+
+	; seekDir leaves HL pointing at	last (high) byte of aRecord
+
+	ld	hl, (dirBCBaddr) ; New instruction
+	call	deblockDir
+	jp	setData
+
+;--------------------------------------------------------------------------
+
+rdDir1:				; CODE XREF: rdDir+7-j
+	call	setDir		; Directory DMA
+	ld	(buffa), hl
+	call	seek
+	call	rdBuff		; Directory record loaded
+; End of function rdDir
+
+; Set data DMA address
+
+setData:			; CODE XREF: rdDir+12-j
+				; resetDiskSystem+14-j ...
+
+	ld	hl, (dmaAd)
+	jp	setDMA
+; End of function setData
+
+
+setDir:				; CODE XREF: rdDir:rdDir1-p
+	ld	hl, (dirBCBaddr)
+	call	getBuffAddr
+; End of function setDir
+
+
+setDMA:				; CODE XREF: setData+3-j
+	ld	(curDMA), hl
+	ret
+
+; Return Z flag	set if at end of directory.
+; End of directory if dCnt = FFFFh
+
+endOfDir:			; CODE XREF: search+17-p openX-p
+	ld	hl, dCnt
+	ld	a, (hl)		; May be FFh
+	inc	hl
+	cp	(hl)		; low(dCnt) = high(dCnt)?
+	ret	nz
+	inc	a		; FFh becomes 0	if so
+	ret
+; End of function endOfDir
+
+; Set dCnt to the end of the directory
+
+setEndDir:			; CODE XREF: readDir+11-j search+C-p
+	ld	hl, 0FFFFh
+	ld	(dCnt),	hl
+	ret
+; End of function setEndDir
+
+; Read next directory entry, with C=true if initialising
+
+readDir:			; CODE XREF: search+14-p
+	ld	hl, (dirMax)
+	ex	de, hl		; In preparation for subtract
+	ld	hl, (dCnt)
+	inc	hl
+	ld	(dCnt),	hl	; ++dCnt
+	ld	a, e		; DE -=	HL
+	sub	l
+	ld	l, a
+	ld	a, d
+	sbc	a, h
+	ld	h, a
+	jp	c, setEndDir
+	ld	a, (dCnt)	; Not at end of	directory; seek
+				; next element.	 Initialisation
+				; flag is in C.
+	and	3		; low(dCnt and dskMsk)
+				; Instructions changed here ...
+	add	a, a		; Was a	loop to	calculate A << B
+	add	a, a		; Now just A <<	5
+	add	a, a		; which	makes a	bit more sense
+	add	a, a		; because directory entries are
+	add	a, a		; 32 bytes long.
+	ld	(dPtr),	a	; Ready	for next dir operation
+	or	a
+	ret	nz		; Return if not	a new record
+	push	bc		; Save C (initialisation flag)
+	call	rdDir		; Read a directory record
+	pop	bc		; Recall initialisation	flag
+	ret
+; End of function readDir
+
+; Compare extent number in A with that in C.  Return NZ if they differ.
+
+compExt:			; CODE XREF: search+49-p openReel+6-p
+	push	bc		; Save C
+	push	af
+	ld	a, (extMsk)
+	cpl
+	ld	b, a		; B := negated extent mask
+	ld	a, c
+	and	b
+	ld	c, a		; Low bits removed from	C
+	pop	af
+	and	b		; Low bits removed from	A
+	sub	c
+	and	31		; Mask with maxExt to set flags
+	pop	bc		; Restore original values
+	ret
+; End of function compExt
+
+
+getDirExt:			; CODE XREF: open+19-p openReel+20-p
+	call	getFCBa		; HL :=	fcb.vRecord
+	ld	bc, 1011h	; This part is different from CPMLDR
+	push	bc		; B = dskap pos	(rel to	0)
+
+getDE0:				; CODE XREF: getDirExt+37-j
+	pop	bc
+	dec	c
+	xor	a		; 0 for	cpmparison
+
+getDE1:				; CODE XREF: getDirExt+11-j
+	dec	hl
+	dec	b		; Decrement diskmap position
+	cp	(hl)
+	jp	nz, getDE2	; fcb.diskMap[b] != 0
+	dec	c
+	jp	nz, getDE1
+
+	; C = 0	means all blocks = 0 in	fcb disk map
+
+getDE2:				; CODE XREF: getDirExt+D-j
+	ld	a, c
+	ld	(dMinX), a
+	ld	a, (single)
+	or	a
+	ld	a, b
+	jp	nz, getDE3
+	rra
+
+getDE3:				; CODE XREF: getDirExt+1D-j
+	push	bc		; Save diskmap position	and count
+	push	hl
+	ld	l, a
+	ld	h, 0		; HL :=	non-zero block index
+				; Compute ext offset from last non-
+				; zero block index by shifting block
+				; index	right by 7 - blkShF
+	ld	a, (blkShF)
+	ld	d, a
+	ld	a, 7
+	sub	d
+	ld	c, a
+	call	hlrotr
+	ld	b, l		; B:= extent offset
+	ld	a, (extMsk)
+	cp	b
+	pop	hl
+	jp	c, getDE0
+	call	getExtA		; Verify computed extent offset
+				; <= extMsk
+	ld	c, (hl)
+	cpl
+	and	1Fh		; maxext
+	and	c
+	or	b
+	; Dir ext = (fcb ext & (~ extMsk) & maxExt) | ext offset
+	pop	bc		; Restore stack
+	ret			; A = directory	extent
+; End of function getDirExt
+
+; Search for directory element of length 15 at info.
+;
+; Original code	searched for element of	length C
+
+search:				; CODE XREF: open-p openReel+F-p
+	ld	c, 15
+	ld	hl, (info)
+	ld	(searchAddr), hl
+	ld	a, c
+	ld	(searchLen), a
+	call	setEndDir
+	call	home
+
+searchNxt:			; CODE XREF: search+2C-j search+42-j ...
+	ld	c, 0
+	call	readDir
+	call	endOfDir
+	jr	z, retFF	; Exit if end of directory
+	ld	hl, (searchAddr) ; Not end of directory, scan for match
+	ex	de, hl		; DE :=	beginning of user FCB
+	call	getDPtrAddr	; HL :=	buffAddr + dPtr
+	ld	a, (searchLen)
+	ld	c, a		; Length of search to C
+	ld	b, 0		; B counts up, C counts	down
+	ld	a, (hl)
+	cp	0E5h ; 'e'      ; Is it an empty slot?
+	jp	z, searchNxt
+
+searchLoop:			; CODE XREF: search+54-j
+	ld	a, c
+	or	a
+	jp	z, endSearch
+	ld	a, b
+	cp	13		; 13 = ubytes
+	jr	z, searchOK
+	cp	12		; 12 = extNum
+	jp	z, searchExt
+	ld	a, (de)
+	sub	(hl)
+	and	7Fh		; Mask out flags/extent modulus
+	jr	nz, searchNxt
+	jr	searchOK
+
+;--------------------------------------------------------------------------
+
+searchExt:			; CODE XREF: search+3B-j
+	ld	a, (de)		; Attempt an extent number match
+	push	bc		; Save counters
+	ld	c, (hl)		; Directory character to C
+	call	compExt		; Compare user/dir byte
+	pop	bc		; Recall counters
+	or	a		; Condition the	flags
+	jr	nz, searchNxt	; Skip if no match
+
+	; Current character matches
+
+searchOK:			; CODE XREF: search+37-j search+44-j
+	inc	de
+	inc	hl
+	inc	b
+	dec	c
+	jr	searchLoop
+
+;--------------------------------------------------------------------------
+
+endSearch:			; CODE XREF: search+31-j
+	xor	a
+	ld	(aRet),	a	; Set return code to zero
+				; Successful search -
+				; return with Z	flag off
+	ld	b, a
+	inc	b
+	ret
+; End of function search
+
+;--------------------------------------------------------------------------
+
+retFF:				; CODE XREF: ldrBDOS+3F-j search+1A-j
+	ld	a, 0FFh
+	ld	b, a
+	inc	b
+	jp	funcRet
+
+; Search for directory entry, copy to FCB
+
+open:				; CODE XREF: seg000:0BE9-p
+	call	search		; Original code	loaded c with namelen
+				; before calling search.
+	ret	z		; Exit with lRet=255 if	end
+
+	; Not end of directory;	copy FCB information
+
+openCopy:			; CODE XREF: openReel+12-p
+	call	getExtA		; This code is quite different from
+				; the original in CPMLDR
+	ld	e, (hl)
+	inc	hl
+	inc	hl
+	ld	d, (hl)
+	push	de
+	push	hl
+	call	getDPtrAddr
+	ex	de, hl
+	ld	hl, (info)
+	ld	c, 20h ; ' '
+	call	move
+	call	getDirExt
+	ld	c, a
+	pop	hl
+	pop	de
+	ld	(hl), d
+	dec	hl
+	dec	hl
+	ld	(hl), e
+
+setRC:				; CODE XREF: openReel+2E-p
+	ld	b, 0
+	ex	de, hl
+	ld	hl, 3		; recCnt - extNum
+	add	hl, de
+	ld	a, (de)
+	sub	c
+	jp	z, setrc2
+	ld	a, b
+	jr	nc, setrc1
+	ld	a, 128
+	ld	b, (hl)
+
+setrc1:				; CODE XREF: open+30-j
+	ld	(hl), a
+	ld	a, b
+	ld	(actualRC), a
+	ret
+
+;--------------------------------------------------------------------------
+
+setrc2:				; CODE XREF: open+2C-j
+	ld	(actualRC), a
+	ld	a, (hl)
+	or	a
+	ret	nz		; Exit if RC !=	0
+	ld	a, (dMinX)
+	or	a
+	ret	z		; Exit if no blocks in FCB
+	ld	a, (fx)
+	cp	15
+	ret	z		; Exit if fx = 15
+	ld	(hl), 128	; rc = 128
+	ret
+; End of function open
+
+restoreRC:			; CODE XREF: openReel:openReel4-p
+	push	hl		; HL :=	fcb.extNum
+				; if actualRC != 0 then
+				;     rCount :=	actualRC
+	ld	a, (actualRC)
+	or	a
+	jp	z, restoreRC1
+	ld	de, 3		; recCnt - extNum
+	add	hl, de
+	ld	(hl), a
+	xor	a
+	ld	(actualRC), a
+
+restoreRC1:			; CODE XREF: restoreRC+5-j
+	pop	hl
+	ret
+; End of function restoreRC
+
+; Close	the current extent and open the	next one if possible
+
+openReel:			; CODE XREF: seg000:0C18-p
+
+	call	getExtA
+	ld	a, (hl)
+	ld	c, a
+	inc	c
+	call	compExt
+	jr	z, openReel3
+	ld	a, 31		; maxExt
+	and	c
+	ld	(hl), a		; Increment extent field.
+				; ld c,namelen was here
+	call	search		; Next extent found?
+	call	openCopy	; Open it if so
+
+openReel2:			; CODE XREF: openReel+31-j
+	call	getFCB		; Set parameters
+	xor	a
+	ld	(vRecord), a
+	jp	funcRet		; lRet = 0
+
+;--------------------------------------------------------------------------
+
+openReel3:			; CODE XREF: openReel+9-j
+	inc	(hl)		; ++fcb.ex
+	call	getDirExt
+	ld	c, a
+	cp	(hl)		; Is new extent	beyond dirExt?
+	jr	nc, openReel4	; No
+	dec	(hl)		; --fcb.ex
+	jp	setLRet1
+
+;--------------------------------------------------------------------------
+
+openReel4:			; CODE XREF: openReel+25-j
+	call	restoreRC
+	call	setRC
+	jr	openReel2
+; End of function openReel
+
+;--------------------------------------------------------------------------
+
+selDsk:				; DATA XREF: seg000:0D8C-o
+	call	setSelDsk
+
+curSelect:			; CODE XREF: reselect1:noSelect-p
+
+	ld	a, (sel_dsk)
+	inc	a
+	jp	z, selErr
+	dec	a
+	ld	hl, curDsk
+	cp	(hl)
+	ret	z		; Exit if selDsk = curDsk
+	ld	(hl), a		; curDsk := selDsk
+	ld	d, a		; Save in D for	later selectDisk
+	ld	hl, (dLog)
+	call	testVector	; (Leaves DE alone)
+	ld	e, a		; Ready	for selDsk
+	push	de		; Save for test	below
+	call	selectDisk
+	pop	hl		; Recall dLog vector
+	jp	nc, selErr	; C flag set if	selectDisk OK
+				; Is the disk logged in?
+	dec	l		; L = 1	if so
+	ret	z		; Yes: drive previously	logged in
+	ld	hl, (dLog)	; No: do more stuff
+	ld	c, l		; Parameter to BC
+	ld	b, h
+	ld	a, (sel_dsk)	; This code differs from CPMLDR
+	ld	hl, 1
+	or	a		; Shift	counter
+	jr	z, curSel1	; No shift if A=0
+
+curSel0:			; CODE XREF: curSelect+30-j
+	add	hl, hl		; HL <<	1
+	dec	a
+	jr	nz, curSel0
+
+	; Now we have HL << A
+
+curSel1:			; CODE XREF: curSelect+2C-j
+	ld	a, c		; HL |=	BC
+	or	l
+	ld	l, a
+	ld	a, b
+	or	h
+	ld	h, a
+	ld	(dLog),	hl
+	ret
+; End of function curSelect
+
+setSelDsk:			; CODE XREF: seg000:selDsk-p
+				; reselect1+20-p
+	ld	a, (linfo)
+	ld	(sel_dsk), a
+	ret
+; End of function setSelDsk
+
+reselect:			; CODE XREF: seg000:rdSeq-p
+	; Check current FCB to see if reselection is necessary
+
+	ld	a, 80h		; These four instructions comprise a rather
+	ld	b, a		; complicated way of saying:
+	dec	a		;	ld	bc, 807Fh
+	ld	c, a		; I have to wonder why.
+
+	ld	hl, (info)
+	ld	de, 7
+	ex	de, hl
+	add	hl, de		; Access fcb[7]
+	ld	a, (hl)		; Two spurious instructions
+	and	b
+	ld	a, (hl)
+	and	c
+	ld	(hl), a		; fcb[7] &= 7Fh
+	inc	hl
+	ld	a, (hl)
+	and	b
+	ld	(highExt), a	; highExt := fcb[8] & 80h
+	ld	a, (hl)
+	and	c
+	ld	(hl), a		; fcb[8] &= 7Fh
+	call	getExtA		; CPMLDR called	clrExt
+	ld	a, (hl)		; but this code	does much
+	and	1Fh		; the same things
+	ld	(hl), a
+
+	; if fcb.rc & 80h then
+	;     fcb.rc :=	80h
+	;     actualRC := fcb.rc & 7Fh
+	; else
+	;     actualRC := 0
+
+	call	getRecentAddr
+	ld	a, (hl)
+	and	b
+	jr	z, reselect1
+	ld	a, (hl)
+	and	c
+	ld	(hl), b
+; End of function reselect
+
+reselect1:			; CODE XREF: reselect+27-j seg000:0BE6-p
+	ld	(actualRC), a
+	ld	hl, 0
+	ld	(fcbDsk), hl	; fcbDsk := 0
+	ld	a, 0FFh
+	ld	(resel), a	; Mark possible	reselect
+	ld	hl, (info)
+	ld	a, (hl)		; Drive	select code
+	and	1Fh		; Non-zero is auto drive select
+	dec	a		; Drive	code normalised	to
+				; 0..30	or 255
+	ld	(linfo), a	; Save drive code
+	cp	0FFh
+	jr	z, noSelect
+	ld	a, (hl)		; Auto select; selDsk saved above
+	ld	(fcbDsk), a	; Save drive code
+	call	setSelDsk
+
+noSelect:			; CODE XREF: reselect1+1A-j
+	call	curSelect
+	ld	a, 0
+	ld	hl, (info)
+	ld	(hl), a
+	ret
+; End of function reselect1
+
+resetDiskSystem:		; CODE XREF: sub_38+5BE-p
+				; DATA XREF: seg000:0D8A-o
+	ld	hl, 0
+	ld	(dLog),	hl
+	xor	a
+	ld	(sel_dsk), a
+	dec	a
+	ld	(curDsk), a
+	ld	hl, 80h	; ' '
+	ld	(dmaAd), hl
+	jp	setData
+; End of function resetDiskSystem
+
+;--------------------------------------------------------------------------
+
+openf:				; DATA XREF: seg000:0D8E-o
+	xor	a
+	ld	(highExt), a
+	call	reselect1
+	call	open
+	call	openX
+	ret
+
+openX:				; CODE XREF: seg000:0BEC-p
+	call	endOfDir
+	ret	z
+	call	getFCBa
+	ld	a, (hl)
+	inc	a
+	jp	nz, openXa
+	dec	de
+	dec	de
+	ld	a, (de)
+	ld	(hl), a
+openXa:				; CODE XREF: openX+9-j
+	pop	hl
+	ld	c, 40h ; '@'
+	ret
+; End of function openX
+
+;---------------------------------------------------------------------------
+
+rdSeq:					; DATA XREF: seg000:0D98-o
+	call	reselect
+	call	getFCB
+	ld	a, (vRecord)
+	ld	hl, rCount
+	cp	(hl)		; vRecord - rCount
+	jr	c, recordOK	; Skip if rCount > vRecord
+	cp	128		; vRecord = 128?
+	jp	nz, setLRet1	; Exit if not
+	call	openReel	; Next extent if so
+	ld	a, (aRet)	; Check	result
+	or	a
+	jp	nz, setLRet1	; Stop at EOF
+recordOK:			; CODE XREF: seg000:0C11-j
+	call	dmPosition	; Z flag set if	aRecord	= 0
+	jp	z, setLRet1	; Reading unwritten data
+	call	aTran		; aRecord now a	disk address
+				; CPMLDR checked sector	size here
+				; and jumped to	a deblocking
+				; routine if not 128 bytes.
+				; Here,	the order is different.
+	jp	c, setFCB
+	jr	nz, readDeblock
+	call	setData
+	call	seek
+	call	rdBuff
+	jp	setFCB
+
+;--------------------------------------------------------------------------
+
+readDeblock:			; CODE XREF: seg000:0C2E-j
+	ld	a, 1
+	call	deblockData
+	jp	setFCB
+
+setDMAproc:			; CODE XREF: sub_38+5DA-p loadPart+D-p
+				; DATA XREF: ...
+	ex	de, hl
+	ld	(dmaAd), hl
+	jp	setData
+; End of function setDMAproc
+
+;--------------------------------------------------------------------------
+
+goBack:					; DATA XREF: ldrBDOS+2C-o
+	ld	a, (fx)
+	cp	15
+	jp	c, retMon
+	ld	a, (olddsk)
+	ld	(sel_dsk), a
+	ld	a, (resel)
+	or	a
+	jp	z, retMon
+	ld	hl, (info)
+	ld	(hl), 0
+	ld	a, (fcbDsk)
+	or	a
+	jp	z, goBack1
+	ld	(hl), a
+goBack1:			; CODE XREF: seg000:0C69-j
+	inc	hl
+	ld	a, (highExt)
+	or	(hl)
+	ld	(hl), a
+	call	getRecentAddr
+	ld	a, (actualRC)
+	or	(hl)
+	ld	(hl), a
+
+;--------------------------------------------------------------------------
+
+retMon:
+	ld	sp, 0		; CODE XREF: seg000:0C50-j seg000:0C5D-j
+entSP	equ	retMon+1	; DATA XREF: ldrBDOS+25-w
+	ld	hl, (aRet)
+	ld	a, l
+	ld	b, h
+	ret
+
+;==========================================================================
+
+dLog:				; DATA XREF: curSelect+F-r
+	dw	0		; curSelect+20-r ...
+curDMA:				; DATA XREF: seek+89-r setData:setDMA-w	...
+	dw	0
+buffa:				; DATA XREF: getDPtrAddr-r rdDir+18-w ...
+	dw	0
+	db	0
+	db	0
+curTrkA:			; DATA XREF: selectDisk+D-w home+4-r ...
+	dw	0
+curRecA:			; DATA XREF: selectDisk+12-w home+A-r ...
+	dw	0
+	db	0		; \
+	db	0		;  | No obvious reference to these bytes
+	db	0		;  |
+	db	0		; /
+
+dpbAddr:			; DATA XREF: selectDisk+1F-o
+	dw	0		; selectDisk+27-r
+
+	db	0		; \
+	db	0		;  | More bytes apparently unused
+	db	0		;  |
+	db	0		; /
+
+dirBCBaddr:			; DATA XREF: rdDir+C-r setDir-r
+	dw	0
+dtabcba:			; DATA XREF: deblockData-r
+	dw	0		; Data buffer control block address
+
+	db	0		; \
+	db	0		;  > Unused yet again?
+	db	0		; /
+
+sectpt:				; DATA XREF: selectDisk+2B-t seek+20-r ...
+	dw	0
+blkShF:				; DATA XREF: shrPhyShF:dmPosition-o
+				; shrPhyShF:aTran-r ...
+	db	0		; Block shift factor
+blkMsk:				; DATA XREF: shrPhyShF+5E-r
+	db	0
+extMsk:				; DATA XREF: shrPhyShF+98-r compExt+2-r	...
+	db	0
+maxAll:				; DATA XREF: selectDisk+33-r
+	dw	0
+dirMax:				; DATA XREF: readDir-r
+	dw	0
+
+	db	0		; \
+	db	0		;  |
+	db	0		;  |
+	db	0		; /
+
+offset:				; DATA XREF: seek+51-r
+	dw	0
+phyShF:				; DATA XREF: shrPhyShF-r
+	db	0
+phyMsk:				; DATA XREF: rdDir+3-r deblockDir+1-r
+	db	0
+blkOff:				; DATA XREF: shrPhyShF+67-w
+	db	0
+dircnt:				; DATA XREF: ldrBDOS+F-w
+	db	0
+tranVec:			; DATA XREF: selectDisk+1C-w seek+7A-r
+	dw	0
+linfo:				; DATA XREF: ldrBDOS+19-w setSelDsk-r ...
+	db	0
+dMinX:				; DATA XREF: shrPhyShF+3E-w
+	db	0		; getDirExt+15-w ...
+actualRC:			; DATA XREF: open+37-w open:setrc2-w ...
+	db	0
+single:				; DATA XREF: selectDisk+37-t
+	db	0		; shrPhyShF+13-r ...
+olddsk:				; DATA XREF: ldrBDOS+15-w seg000:0C53-r
+	db	0
+rCount:				; DATA XREF: shrPhyShF+92-w
+	db	0		; shrPhyShF+AB-r ...
+extVal:				; DATA XREF: shrPhyShF+33-r
+	db	0			; shrPhyShF+9C-w
+vRecord:			; DATA XREF: shrPhyShF+26-r
+	db	0		; shrPhyShF+62-r ...
+curDsk:				; DATA XREF: curSelect+8-o
+	db	0FFh		;	resetDiskSystem+B-w ...
+aRecord:			; DATA XREF: passARecord-o seekDir+E-o ...
+	dw	0
+aRec2:				; DATA XREF: seek+12-r shrPhyShF+5B-w
+	db	0
+
+	db	0		; \
+	db	0		; /
+
+highExt:			; DATA XREF: reselect+15-w
+	db	0		;	 seg000:0BE3-w ...
+dPtr:				; DATA XREF: getDPtrAddr+3-r
+	db	0		; readDir+1E-w
+fcbDsk:				; DATA XREF: reselect1+6-w
+	dw	0		; reselect1+1D-w ...
+curbcba:			; DATA XREF: deblockDir+14-w deblock9-r	...
+	dw	0
+track:				; DATA XREF: seek+57-w deblockio+E-o
+	dw	0
+sector:				; DATA XREF: seek+83-w
+	dw	0
+column:				; DATA XREF: conout+6-o	print+B-r
+	db	0
+dmaAd:				; DATA XREF: setData-r
+	dw	80h		; resetDiskSystem+11-w ...
+sel_dsk:			; DATA XREF: ldrBDOS+12-r testVector-r ...
+	db	0
+info:				; DATA XREF: ldrBDOS+1-w ldrBDOS+4A-r ...
+	dw	0
+resel:				; DATA XREF: ldrBDOS+22-w reselect1+B-w	...
+	db	0
+
+    if	fxGuard
+	db	0		; Protect fx from ld (resel),hl
+    endif
+
+fx:				; DATA XREF: ldrBDOS+B-w open+46-r ...
+	db	0
+dCnt:				; DATA XREF: seekDir-r endOfDir-o ...
+	dw	0
+searchAddr:			; DATA XREF: search+5-w	search+1C-r
+	dw	0
+searchLen:			; DATA XREF: search+9-w	search+23-r
+	db	0
+
+;==========================================================================
+
+deblockData:				; CODE XREF: seg000:0C3E-p
+	ld	hl, (dtabcba)
+	; Fall through to deblockDir
+
+; BDOS Block/Deblock routine
+; a = 1	-> read	command
+; a = 2	-> write command
+; a = 3	-> locate command
+; a = 4	-> flush command
+; a = 5	-> directory update
+
+deblockDir:			; CODE XREF: rdDir+F-p
+	push	af		; Save Z flag and deblock function
+	ld	a, (phyMsk)
+	ld	b, a
+	cpl
+	ld	c, a
+	ld	a, (aRecord)
+	ld	e, a
+	and	b
+	ld	(fcbDsk+1), a	; phyOff
+	ld	a, e
+	and	c
+	ld	(aRecord), a
+	ld	(curbcba), hl
+	call	getBuffAddr
+	ld	(curDMA), hl
+	call	deblock9
+	pop	af		; Retrieve command
+	push	af		; Save it again
+	cp	4		; Is it	a flush	command?
+	jp	nc, deblock1	; Yes (or dir update?)
+	call	compare		; Is referenced	physical record
+				; already in buffer?
+	jp	z, deblock45	; Yes
+	xor	a
+
+deblock1:			; CODE XREF: deblockDir+24-j
+	call	deblock10
+	ld	a, 2		; Read physical	record
+	call	deblockio
+	call	deblock9	; phypfx := aDrive || aRecord
+	call	move
+	ld	(hl), 0		; Clear	'pending' flag
+
+deblock45:			; CODE XREF: deblockDir+2A-j
+	ld	a, (fcbDsk+1)	; phyoff
+	inc	a
+	ld	de, 80h
+	ld	hl, 0FF80h	; -128
+
+deblock5:			; CODE XREF: deblockDir+4A-j
+	add	hl, de
+	dec	a
+	jr	nz, deblock5
+	ex	de, hl
+	ld	hl, (curDMA)
+	add	hl, de
+	pop	af
+	cp	3
+	jr	nz, deblock6
+	ld	(buffa), hl
+	ret
+
+deblock6:			; CODE XREF: deblockDir+54-j
+	ld	de, (dmaAd)
+	ld	bc, 128
+	ldir
+	ret
+; End of function deblockDir
+
+deblock9:			; CODE XREF: deblockDir+1D-p
+				; deblockDir+36-p
+	ld	hl, (curbcba)
+	ld	de, curDsk
+	ld	c, 4
+	ret
+; End of function deblock9
+
+deblock10:			; CODE XREF: deblockDir:deblock1-p
+				; deblockio+9-p
+	ld	de, 4
+	ld	hl, (curbcba)
+	add	hl, de
+	ret
+; End of function deblock10
+
+deblockio:			; CODE XREF: deblockDir+33-p
+	push	af
+	call	seek
+	pop	af
+	dec	a
+	call	p, rdBuff
+	call	deblock10
+	inc	hl
+	inc	hl
+	ld	de, track
+	ld	c, 4
+; End of function deblockio
+
+move:				; CODE XREF: selectDisk+24-p
+				; selectDisk+30-p ...
+	inc	c
+move0:				; CODE XREF: move+7-j
+	dec	c
+	ret	z
+	ld	a, (de)
+	ld	(hl), a
+	inc	de
+	inc	hl
+	jp	move0
+; End of function move
+
+;--------------------------------------------------------------------------
+
+funcTab:			; DATA XREF: ldrBDOS+37-o
+	dw	justRet		;  0 - reset
+	dw	justRet		;  1 - conin
+	dw	print		;  2 - conout
+	dw	justRet		;  3 - auxin
+	dw	justRet		;  4 - auxout
+	dw	justRet		;  5 - lstout
+	dw	justRet		;  6 - dconio
+	dw	justRet		;  7 - auxist
+	dw	justRet		;  8 - auxost
+	dw	print$DE	;  9 - strout
+	dw	justRet		; 10 - strinp
+	dw	justRet		; 11 - const
+	dw	justRet		; 12 - getver
+	dw	resetDiskSystem	; 13 - resdks
+	dw	selDsk		; 14 - seldsk
+	dw	openf		; 15 - openf
+	dw	justRet		; 16 - closef
+	dw	justRet		; 17 - find1st
+	dw	justRet		; 18 - findnxt
+	dw	justRet		; 19 - deletef
+	dw	rdSeq		; 20 - rdseq
+	dw	justRet		; 21 - wrtseq
+	dw	justRet		; 22 - createf
+	dw	justRet		; 23 - rename
+	dw	justRet		; 24 - loginv
+	dw	justRet		; 25 - curdsk
+	dw	setDMAproc	; 26 - setdma
+	dw	justRet		; 27 - getalloc
+	dw	justRet		; 28 - wrprot
+	dw	justRet		; 29 - getrov
+	dw	justRet		; 30 - setattr
+	dw	justRet		; 31 - getdpb
+	dw	justRet		; 32 - user
+	dw	justRet		; 33 - rdrand
+	dw	justRet		; 34 - wrrand
+	dw	justRet		; 35 - filesz
+	dw	justRet		; 36 - setrec
+	dw	justRet		; 37 - rstdrv
+	dw	justRet		; 38 - accdrv
+	dw	justRet		; 39 - freedrv
+	dw	justRet		; 40 - wrtran0
+	dw	justRet		; 41 - testwrt
+	dw	justRet		; 42 - lockrec
+	dw	justRet		; 43 - unlkrec
+	dw	justRet		; 44 - multio
+	dw	justRet		; 45 - errmode
+	dw	justRet		; 46 - getfree
+	dw	justRet		; 47 - chain
+	dw	justRet		; 48 - flush
+	dw	justRet		; 49 - scbacc
+
+	; Stack.  The following macro allocates 22 levels but the address
+	; calculation which follows may extend that by quite a lot.  The
+	; loader sets the working stack to "coldbt".
+
+	rept	22
+	defw	0
+	endm
+
+endldr:
+	org	loader+((($-loader)+255) and 0FF00h)-1
+
+	db	0
+
+;	org	loader+(((endldr-loader)+255) and 0FF00h
+
+; Bios equates
+
+biospg	equ	$
+
+coldbt	equ	biospg+00	; 00. cold boot
+conoutf	equ	biospg+12	; 04. console output function
+homef	equ	biospg+24	; 08. disk home function
+seldskf	equ	biospg+27	; 09. select disk function
+settrkf	equ	biospg+30	; 10. set track function
+setsecf	equ	biospg+33	; 11. set sector function
+setdmaf	equ	biospg+36	; 12. set dma function
+sectran	equ	biospg+48	; 16. sector translate
+movef	equ	biospg+75	; 25. memory move function
+readf	equ	biospg+39	; 13. read disk function
+
+	end

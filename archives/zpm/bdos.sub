@@ -1,0 +1,15 @@
+; Script to build the CP/M 3 BDOS
+erase *.spr
+m80 =bzpm0.z80
+m80 =rzpm0.z80
+erase *.spr
+link bnkbdos3.spr[os]=bzpm0
+link resbdos3.spr[os]=rzpm0
+erase ?zpm*.rel *.sym *.bak
+; My CP/M+ build system is arranged on A: as follows
+;	A0:	Boot area (cpm3.sys, cpm3.com) and general programs
+;	A1:	BIOS and system build
+;	A2:	BDOS (ZPM3)
+;	A3:	CCP (CCP105+)
+; Hence the following line to put the BDOS in the right place ...
+pip a:[g1]=*.spr

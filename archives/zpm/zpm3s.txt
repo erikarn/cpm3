@@ -1,0 +1,19 @@
+ZPM3 RELEASE - 24 Feb 2015
+==========================
+
+This is a re-release of the ZPM3FIX.ARC from volume 88 with one additional
+feature.  Tilmann Reh has graciously given me permission to distribute the
+ZPM3 source code which he produced over 20 years ago during a four month
+disassembly exercise.
+
+This archive also contains my disassembly of Simeon Cran's ZPM3LDR which 
+supposedly fixes an issue with the standard CPM3LDR program.  I have not
+spent much time with it but I have checked that what pops out of
+	z80asm zpm3ldr
+when linked with a loader BIOS generates a loader which is bit-for-bit
+identical to that which is produced by linking Simeon's ZPM3LDR.REL to the
+same loader BIOS.
+
+Jon Saxton
+tesseract@triton.vg
+24 February 2015
