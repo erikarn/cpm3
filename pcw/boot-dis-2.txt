@@ -21,9 +21,11 @@ f029: cd 57 f0			CALL &F057
 f02c: c2 23 f1			JP NZ, &F123
 f02f: d1			POP DE
 f030: 06 10			LD B, &10
+loop2:
 f032: 7e			LD A, (HL)
 f033: b7			OR A
 f034: 28 1d			JR Z, ...
+
 f036: e5			PUSH HL
 f037: 6f			LD L, A
 f038: 26 00			LD H, &00
@@ -33,7 +35,7 @@ f03e: cd 8e f0 			CALL &F08E
 f041: cd d8 f0			CALL &F0D8
 f044: e1			POP HL
 f045: 23			INC HL
-f046: 10 ea			DJNZ ..
+f046: 10 ea			DJNZ loop2
 f048: 21 b3 f0			LD HL, &F0B3
 f04b: 34			INC (HL)
 f04c: d5			PUSH DE
@@ -52,8 +54,10 @@ f061: c5			PUSH BC
 f062: e5			PUSH HL
 f063: 11 0d 00			LD DE, &000D
 f066: 19			ADD HL, DE
-f067: 11 b4 f0			LD DE, &F0B4
-f06a: 01 ff 0c			LD BC, &0CFF
+f067: 11 b4 f0			LD DE, &F0B4			; point to the byte after EMS\0
+f06a: 01 ff 0c			LD BC, &0CFF			; B=loop count &C, C=&FF
+
+loop3:
 f06d: 1b			DEC DE
 f06e: 1a			LD A, (DE)
 f06f: 2b			DEC HL
@@ -61,14 +65,14 @@ f070: ae			XOR (HL)
 f071: a1			AND C
 f072: 28 09			JR Z, ...
 f074: 1a			LD A, (DE)
-f075: fe 3f			CP &3F
+f075: fe 3f			CP &3F				; compare against '?' ?
 f077: 20 08			JR NZ, ...
 f079: 7e			LD A, (HL)
 f07a: a1			AND C
 f07b: 12			LD (DE), A
 f07c: af			XOR A
-f07d: 0e 7f			LD C, &7F
-f07f: 10 ec			DJNZ ...
+f07d: 0e 7f			LD C, &7F			; change compare mask now to strip off high bit?
+f07f: 10 ec			DJNZ loop3
 
 f081: e1			POP HL
 f082: c1			POP BC
@@ -83,11 +87,11 @@ f08d: c9			RET
 f08e: c5			PUSH BC
 f08f: e5			PUSH HL
 f090: 01 f7 ff			LD BC, &FFF7
-f093: af			XOR A
+f093: af			XOR A			; A=0
+loop40:
 f094: 3c			INC A
 f095: 09			ADD HL, BC
-f096: 38 fc			JR C, ...
-
+f096: 38 fc			JR C, loop40
 f098: 47			LD B, A
 f099: 7d			LD A, L
 f09a: c6 0a			ADD A, &0A
@@ -102,12 +106,12 @@ f0a5: 14			INC D
 f0a6: 23			INC HL
 f0a7: c9			RET
 
-f0a8: 3f 3f 3f 3f 3f 3f 3f 3f
+f0a8: 3f 3f 3f 3f 3f 3f 3f 3f	; is this maybe some wildcard? It's literally '?'
 
-f0b0: 45			LD B, L
-f0b1: 4d			LD C, L
-f0b2: 53			LD D, E
+f0b0: 45 4d 53			DEFB 'E', 'M', 'S'	; suffix of file to load?
 f0b3: 00			NOP
+
+func10:
 f0b4: 01 ff 5a			LD BC, &5AFF
 f0b7: 21 00 f6			LD HL, &F600
 f0ba: 11 07 00			LD DE, &0007
@@ -173,26 +177,30 @@ f11c: 32 d0 f8			LD (&F8D0), A
 f11f: c1			POP BC
 f120: 1d			DEC E
 f121: 20 d2			JR NZ, ...
+
 f123: cd 42 f1			CALL &F142
 f126: 16 04			LD D, &04
+loop80:
 f128: 01 0b 14			LD BC, &140B
 f12b: cd 4c f1			CALL &F14C
 f12e: 01 0c 50			LD BC, &500C
 f131: cd 4c f1			CALL &F14C
 f134: 15			DEC D
-f135: 20 f1			JR NZ, ...
+f135: 20 f1			JR NZ, loop80
 f137: 21 f5 ff			LD HL, &FFF5
 f13a: 77			LD (HL), A
+loop81:
 f134: cb 7e			BIT 7, (HL)
-f136: 28 fc			JR Z, ...
+f136: 28 fc			JR Z, loop81		; Looping over &FFF5 bit 7?
 f138: 3c			INC A
-f140: d3 f8			OUT (&F8), A
+f140: d3 f8			OUT (&F8), A		; System control?
+
 f142: cd e6 f0			CALL &F0E6
 f145: 3e 80			LD A, &80
-f147: d3 f7			OUT (&F7), A
+f147: d3 f7			OUT (&F7), A		; Video control?
 f149: 01 0a 01			LD BC, &010A
-f14c: 79			LD A, C
-f14d: d3 f8			OUT (&F8), A
+f14c: 79			LD A, C			; A=&A, disc motor off
+f14d: d3 f8			OUT (&F8), A		; system contol
 f14e: 18 64			JR ...
 
 f151: c5			PUSH BC
@@ -212,20 +220,21 @@ f168: 02			LD (BC), A
 f169: 09			ADD HL, BC
 f16a: 2a ff 16			LD HL, (&16FF)
 f16d: 02			LD (BC), A
+loop82:
 f16e: db 00			IN A, (&00)		; FDC status?
 f170: 87			ADD A, A
-f171: 30 fb			JR NZ, ...
+f171: 30 fb			JR NZ, loop82
 f173: 87			ADD A, A
 f174: f2 7e f1			JP P, &F17E
 f177: ed a2			INI			; (C) -> (HL), inc HL, dec B
-f179: 20 f3			JR NZ, ...
+f179: 20 f3			JR NZ, loop82
 f17b: 15			DEC D
-f17c: 20 f0			JR JZ, ...
+f17c: 20 f0			JR JZ, loop82
 f17e: 3e 05			LD A, &05		; set FDC terminal count input high
 f180: d3 f8			OUT (&F8), A		; system control
 f182: cd cb f1			CALL &F1CB
 f185: e6			AND A, A
-f186: cb e1			SET 4, C
+f186: cb e1			SET 4, C		; why do this before POP BC?
 f188: c1			POP BC
 f189: c9			RET
 
@@ -236,7 +245,7 @@ f18f: 78			LD A, B
 f190: 32 d0 f8			LD (&F8D0), A
 f193: cd e6 f0			CALL &F0E6
 f196: 79			LD A, C
-f197: d3 f7			OUT (&F7), A
+f197: d3 f7			OUT (&F7), A		; Video control
 f199: 78			LD A, B
 f19a: 32 a6 f1			LD (&F1A6), A
 f19d: cd df f1			CALL &F1DF
@@ -272,14 +281,16 @@ f1c6: cd e6 f1			CALL &F1E6
 f1c9: 01 08 21			LD BC, &2108
 f1cc: d1			POP DE
 f1cd: f8			RET M
+loop93:
 f1ce: db 00			IN A, (&00)		; read FDC status
 f1d0: 87			ADD A, A
-f1d1: 30 fb			JR NC, ...
+f1d1: 30 fb			JR NC, loop93
 f1d3: 3a d1 f8			LD A, (&F8D1)
 f1d6: f0			RET P
-f1d7: ed a2			INI
+f1d7: ed a2			INI			; (C) -> (HL), inc HL, dec B
 f1d9: e3 e3 e3 e3		EX (SP), HL		; XXX again why do this four times?
-f1dd: 18 ef			JR ...
+f1dd: 18 ef			JR loop93
+
 f1df: e5			PUSH HL
 loop99:
 f1e0: cd c1 f1			CALL &F1C1
@@ -289,17 +300,17 @@ f1e6: e3			EX (SP), HL
 f1e7: 46			LD B, (HL)
 f1e8: 23			INC HL
 f1e9: e3			EX (SP), HL
-f1ea: 0e 01			LD C, &01
-
+f1ea: 0e 01			LD C, &01		; FD data register
 loop100:
 f1ec: e3			EX (SP), HL		; single exchange here?
 loop101:
 f1ed: db 00			IN A, (&00)		; FDC status
 f1ef: 87			ADD A, A
 f1f0: 30 fb			JR NC, loop101
-f1f2: fa f8 f1			JP M, &F1F8
+f1f2: fa f8 f1			JP M, loop102
 f1f5: 7e			LD A, (HL)
-f1f6: ed 79			OUT (C), A		; IO (BC) <- A
+f1f6: ed 79			OUT (C), A		; IO (BC) <- A (FDC daya); but why like this? Why not just OUT (&01), A ?
+loop102:
 f1f8: 23			INC HL
 f1f9: e3 e3 e3			EX (SP), HL		; XXX three this time! So it now actually swaps
 f1fc: 10 ee			DJNZ loop100
