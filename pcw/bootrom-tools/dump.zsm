@@ -1,0 +1,166 @@
+;
+; Fake boot code to dump memory. This must be at most 2k in size, because it
+; replaces the CP/M directory on cylinder 1 head 0 sectors 1-4.
+;
+	org	0D000h
+;
+; Stop the drive motor
+;
+	ld	a,10
+	out	(0F8h),a
+;
+; Put the Roller-RAM at 4000h, screen at 4200h
+;
+	ld	a, 20h
+	out	(0F5h),a
+;
+; Initialise RRAM
+;
+	ld	hl,4000h
+	ld	de,2100h	;=> 4200h
+	ld	c,32		;32 lines on screen
+init8:	ld	b,8
+init7:	ld	(hl),e
+	inc	hl
+	ld	(hl),d
+	inc	hl
+	inc	e
+	djnz	init7
+	push	hl
+	ld	hl, 352
+	add	hl, de
+	ex	de, hl
+	pop	hl
+	dec	c
+	jr	nz,init8
+;
+; Initialise the CRC engine
+;
+	ld	hl,crctab
+	call	CRC_Init
+;
+; Roller set up. Dump memory at 0000.
+;
+	ld	ix, 0
+	ld	hl, 4200h
+	ld	b,20
+dumpit:	push	hl
+	push	bc
+	push	ix
+	call	dumpline
+	pop	ix
+	pop	bc
+	pop	hl
+	ld	de,720
+	add	hl,de 	;Next line
+	ld	de,16
+	add	ix,de
+	djnz	dumpit
+	ld	de,1440
+	add	hl,de
+	ld	de,msg
+prmsg:	ld	a,(de)
+	inc	de
+	cp	'$'
+	jr	z,prms1
+	call	prchar
+	jr	prmsg
+;
+prms1:	push	hl
+	call	CRC_Clear
+	ld	ix,2
+	ld	b, 0
+crcrom:	ld	a,(ix+0)
+	inc	ix
+	call	CRC_Update
+	djnz	crcrom
+	call	CRC_Done	
+	ex	de,hl
+	pop	hl
+	call	hexde
+
+hlt:	jp	hlt
+;
+dumpline:
+	call	CRC_Clear
+
+	push	ix
+	pop	de
+	call	hexde
+	ld	a,':'	
+	call	prchar
+	ld	a,' '
+	call	prchar
+	push	ix
+	ld	b, 16
+dump1:	ld	a,(ix+0)
+	call	hexa
+	ld	a, ' '
+	call	prchar
+	inc	ix
+	djnz	dump1
+	pop	ix
+	ld	a, ' '
+	call	prchar
+	ld	b, 16
+dump2:	ld	a,(ix+0)
+	push	af
+	call	CRC_Update
+	pop	af
+	and	7Fh
+	call	prchar
+	inc	ix
+	djnz	dump2
+	ld	a, ' '
+	call	prchar
+	ld	a, ' '
+	call	prchar
+	push	hl
+	call	CRC_Done	
+	ex	de,hl
+	pop	hl
+;	jp	hexde
+
+hexde:	ld	a,d
+	call	hexa
+	ld	a,e
+hexa:	push	af
+	rrca
+	rrca
+	rrca
+	rrca
+	call	hexn
+	pop	af
+hexn:	and	0fh
+	cp	10
+	jr	c,hexn1
+	add	a, 7
+hexn1:	add	a, '0'
+prchar:	push	bc
+	push	de
+	push	hl
+	ld	l, a
+	ld	h, 0
+	add	hl, hl	;*2
+	add	hl, hl	;*4
+	add	hl, hl	;*8
+	ld	bc, font
+	add	hl, bc	;Source char
+	pop	de
+	ld	bc, 8
+	ldir
+	ex	de, hl
+	pop	de
+	pop	bc
+	ret
+;
+	include	crcsubs.inc
+
+font:	
+	include font.inc
+;
+msg:	defb	'CRC of 256 bytes from 0002-0101=$'
+crctab:
+	end
+;
+

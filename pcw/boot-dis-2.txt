@@ -1,0 +1,308 @@
+
+512-byte boot sector is loaded at 0F000h..0F1FFh.
+Execution starts at 0F010h.
+
+f000: 00 00 28 09 02 01 03 02  2a 52 00 00 00 00 00 04
+
+start:
+
+f010: 31 f0 ff			LD SP, &FFF0			; Setup stack pointer
+f013: 3e ff			LD A, &FF
+f015: 32 d0 f8			LD (&F8D0), A
+f018: cd b4 f0			CALL &F0B4
+f01b: 21 00 00			LD HL, &0000
+f01e: e5			PUSH HL
+f01f: 11 00 d0			LD DE, &D000
+f022: 06 04			LD B, &04
+loop1:
+f024: cd 8e f0			CALL &F08E
+f027: 10 fb			DJNZ loop1
+f029: cd 57 f0			CALL &F057
+f02c: c2 23 f1			JP NZ, &F123
+f02f: d1			POP DE
+f030: 06 10			LD B, &10
+f032: 7e			LD A, (HL)
+f033: b7			OR A
+f034: 28 1d			JR Z, ...
+f036: e5			PUSH HL
+f037: 6f			LD L, A
+f038: 26 00			LD H, &00
+f03a: 29			ADD HL, HL
+f03b: cd 8e f0			CALL &F08E
+f03e: cd 8e f0 			CALL &F08E
+f041: cd d8 f0			CALL &F0D8
+f044: e1			POP HL
+f045: 23			INC HL
+f046: 10 ea			DJNZ ..
+f048: 21 b3 f0			LD HL, &F0B3
+f04b: 34			INC (HL)
+f04c: d5			PUSH DE
+f04d: cd 57 f0			CALL &F057
+f050: d1			POP DE
+f051: 28 dd			JR Z, ...
+f053: cd 42 f1			CALL &F142
+f056: c7			RST &00				; Reset!
+
+f057: 21 00 d0			LD HL, &D000
+f059: 06 40			LD B, &40
+f05b: 7e			LD A, (HL)
+f05c: e6 f0			AND &F0
+f05f: 20 22			JR NZ, ...
+f061: c5			PUSH BC
+f062: e5			PUSH HL
+f063: 11 0d 00			LD DE, &000D
+f066: 19			ADD HL, DE
+f067: 11 b4 f0			LD DE, &F0B4
+f06a: 01 ff 0c			LD BC, &0CFF
+f06d: 1b			DEC DE
+f06e: 1a			LD A, (DE)
+f06f: 2b			DEC HL
+f070: ae			XOR (HL)
+f071: a1			AND C
+f072: 28 09			JR Z, ...
+f074: 1a			LD A, (DE)
+f075: fe 3f			CP &3F
+f077: 20 08			JR NZ, ...
+f079: 7e			LD A, (HL)
+f07a: a1			AND C
+f07b: 12			LD (DE), A
+f07c: af			XOR A
+f07d: 0e 7f			LD C, &7F
+f07f: 10 ec			DJNZ ...
+
+f081: e1			POP HL
+f082: c1			POP BC
+f083: 11 10 00			LD DE, &0010
+f086: 19			ADD HL, DE
+f087: c8			RET Z
+f088: 19			ADD HL, DE
+f089: 10 d1			DJNZ ...
+f08b: f6 ff			OR &FF
+f08d: c9			RET
+
+f08e: c5			PUSH BC
+f08f: e5			PUSH HL
+f090: 01 f7 ff			LD BC, &FFF7
+f093: af			XOR A
+f094: 3c			INC A
+f095: 09			ADD HL, BC
+f096: 38 fc			JR C, ...
+
+f098: 47			LD B, A
+f099: 7d			LD A, L
+f09a: c6 0a			ADD A, &0A
+f09c: 4f			LD C, A
+f09d: eb			EX DE, HL
+f09e: cd f3 f0			CALL &F0F3
+f0a1: eb			EX DE, HL
+f0a2: e1			POP HL
+f0a3: c1			POP BC
+f0a4: 14			INC D
+f0a5: 14			INC D
+f0a6: 23			INC HL
+f0a7: c9			RET
+
+f0a8: 3f 3f 3f 3f 3f 3f 3f 3f
+
+f0b0: 45			LD B, L
+f0b1: 4d			LD C, L
+f0b2: 53			LD D, E
+f0b3: 00			NOP
+f0b4: 01 ff 5a			LD BC, &5AFF
+f0b7: 21 00 f6			LD HL, &F600
+f0ba: 11 07 00			LD DE, &0007
+f0bd: 71			LD (HL), C
+f0be: 23			INC HL
+f0bf: 72			LD (HL), D
+f0c0: 19			ADD HL, DE
+f0c1: 10 fa			DJNZ ...
+f0c3: 21 00 f6			LD HL, &F600
+f0c6: 2b			DEC HL
+f0c7: 36 7b			LD (HL), &7B
+f0c9: 2b			DEC HL
+f0ca: 72			LD HL, (D)
+f0cb: 10 f9 7c			LD BC, &7CF9
+f0ce: 0f			RRCA
+f0cf: d3 f5			OUT (&F5), A		; base location of roller RAM
+f0d1: af			XOR A
+f0d2: d3 f6			OUT (&F6), A		; vertical screen origin
+f0d4: e5			PUSH HL
+f0d5: dd e1			POP IX
+f0d7: c9			RET
+
+f0d8: c5			PUSH BC
+f0d9: dd 34 04			INC (IX+&4)
+f0dc: dd 34 06			INC (IX+&6)
+f0df: 01 08 00			LD BC, &0008
+f0e2: dd 09			ADD IX, BC
+f0e4: c1			POP BC
+f0e5: c9			RET
+
+f0e6: db f8			IN A, (&F8)		; system status, testing bit 7
+f0e8: e6 40			AND &40
+f0ea: 20 fa			JR NZ, ...
+f0ec: db f8			IN A, (&F8)		; system status, testing bit 7
+f0ee: e6 40			AND &40
+f0f0: 28 fa			JR Z, ...
+f0f2: c9			RET
+
+f0f3: 1e 0a			LD E, &0A
+f0f5: c5			PUSH BC
+f0f6: 0e 40			LD C, &40
+f0f8: cd 8a f1			CALL &F18A
+f0fb: 38 15			JR C, ...
+f0fd: c1			POP BC
+f0fe: cd 51 f1			CALL &F151
+f101: c4 51 f1			CALL NZ, &F151
+f104: c8			RET Z
+f105: c5			PUSH BC
+f106: 3e 27			LD A, &27
+f018: b8			CP B
+f109: 20 01			JR NZ, ...
+f10b: 0f			RRCA
+f10c: 47			LD B, A
+f10d: 0e 00			LD C, &00
+f10f: cd 8a f1			CALL &F18A
+f112: cd df f1			CALL &F1DF
+f115: 02			LD (BC), A
+f116: 07			RLCA
+f117: 00			NOP
+f118: cd a7 f1			CALL &F1A7
+f11b: af			XOR A
+f11c: 32 d0 f8			LD (&F8D0), A
+f11f: c1			POP BC
+f120: 1d			DEC E
+f121: 20 d2			JR NZ, ...
+f123: cd 42 f1			CALL &F142
+f126: 16 04			LD D, &04
+f128: 01 0b 14			LD BC, &140B
+f12b: cd 4c f1			CALL &F14C
+f12e: 01 0c 50			LD BC, &500C
+f131: cd 4c f1			CALL &F14C
+f134: 15			DEC D
+f135: 20 f1			JR NZ, ...
+f137: 21 f5 ff			LD HL, &FFF5
+f13a: 77			LD (HL), A
+f134: cb 7e			BIT 7, (HL)
+f136: 28 fc			JR Z, ...
+f138: 3c			INC A
+f140: d3 f8			OUT (&F8), A
+f142: cd e6 f0			CALL &F0E6
+f145: 3e 80			LD A, &80
+f147: d3 f7			OUT (&F7), A
+f149: 01 0a 01			LD BC, &010A
+f14c: 79			LD A, C
+f14d: d3 f8			OUT (&F8), A
+f14e: 18 64			JR ...
+
+f151: c5			PUSH BC
+f152: e5			PUSH HL
+f153: 78			LD A, B
+f154: 32 65 f1			LD (&F165), A
+f157: 79			LD A, D
+f158: 32 67 f1			LD (&F167), A
+f15b: 3e 06			LD A, &06		; clear FDC terminal count input
+f15d: d3 f8			OUT (&F8), A		; System control
+f157: cd df f1			CALL &F1DF
+f162: 09			ADD HL, BC
+f163: 66			LD H, (HL)
+; note: this is where some self modifying stuff is happening?
+f164: 00 00 00 00		NOP NOP NOP NOP
+f168: 02			LD (BC), A
+f169: 09			ADD HL, BC
+f16a: 2a ff 16			LD HL, (&16FF)
+f16d: 02			LD (BC), A
+f16e: db 00			IN A, (&00)		; FDC status?
+f170: 87			ADD A, A
+f171: 30 fb			JR NZ, ...
+f173: 87			ADD A, A
+f174: f2 7e f1			JP P, &F17E
+f177: ed a2			INI			; (C) -> (HL), inc HL, dec B
+f179: 20 f3			JR NZ, ...
+f17b: 15			DEC D
+f17c: 20 f0			JR JZ, ...
+f17e: 3e 05			LD A, &05		; set FDC terminal count input high
+f180: d3 f8			OUT (&F8), A		; system control
+f182: cd cb f1			CALL &F1CB
+f185: e6			AND A, A
+f186: cb e1			SET 4, C
+f188: c1			POP BC
+f189: c9			RET
+
+f18a: 3a d0 f8			LD A, (&F8D0)
+f18d: b8			CP B
+f18e: c8			RET Z
+f18f: 78			LD A, B
+f190: 32 d0 f8			LD (&F8D0), A
+f193: cd e6 f0			CALL &F0E6
+f196: 79			LD A, C
+f197: d3 f7			OUT (&F7), A
+f199: 78			LD A, B
+f19a: 32 a6 f1			LD (&F1A6), A
+f19d: cd df f1			CALL &F1DF
+f1a0: 06 03			LD B, &03
+f1a2: af			XOR A
+f1a3: 03			INC BC
+f1a4: 0f			RRCA
+f1a5: 00			NOP
+f1a6: 00			NOP
+f1a7: e5			PUSH HL
+loop90:
+f1a8: cd c1 f1			CALL &F1C1
+f1ab: 30 fb			JR NC, loop90
+f1ad: 17			RLA
+f1ae: 38 f8			JR C, loop90
+f1b0: e1			POP HL
+f1b1: 17			RLA
+f1b2: d8			RET C
+f1b3: 06 03			LD B, &03
+loop91:
+f1b5: 3e b3			LD A, &B3
+loop92:
+f1b7: e3 e3 e3 e3		EX (SP), HL		; XXX why do this four times? A delay?
+f1bb: 3d			DEC A
+f1bc: 20 f9			JR NZ, loop92
+f1be: 10 f5			DJNZ loop91
+f1c0: c9			RET
+
+f1c1: db f8			IN A, (&F8)		; system status read
+f1c3: e6 20			AND &20			; FDC interrupt bit
+f1c5: c8			RET Z
+f1c6: cd e6 f1			CALL &F1E6
+f1c9: 01 08 21			LD BC, &2108
+f1cc: d1			POP DE
+f1cd: f8			RET M
+f1ce: db 00			IN A, (&00)		; read FDC status
+f1d0: 87			ADD A, A
+f1d1: 30 fb			JR NC, ...
+f1d3: 3a d1 f8			LD A, (&F8D1)
+f1d6: f0			RET P
+f1d7: ed a2			INI
+f1d9: e3 e3 e3 e3		EX (SP), HL		; XXX again why do this four times?
+f1dd: 18 ef			JR ...
+f1df: e5			PUSH HL
+loop99:
+f1e0: cd c1 f1			CALL &F1C1
+f1e3: 38 fb			JR C, loop99
+f1e5: e1			POP HL
+f1e6: e3			EX (SP), HL
+f1e7: 46			LD B, (HL)
+f1e8: 23			INC HL
+f1e9: e3			EX (SP), HL
+f1ea: 0e 01			LD C, &01
+
+loop100:
+f1ec: e3			EX (SP), HL		; single exchange here?
+loop101:
+f1ed: db 00			IN A, (&00)		; FDC status
+f1ef: 87			ADD A, A
+f1f0: 30 fb			JR NC, loop101
+f1f2: fa f8 f1			JP M, &F1F8
+f1f5: 7e			LD A, (HL)
+f1f6: ed 79			OUT (C), A		; IO (BC) <- A
+f1f8: 23			INC HL
+f1f9: e3 e3 e3			EX (SP), HL		; XXX three this time! So it now actually swaps
+f1fc: 10 ee			DJNZ loop100
+f1fe: c9			RET
+f1ff: cf			RST &08			; Never reached!
+
