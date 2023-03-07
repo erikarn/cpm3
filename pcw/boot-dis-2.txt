@@ -1,6 +1,10 @@
 
+
 512-byte boot sector is loaded at 0F000h..0F1FFh.
 Execution starts at 0F010h.
+
+I believe it's loading the .EMS file into 0x0000 and running
+it there.
 
 f000: 00 00 28 09 02 01 03 02  2a 52 00 00 00 00 00 04
 
