@@ -167,10 +167,12 @@ f10b: 0f			RRCA
 f10c: 47			LD B, A
 f10d: 0e 00			LD C, &00
 f10f: cd 8a f1			CALL &F18A
-f112: cd df f1			CALL &F1DF
-f115: 02			LD (BC), A
-f116: 07			RLCA
-f117: 00			NOP
+f112: cd df f1			CALL &F1DF		; Do FDC command setup
+; This looks like a recalibrate+seek command
+f115: 02			; 2 byte
+f116: 07			; recalibrate + seek
+f117: 00			; track 0
+
 f118: cd a7 f1			CALL &F1A7
 f11b: af			XOR A
 f11c: 32 d0 f8			LD (&F8D0), A
@@ -203,27 +205,34 @@ f14c: 79			LD A, C			; A=&A, disc motor off
 f14d: d3 f8			OUT (&F8), A		; system contol
 f14e: 18 64			JR ...
 
+
+; I think this is a track read routine, need to figure out where it's putting it
+; Entry: B=cylinder, D=record
+
 f151: c5			PUSH BC
 f152: e5			PUSH HL
 f153: 78			LD A, B
-f154: 32 65 f1			LD (&F165), A
+f154: 32 65 f1			LD (&F165), A		; B = cylinder
 f157: 79			LD A, D
-f158: 32 67 f1			LD (&F167), A
+f158: 32 67 f1			LD (&F167), A		; D = record
 f15b: 3e 06			LD A, &06		; clear FDC terminal count input
 f15d: d3 f8			OUT (&F8), A		; System control
+
 f157: cd df f1			CALL &F1DF
-f162: 09			ADD HL, BC
-f163: 66			LD H, (HL)
-; note: this is where some self modifying stuff is happening?
-f164: 00 00 00 00		NOP NOP NOP NOP
-f168: 02			LD (BC), A
-f169: 09			ADD HL, BC
-f16a: 2a ff 16			LD HL, (&16FF)
-f16d: 02			LD (BC), A
+; f162 looks like a READ DATA command
+f162: 09			; length
+f163: 66			; read data
+f164: 00 00 00 00		; head + unit, cylinder, head, record
+f168: 02			; number of bytes in sector (512)
+f169: 09			; EOT = (last sector in track)
+f16a: 2a			; GPL = gap length
+f16b: ff			; DTL = data length (unused)
+
+f1dc: 16 02			LD D, &02
 loop82:
-f16e: db 00			IN A, (&00)		; FDC status?
-f170: 87			ADD A, A
-f171: 30 fb			JR NZ, loop82
+f16e: db 00			IN A, (&00)		; FDC status
+f170: 87			ADD A, A		; Wait for it to be done
+f171: 30 fb			JR NC, loop82		; Loop over until it's ready
 f173: 87			ADD A, A
 f174: f2 7e f1			JP P, &F17E
 f177: ed a2			INI			; (C) -> (HL), inc HL, dec B
@@ -248,13 +257,15 @@ f196: 79			LD A, C
 f197: d3 f7			OUT (&F7), A		; Video control
 f199: 78			LD A, B
 f19a: 32 a6 f1			LD (&F1A6), A
-f19d: cd df f1			CALL &F1DF
-f1a0: 06 03			LD B, &03
-f1a2: af			XOR A
-f1a3: 03			INC BC
-f1a4: 0f			RRCA
-f1a5: 00			NOP
-f1a6: 00			NOP
+f19d: cd df f1			CALL &F1DF		; Issue an FDC command
+f1a0: 06			; 6 byte length
+f1a1: 03			; Not sure what this is for?
+f1a2: af			;
+f1a3: 03			;
+f1a4: 0f			;
+f1a5: 00			;
+f1a6: 00			;
+
 f1a7: e5			PUSH HL
 loop90:
 f1a8: cd c1 f1			CALL &F1C1
@@ -278,7 +289,7 @@ f1c1: db f8			IN A, (&F8)		; system status read
 f1c3: e6 20			AND &20			; FDC interrupt bit
 f1c5: c8			RET Z
 f1c6: cd e6 f1			CALL &F1E6
-f1c9: 01 08 21			LD BC, &2108
+f1c9: 01 08 21			LD BC, &2108		; C=&08, B=?
 f1cc: d1			POP DE
 f1cd: f8			RET M
 loop93:
@@ -290,6 +301,9 @@ f1d6: f0			RET P
 f1d7: ed a2			INI			; (C) -> (HL), inc HL, dec B
 f1d9: e3 e3 e3 e3		EX (SP), HL		; XXX again why do this four times?
 f1dd: 18 ef			JR loop93
+
+; I think this is actually a "write the following bytes
+; into the FDC as a command" routine.
 
 f1df: e5			PUSH HL
 loop99:
@@ -309,7 +323,7 @@ f1ef: 87			ADD A, A
 f1f0: 30 fb			JR NC, loop101
 f1f2: fa f8 f1			JP M, loop102
 f1f5: 7e			LD A, (HL)
-f1f6: ed 79			OUT (C), A		; IO (BC) <- A (FDC daya); but why like this? Why not just OUT (&01), A ?
+f1f6: ed 79			OUT (C), A		; IO (BC) <- A (FDC data); but why like this? Why not just OUT (&01), A ?
 loop102:
 f1f8: 23			INC HL
 f1f9: e3 e3 e3			EX (SP), HL		; XXX three this time! So it now actually swaps
