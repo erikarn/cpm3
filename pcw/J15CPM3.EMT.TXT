@@ -59,12 +59,12 @@ Bootloader block:
 002e: 3e 88		LD A, &88		; Page 8 (CCP, buffers, more BIOS)
 0030: d3 f3		OUT (&F3), A		; .. in &C000->FFFF
 
-0032: 21 fe 60		LD HL, &60FE
+0032: 21 fe 60		LD HL, &60FE		; CCP, maybe?
 0035: 11 80 ed		LD DE, &ED80
 0038: 01 80 0c		LD BC, &0C80
 003b: ed b0		LDIR
 
-003d: 21 3e 31		LD HL, &313E
+003d: 21 3e 31		LD HL, &313E		; BIOS, maybe?
 0040: 11 40 c4		LD DE, &C440
 0043: 01 c0 27		LD BC, &27C0
 0046: ed b0		LDIR
@@ -92,32 +92,166 @@ Bootloader block:
 ; This is the start of the code copied up into &CD00
 ; to contine bootstrapping.
 
-00000050  21 d7 29 11 9a ed 01 27  07 ed b0 11 00 cd d5 21  |!.)....'.......!|
-00000060  6b 00 01 26 01 ed b0 3a  00 00 c9 f5 21 fe 30 11  |k..&...:....!.0.|
-00000070  00 00 01 40 00 ed b0 21  b0 01 11 80 00 01 85 0d  |...@...!........|
-00000080  ed b0 21 fe 58 11 00 b8  01 00 08 ed b0 21 80 70  |..!.X........!.p|
-00000090  11 00 fc 3e 05 cd 1c ce  21 80 76 11 00 f6 3e 0c  |...>....!.v...>.|
-000000a0  cd 1c ce 21 00 76 11 d7  29 01 80 32 ed b0 3e 83  |...!.v..)..2..>.|
-000000b0  d3 f2 21 d7 2e 11 00 ba  3e 09 cd 1c ce 21 d7 5c  |..!.....>....!.\|
-000000c0  11 00 8c 3e 5c cd 1c ce  21 d6 29 11 03 57 01 a2  |...>\...!.)..W..|
-000000d0  1a ed b8 af 21 05 0e 11  06 0e 01 2c 03 77 ed b0  |....!......,.w..|
-000000e0  21 04 57 11 05 57 01 2b  02 77 ed b0 21 10 be 11  |!.W..W.+.w..!...|
-000000f0  11 be 01 3f 01 77 ed b0  21 40 00 11 41 00 01 3f  |...?.w..!@..A..?|
-00000100  00 77 ed b0 f1 32 0f 00  0e fd ed 78 e6 20 21 40  |.w...2.....x. !@|
-00000110  00 36 04 20 02 36 10 0e  01 06 04 db 85 e6 01 20  |.6. .6......... |
-00000120  0c db 87 e6 01 28 06 10  f2 cb ee 18 0a 79 b7 28  |.....(.......y.(|
-00000130  06 d3 86 87 4f 18 e2 f3  e5 cd dd cd e1 30 06 db  |....O........0..|
-00000140  e1 e6 08 cb de c3 00 fc  3e 36 d3 e7 3e 0d d3 e4  |........>6..>...|
-00000150  af d3 e4 3e 76 d3 e7 3e  0d d3 e5 af d3 e5 01 e1  |...>v..>........|
-00000160  08 21 14 ce ed b3 0e e3  21 a5 02 cd 06 ce d0 2e  |.!......!.......|
-00000170  5a ed 61 ed 69 ed 61 ed  78 ad e6 f8 c0 37 c9 18  |Z.a.i.a.x....7..|
-00000180  04 44 05 6a 03 e1 10 25  01 80 00 ed b0 3d 20 f7  |.D.j...%.....= .|
-00000190  c9 ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
-000001a0  ff ff ff ff ff ff ff ff  ff ff ff ff ff ff ff ff  |................|
+006b: f5		PUSH AF
+006c: 21 fe 30
+006f: 11 00 00
+0072: 01 40 00
+0075: ed b0
+
+0077: 21 b0 01
+007a: 11 80 00
+007d: 01 85 0d
+0080: ed b0
+
+0082: 21 fe 58
+0085: 11 00 b8
+0088: 01 00 08
+008b: ed b0
+
+008d: 21 80 70
+0090: 11 00 fc
+0093: 3e 05
+0095: cd 1c ce
+
+0098: 21 80 76
+009b: 11 00 f6
+009e: 3e 0c
+00a0: cd 1c ce
+
+00a3: 21 00 76
+00a6: 11 d7 29
+00a9: 01 80 32
+00ac: ed b0
+
+00ae: 3e 83		LD A, &83		; Page 3
+00b0: d3 f2		OUT (&F2), A		; &8000 -> &BFFF
+
+00b2: 21 d7 2e
+00b5: 11 00 ba
+00b8: 3e 09
+00ba: cd 1c ce
+
+00bd: 21 d7 5c
+00c0: 11 00 8c
+00c3: 3e 5c
+00c5: cd 1c ce
+
+00c8: 21 d6 29
+00cb: 11 03 57
+00ce: 01 a2 1a
+00d1: ed b8		LDDR
+
+00d3: af		XOR A, A		; A = 0
+00d4: 21 05 0e		LD HL, &0E05		; Blank &0E05 + &032D
+00d7: 11 06 0e		LD DE, &0E06
+00da: 01 2c 03		LD BC, &032C
+00dd: 77		LD (HL), A		; Zero first byte before LDIR
+00de: ed b0		LDIR
+
+00e0: 21 04 57
+00e3: 11 05 57
+00e6: 01 2b 02
+00e9: 77		LD (HL), A
+00ea: ed b0		LDIR
+
+00ec: 21 10 be
+00ef: 11 11 be
+00f2: 01 3f 01
+00f5: 77		LD (HL), A
+00f6: ed b0		LDIR
+
+00f8: 21 40 00
+00fb: 11 41 00
+00fe: 01 3f 00
+0101: 77		LD (HL), A
+0102: ed b0		LDIR
+
+0104: f1		POP AF
+0105: 32 0f 00		LD (&000F), A
+0108: 0e fd		LD C, &FD		; Printer status register?
+010a: ed 78		IN A, (C)		; Get printer status?
+010c: e6 20		AND &20
+010e: 21 40 00
+0111: 36 04		LD (HL), &04
+0113: 20 02		JR NZ, ...
+0115: 36 10		LD (HL), &10
+0117: 0e 01		LD C, &01
+0119: 06 04		LD B, &04
+011b: db 85		IN A, (&85)
+011d: e6 01		AND &01
+011f: 20 0c		JR NZ, ...
+0121: db 87		IN A, (&87)
+0123: e6 01		AND &01
+0125: 28 06		JR Z, ...
+0127: 10 f2		DJNZ ...
+0129: cb ee		SET 5, (HL)
+012b: 18 0a		JR ...
+012d: 79		LD A, D
+012e: b7		OR A, A
+012f: 28 06		JR Z, ...
+0131: d3 86		OUT (&86), A
+0133: 87		ADD A, A
+0134: 4f		LD C, A
+0135: 18 e2		JR ...
+0137: f3		DI
+0138: e5		PUSH HL
+0139: cd dd cd		CALL &CDDD
+013c: e1		POP HL
+013d: 30 06		JR NC, ...
+013f: db e1		IN A, (&E1)		; CPS8256?
+0141: e6 08		AND &08
+0143: cb de		SET 3, (HL)
+0145: c3 00 fc		JMP &FC00
+
+0148: 3e 36		LD A, (&36)
+014a: d3 e7		OUT (&E7), A
+014c: 3e 0d		LD A, &0D
+014e: d3 e4		OUT (&E4), A
+0150: af		XOR A, A		; A <- 0
+0151: d3 e4		OUT (&E4), A
+0153: 3e 76		LD A, &76
+0155: d3 e7		OUT (&E7), A
+0157: 3e 0d		LD A, &0D
+0159: d3 e5		OUT (&E5), A
+015b: af		XOR A, A		; A <- 0
+015c: d3 e5		OUT (&E5), A
+015e: 01 e1 08		LD BC, &08E1
+0161: 21 14 ce		LD HL, &CE14
+0164: ed b3		OTIR
+0166: 0e e3		LD C, &E3
+0168: 21 a5 02		LD HL, &02A5
+016b: cd 06 ce		CALL &CE06
+016e: d0		RET NC
+016f: 2e 5a		LD L, &5A
+0171: ed 61		OUT (C), H
+0173: ed 69		OUT (C), L
+0175: ed 61		OUT (C), H
+0177: ed 78		IN (A), C
+0179: ad		XOR A, L
+017a: e6 f8		AND &F8
+017c: c0		RET NZ
+017d: 37		SCF
+017e: c9		RET
+
+017f: 18 04		JR ...
+0181: 44		LD B, H
+0182: 05		DEC B
+0183: 6a		LD L, D
+0184: 03		INC BC
+0185: e1		POP HL
+0186: 10 25		DJNZ ...
+0188: 01 80 00		LD BC, &0008
+018b: ed b0		LDIR
+018d: 3d		DEC A
+018e: 20 f7		JR NZ, ...
+0190: C9		RET
 
 
 
 =====
+
+looks like jump tables, hm!
+
 
 000001b0  c3 10 54 c3 6d 54 c3 11  51 c3 3e 51 c3 49 51 c3  |..T.mT..Q.>Q.IQ.|
 000001c0  57 51 c3 9d 51 c3 f6 51  c3 de 53 c3 25 51 c3 4a  |WQ..Q..Q..S.%Q.J|
