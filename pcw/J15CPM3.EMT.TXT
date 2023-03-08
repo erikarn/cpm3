@@ -93,52 +93,54 @@ Bootloader block:
 ; to contine bootstrapping.
 
 006b: f5		PUSH AF
-006c: 21 fe 30
-006f: 11 00 00
-0072: 01 40 00
-0075: ed b0
+006c: 21 fe 30		LD HL, &30FE	; is this the initial page 0 contents?
+006f: 11 00 00		LD DE, &0000
+0072: 01 40 00		LD BC, &0040
+0075: ed b0		LDIR
 
-0077: 21 b0 01
-007a: 11 80 00
-007d: 01 85 0d
-0080: ed b0
+0077: 21 b0 01		LD HL, &01B0	; XBIOS jumpblock, initialisation
+007a: 11 80 00		LD DE, &0080	; goes to &80
+007d: 01 85 0d		LD BC, &0D85
+0080: ed b0		LDIR
 
-0082: 21 fe 58
-0085: 11 00 b8
-0088: 01 00 08
-008b: ed b0
+0082: 21 fe 58		LD HL, &58FE
+0085: 11 00 b8		LD DE, &B800
+0088: 01 00 08		LD BC, &0800
+008b: ed b0		LDIR
 
-008d: 21 80 70
-0090: 11 00 fc
-0093: 3e 05
-0095: cd 1c ce
+008d: 21 80 70		LD HL, &7080
+0090: 11 00 fc		LD DE, &FC00	; CP/M resident BIOS?
+0093: 3e 05		LD A, &05
+0095: cd 1c ce		CALL &CE1C
 
-0098: 21 80 76
-009b: 11 00 f6
-009e: 3e 0c
-00a0: cd 1c ce
+0098: 21 80 76		LD HL, &7680
+009b: 11 00 f6		LD DE, &F600	; CP/M resident BDOS?
+009e: 3e 0c		LD A, &0C
+00a0: cd 1c ce		CALL &CE1C
 
-00a3: 21 00 76
-00a6: 11 d7 29
-00a9: 01 80 32
-00ac: ed b0
+00a3: 21 00 76		LD HL, &7600
+00a6: 11 d7 29		LD DE, &29D7	; ???
+00a9: 01 80 32		LD BC, &3280	; (~ 13k though)
+00ac: ed b0		LDIR
 
-00ae: 3e 83		LD A, &83		; Page 3
-00b0: d3 f2		OUT (&F2), A		; &8000 -> &BFFF
+00ae: 3e 83		LD A, &83	; Page 3
+00b0: d3 f2		OUT (&F2), A	; &8000 -> &BFFF
 
-00b2: 21 d7 2e
-00b5: 11 00 ba
-00b8: 3e 09
-00ba: cd 1c ce
+00b2: 21 d7 2e		LD HL, &2ED7
+00b5: 11 00 ba		LD DE, &BA00	; CP/M banked BIOS
+00b8: 3e 09		LD A, &09
+00ba: cd 1c ce		CALL &CE1C
 
-00bd: 21 d7 5c
-00c0: 11 00 8c
-00c3: 3e 5c
-00c5: cd 1c ce
+00bd: 21 d7 5c		LD HL, &5CD7
+00c0: 11 00 8c		LD DE, &8C00	; CP/M banked BDOS
+00c3: 3e 5c		LD A, &5C
+00c5: cd 1c ce		CALL &CE1C
 
-00c8: 21 d6 29
-00cb: 11 03 57
-00ce: 01 a2 1a
+00c8: 21 d6 29		LD HL, &29D6
+00cb: 11 03 57		LD DE, &5703	; This is at the beginning of the
+					; data segments area.
+					; Counts backward, &1AA2 bytes.
+00ce: 01 a2 1a		LD BC, &1AA2
 00d1: ed b8		LDDR
 
 00d3: af		XOR A, A		; A = 0
@@ -148,21 +150,21 @@ Bootloader block:
 00dd: 77		LD (HL), A		; Zero first byte before LDIR
 00de: ed b0		LDIR
 
-00e0: 21 04 57
-00e3: 11 05 57
-00e6: 01 2b 02
+00e0: 21 04 57		LD HL, &5704		; Blank &5704, &022C bytes
+00e3: 11 05 57		LD DE, &5705		; data segments for drivers?
+00e6: 01 2b 02		LD BC, &022B
 00e9: 77		LD (HL), A
 00ea: ed b0		LDIR
 
-00ec: 21 10 be
-00ef: 11 11 be
-00f2: 01 3f 01
+00ec: 21 10 be		LD HL, &BE10		; zero &BE10, &0140 bytes
+00ef: 11 11 be		LD DE, &BE11
+00f2: 01 3f 01		LD BC, &013F
 00f5: 77		LD (HL), A
 00f6: ed b0		LDIR
 
-00f8: 21 40 00
-00fb: 11 41 00
-00fe: 01 3f 00
+00f8: 21 40 00		LD HL, &0040		; blank &0040, &40 bytes
+00fb: 11 41 00		LD DE, &0041
+00fe: 01 3f 00		LD BC, &003F
 0101: 77		LD (HL), A
 0102: ed b0		LDIR
 
@@ -171,7 +173,7 @@ Bootloader block:
 0108: 0e fd		LD C, &FD		; Printer status register?
 010a: ed 78		IN A, (C)		; Get printer status?
 010c: e6 20		AND &20
-010e: 21 40 00
+010e: 21 40 00		LD HL, &0040
 0111: 36 04		LD (HL), &04
 0113: 20 02		JR NZ, ...
 0115: 36 10		LD (HL), &10
