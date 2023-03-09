@@ -33,6 +33,7 @@ Bootloader block:
 
 0000: 01 75 10 		LD BC, &1075		; excess?
 0003: 31 00 cf		LD SP, &CF00		; SP <- &CF00
+
 0006: 21 f0 ff		LD HL, &FFF0		; blank memory from
 0009: 11 f1 ff		LD DE, &FFF1		; &fff0 -> &ffff
 000c: 01 0f 00		LD BC, &000F
@@ -72,7 +73,7 @@ Bootloader block:
 0048: 3e 83		LD A, &83		; Page 3 (BIOS/BDOS)
 004a: d3 f3		OUT (&F3), A		; .. in &C000->&FFFF
 
-004c: 3e 87		LD A, &87		; Page 7 (common?)
+004c: 3e 87		LD A, &87		; Page 7 (common)
 004e: d3 f3		OUT (&F3), A		; .. in &C000->&FFFF
 
 0050: 21 d7 29		LD HL, &29D7
@@ -168,6 +169,8 @@ Bootloader block:
 0101: 77		LD (HL), A
 0102: ed b0		LDIR
 
+; After this i'm not entirely certain of what's going on
+
 0104: f1		POP AF
 0105: 32 0f 00		LD (&000F), A
 0108: 0e fd		LD C, &FD		; Printer status register?
@@ -203,7 +206,9 @@ Bootloader block:
 013f: db e1		IN A, (&E1)		; CPS8256?
 0141: e6 08		AND &08
 0143: cb de		SET 3, (HL)
-0145: c3 00 fc		JMP &FC00
+0145: c3 00 fc		JMP &FC00		; &FC00 is the CP/M resident BIOS start
+
+; and this whole block I don't .. quite know yet
 
 0148: 3e 36		LD A, (&36)
 014a: d3 e7		OUT (&E7), A
@@ -217,12 +222,12 @@ Bootloader block:
 0159: d3 e5		OUT (&E5), A
 015b: af		XOR A, A		; A <- 0
 015c: d3 e5		OUT (&E5), A
-015e: 01 e1 08		LD BC, &08E1
-0161: 21 14 ce		LD HL, &CE14
-0164: ed b3		OTIR
+015e: 01 e1 08		LD BC, &08E1		; B = 8 bytes, C = &E1 (DART control)
+0161: 21 14 ce		LD HL, &CE14		; &017f in original memory
+0164: ed b3		OTIR			; loop { (HL)->(C), HL++, B--} until B=0
 0166: 0e e3		LD C, &E3
 0168: 21 a5 02		LD HL, &02A5
-016b: cd 06 ce		CALL &CE06
+016b: cd 06 ce		CALL &CE06		; &0171 in the original memory
 016e: d0		RET NC
 016f: 2e 5a		LD L, &5A
 0171: ed 61		OUT (C), H
@@ -235,20 +240,30 @@ Bootloader block:
 017d: 37		SCF
 017e: c9		RET
 
-017f: 18 04		JR ...
-0181: 44		LD B, H
-0182: 05		DEC B
-0183: 6a		LD L, D
-0184: 03		INC BC
-0185: e1		POP HL
-0186: 10 25		DJNZ ...
-0188: 01 80 00		LD BC, &0008
+; These are register pairs being sent to &E1, the DART control,
+; for I/O setup.
+017f: 18 04 44 05 6a 03 e1 10
+
+; Ok, this is where i wonder if I've disassmbled this right.
+; The earlier code has relocated code @ &006b -> &cd00; and
+; then there's calls to &ce1c which translate to &0187 in this
+; file.
+
+; In any case, this routine does look like a 128 byte load.
+; My guess is that the source address is 128
+; bytes above where it needs to be, and after a 128 byte load
+; (and HL is +128) it's doing HL = HL - 256, which is effectively
+; doing HL = HL - 128.  Ie, it's working its way backwards in
+; 128 byte blocks.
+
+; &CE1C relocated function:
+;
+0187: 25		DEC H
+0188: 01 80 00		LD BC, &0080		; 128 byte move
 018b: ed b0		LDIR
 018d: 3d		DEC A
 018e: 20 f7		JR NZ, ...
-0190: C9		RET
-
-
+0190: c9		RET
 
 =====
 
