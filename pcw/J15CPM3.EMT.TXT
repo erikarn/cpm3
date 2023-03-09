@@ -58,15 +58,16 @@ Bootloader block:
 002c: 20 e7		JR NZ, ...
 
 002e: 3e 88		LD A, &88		; Page 8 (CCP, buffers, more BIOS)
+						; This is &4000->&7fff in SELMEM 3
 0030: d3 f3		OUT (&F3), A		; .. in &C000->FFFF
 
-0032: 21 fe 60		LD HL, &60FE		; CCP, maybe?
-0035: 11 80 ed		LD DE, &ED80
+0032: 21 fe 60		LD HL, &60FE		; CCP, maybe?  Definitely not sure
+0035: 11 80 ed		LD DE, &ED80		; (&6D80)
 0038: 01 80 0c		LD BC, &0C80
 003b: ed b0		LDIR
 
-003d: 21 3e 31		LD HL, &313E		; BIOS, maybe?
-0040: 11 40 c4		LD DE, &C440
+003d: 21 3e 31		LD HL, &313E		; BIOS, maybe?  Definitely not sure
+0040: 11 40 c4		LD DE, &C440		; (&4440)
 0043: 01 c0 27		LD BC, &27C0
 0046: ed b0		LDIR
 
@@ -77,14 +78,14 @@ Bootloader block:
 004e: d3 f3		OUT (&F3), A		; .. in &C000->&FFFF
 
 0050: 21 d7 29		LD HL, &29D7
-0053: 11 9a ed		LD DE, &ED9A
-0056: 01 27 07		LD BC, &0727
+0053: 11 9a ed		LD DE, &ED9A		; (looks like this is loaded into TPA)
+0056: 01 27 07		LD BC, &0727		; 1831 bytes
 0059: ed b0		LDIR
 
 005b: 11 00 cd		LD DE, &CD00		; Copy &006B -> &CD00
 005e: d5		PUSH DE			; Save to RET into
 005f: 21 6b 00		LD HL, &006B
-0062: 01 26 01		LD BC, &0126		; &126 bytes
+0062: 01 26 01		LD BC, &0126		; 294 bytes
 0065: ed b0		LDIR
 
 0067: 3a 00 00		LD A, (&0000)	; .. this is &01 ? Why?
@@ -92,84 +93,145 @@ Bootloader block:
 
 ; This is the start of the code copied up into &CD00
 ; to contine bootstrapping.
+;
+; What is the memory region configuration at this point?
+; Bootloader has it setup as:
+; 0x80, 0x81, 0x82, 0x83
+;
+; And &C000->&FFFF is being used here for initialisation, so
+; whatever file we're loading, it can't be bigger than &C000 bytes
+; (41952.)
+;
+; And now we're at:
+;
+; &0000 -> &3fff - ?
+; &4000 -> &7fff - ?
+; &8000 -> &bfff - ?
+; &c000 -> &ffff - &87 (page 7 - TPA/common)
+
+; Copy the page 0 contents over.  At this point it overwrites what's between
+; &0000 -> &003F.
 
 006b: f5		PUSH AF
 006c: 21 fe 30		LD HL, &30FE	; is this the initial page 0 contents?
-006f: 11 00 00		LD DE, &0000
+006f: 11 00 00		LD DE, &0000	; Copy it into &00 -> &3F
 0072: 01 40 00		LD BC, &0040
 0075: ed b0		LDIR
 
+; Copy the XBIOS jump block and initialisation.
+; At this point it's overwritten what's between
+; &0080 -> &0E05.
+
 0077: 21 b0 01		LD HL, &01B0	; XBIOS jumpblock, initialisation
-007a: 11 80 00		LD DE, &0080	; goes to &80
+007a: 11 80 00		LD DE, &0080	; goes to &80 in page &80.
 007d: 01 85 0d		LD BC, &0D85
 0080: ed b0		LDIR
 
+; Copy what I think is the character set over.
+; This copies &58FE to &60FD to &B800 -> &BFFF.
+
 0082: 21 fe 58		LD HL, &58FE
-0085: 11 00 b8		LD DE, &B800
-0088: 01 00 08		LD BC, &0800
+0085: 11 00 b8		LD DE, &B800	; is this .. the character set?
+					; it's in page &82, that's mapped
+					;  &8000 -> &BFFF .
+0088: 01 00 08		LD BC, &0800	; 2048 bytes
 008b: ed b0		LDIR
 
-008d: 21 80 70		LD HL, &7080
-0090: 11 00 fc		LD DE, &FC00	; CP/M resident BIOS?
-0093: 3e 05		LD A, &05
+; The first time $CE1C is called.
+; Now remember the first thing that happens is DEC H is run, before
+; it copies things backwards.  So, HL is &7080, but after the first
+; DEC H it'll be &6F80.
+
+; .. So, this is from &6F80 in 128 byte blocks, going backwards each block
+008d: 21 80 70		LD HL, &7080	; From &6F80 ?
+0090: 11 00 fc		LD DE, &FC00	; CP/M resident BIOS, forwards
+0093: 3e 05		LD A, &05	; 5 * 128 = 640 bytes
 0095: cd 1c ce		CALL &CE1C
 
-0098: 21 80 76		LD HL, &7680
+; .. and this'd be &7580 in 128 byte blocks, going backwards each block
+0098: 21 80 76		LD HL, &7680	; From &7580 ?
 009b: 11 00 f6		LD DE, &F600	; CP/M resident BDOS?
-009e: 3e 0c		LD A, &0C
+009e: 3e 0c		LD A, &0C	; 12 * 128 = 1536 bytes
 00a0: cd 1c ce		CALL &CE1C
 
-00a3: 21 00 76		LD HL, &7600
+; Now remember the CE1C call is copying 128 byte blocks,
+; but then the source blocks go backwards. So, the first
+; 128 byte block is &7580 -> &75FF, and our copy here
+; starts at &7600.  Phew.
+00a3: 21 00 76		LD HL, &7600	; &7600 -> &A880
+					; Which is the end of this file!
 00a6: 11 d7 29		LD DE, &29D7	; ???
-00a9: 01 80 32		LD BC, &3280	; (~ 13k though)
+00a9: 01 80 32		LD BC, &3280	; 12928 bytes
+					; That's &29D7 -> &5C56
 00ac: ed b0		LDIR
+
+; So at this point &29D7 -> &5C56 has been overwritten, which
+; is straddling page &80 (CP/M hidden, BIOS jumpblock) and &81 (more CP/M).
 
 00ae: 3e 83		LD A, &83	; Page 3
 00b0: d3 f2		OUT (&F2), A	; &8000 -> &BFFF
 
-00b2: 21 d7 2e		LD HL, &2ED7
+; At this point &8000 -> &BFFF is now setup to page &83, which is the
+; CP/M stuff (BIOS/BDOS, keyboard MMIO region.)
+; Anything copied into here is going into the CP/M banked
+; config (pages &80, &81, &83, &87.)
+;
+; This means that the stuff in page &82 that was mapped
+; between &8000 -> &BFFF is no longer accessible.
+
+; Which is good, because this code is literally now copying data
+; from the big 13k area that was just relocated down into
+; page &80 and &81.  Note that 1152 + 11776 bytes adds up to the
+; 12928 byte block that was just relocated above.
+
+00b2: 21 d7 2e		LD HL, &2ED7	; Copy from &2DD7
 00b5: 11 00 ba		LD DE, &BA00	; CP/M banked BIOS
-00b8: 3e 09		LD A, &09
+00b8: 3e 09		LD A, &09	; 9 * 128 = 1152 bytes
 00ba: cd 1c ce		CALL &CE1C
 
-00bd: 21 d7 5c		LD HL, &5CD7
+00bd: 21 d7 5c		LD HL, &5CD7	; Copy from &5BD7
 00c0: 11 00 8c		LD DE, &8C00	; CP/M banked BDOS
-00c3: 3e 5c		LD A, &5C
+00c3: 3e 5c		LD A, &5C	; 92 * 128 = 11776 bytes
 00c5: cd 1c ce		CALL &CE1C
 
-00c8: 21 d6 29		LD HL, &29D6
-00cb: 11 03 57		LD DE, &5703	; This is at the beginning of the
+; What's it copying, and why is it copying it backwards instead
+; of forwards?  They don't .. overlap do they?
+00c8: 21 d6 29		LD HL, &29D6	; from &29D6 -> &0F35
+00cb: 11 03 57		LD DE, &5703	; From &5703 -> &3C61
+					; This is at the beginning of the
 					; data segments area.
 					; Counts backward, &1AA2 bytes.
-00ce: 01 a2 1a		LD BC, &1AA2
+00ce: 01 a2 1a		LD BC, &1AA2	; 6818 bytes
 00d1: ed b8		LDDR
 
 00d3: af		XOR A, A		; A = 0
 00d4: 21 05 0e		LD HL, &0E05		; Blank &0E05 + &032D
 00d7: 11 06 0e		LD DE, &0E06
-00da: 01 2c 03		LD BC, &032C
+00da: 01 2c 03		LD BC, &032C		; 812 bytes + 1 = 813 bytes
 00dd: 77		LD (HL), A		; Zero first byte before LDIR
 00de: ed b0		LDIR
 
 00e0: 21 04 57		LD HL, &5704		; Blank &5704, &022C bytes
 00e3: 11 05 57		LD DE, &5705		; data segments for drivers?
-00e6: 01 2b 02		LD BC, &022B
+00e6: 01 2b 02		LD BC, &022B		; 555 bytes + 1 = 556 bytes
 00e9: 77		LD (HL), A
 00ea: ed b0		LDIR
 
 00ec: 21 10 be		LD HL, &BE10		; zero &BE10, &0140 bytes
 00ef: 11 11 be		LD DE, &BE11
-00f2: 01 3f 01		LD BC, &013F
+00f2: 01 3f 01		LD BC, &013F		; 319 + 1 = 320 bytes
 00f5: 77		LD (HL), A
 00f6: ed b0		LDIR
 
 00f8: 21 40 00		LD HL, &0040		; blank &0040, &40 bytes
 00fb: 11 41 00		LD DE, &0041
-00fe: 01 3f 00		LD BC, &003F
+00fe: 01 3f 00		LD BC, &003F		; 63 + 1 = 64 bytes
 0101: 77		LD (HL), A
 0102: ed b0		LDIR
 
 ; After this i'm not entirely certain of what's going on
+; This looks like it's checking what attached basic hardware
+; it supports (printer, serial?)
 
 0104: f1		POP AF
 0105: 32 0f 00		LD (&000F), A
@@ -200,7 +262,7 @@ Bootloader block:
 0135: 18 e2		JR ...
 0137: f3		DI
 0138: e5		PUSH HL
-0139: cd dd cd		CALL &CDDD
+0139: cd dd cd		CALL &CDDD		; Probe DART?
 013c: e1		POP HL
 013d: 30 06		JR NC, ...
 013f: db e1		IN A, (&E1)		; CPS8256?
@@ -208,7 +270,7 @@ Bootloader block:
 0143: cb de		SET 3, (HL)
 0145: c3 00 fc		JMP &FC00		; &FC00 is the CP/M resident BIOS start
 
-; and this whole block I don't .. quite know yet
+; This is &CDDD after the initial boot relocation.
 
 0148: 3e 36		LD A, (&36)
 014a: d3 e7		OUT (&E7), A
@@ -230,6 +292,7 @@ Bootloader block:
 016b: cd 06 ce		CALL &CE06		; &0171 in the original memory
 016e: d0		RET NC
 016f: 2e 5a		LD L, &5A
+
 0171: ed 61		OUT (C), H
 0173: ed 69		OUT (C), L
 0175: ed 61		OUT (C), H
@@ -1661,6 +1724,9 @@ looks like jump tables, hm!
 000058c0  0c 05 01 05 0c 07 03 0f  05 01 05 1f 05 01 05 0f  |................|
 000058d0  09 95 8c 95 89 0b 03 40  22 05 0c 07 03 0b 09 c4  |.......@".......|
 000058e0  8e c9 89 07 1a 04 84 08  04 84 1a 07 0b 02 82 0b  |................|
+
+; &58FE is here, let's see if this looks like character set data.
+
 000058f0  8b 02 0f 06 0c 04 07 04  03 06 0f ff ff ff 00 00  |................|
 00005900  66 db db db 66 00 3c 42  81 99 81 42 3c 00 fe c6  |f...f.<B...B<...|
 00005910  c0 c0 c0 c0 c0 00 10 38  38 6c 6c c6 fe 00 3c 42  |.......88ll...<B|
@@ -1789,6 +1855,10 @@ looks like jump tables, hm!
 000060c0  7a cc d6 66 bc 00 32 4c  00 dc 66 66 66 00 32 4c  |z..f..2L..fff.2L|
 000060d0  78 0c 7c cc 76 00 32 4c  00 3c 66 66 3c 00 08 0c  |x.|.v.2L.<ff<...|
 000060e0  fe 07 fe 0c 08 00 10 30  7f e0 7f 30 10 00 00 24  |.......0...0...$|
+
+; &60FE is here, end of character set data? Just before the
+; string LOADER.
+
 000060f0  7e c3 7e 24 00 00 00 7e  00 7e 00 7e 00 00 c3 1a  |~.~$...~.~.~....|
 00006100  04 00 00 00 c3 1b 01 c3  06 00 07 00 00 00 4c 4f  |..............LO|
 00006110  41 44 45 52 20 20 ff 00  00 79 fe 3b c2 09 01 c1  |ADER  ...y.;....|
