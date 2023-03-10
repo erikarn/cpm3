@@ -9,9 +9,11 @@
 ; gap from 0x0191 -> 0x01b0
 ; all 0xff's in the source file, so ok
 0x01b0,0x0d85,xbios-jumpblock-init.bin
-; gap from 0x0f35 to 0x29d6 ? maybe in-place XBIOS code?
+; no gap
+0x0f35,0x1aa2,unknown-4.bin
+; no gap
 0x29d7,0x0727,unknown-3.bin
-; gap from 0x305e -> 0x30fd ? maybe more in-place XBIOS code?
+; no gap
 0x30fe,0x0040,zero-page.bin
 ; no gap
 0x313e,0x27c0,unknown-2.bin
