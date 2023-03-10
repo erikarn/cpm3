@@ -76,9 +76,9 @@ The memory is now configured as SELMEM 0:
 -> &8c00 - CP/M banked BDOS		&83	SELRAM 0
 
 
-Then finally, a reverse copy, &29d6 -> &5703, &1aa2 bytes, BACKWARDS
+Then finally, a reverse copy, &29d7 -> &5703, &1aa2 bytes, BACKWARDS
 
-&0f35.. &29d6 -> &3c61..&5703, &1aa2 (6818) bytes	SELRAM
+&0f35.. &29d7 -> &3c61..&5703, &1aa2 (6818) bytes	&80, &81	SELRAM 0	?
 
 After that it's a bunch of blanked regions of RAM, some hardware probing, then
 finally a JMP &FC00, the CP/M resident BIOS entry point.
