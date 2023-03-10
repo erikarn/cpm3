@@ -160,7 +160,7 @@ Bootloader block:
 ; starts at &7600.  Phew.
 00a3: 21 00 76		LD HL, &7600	; &7600 -> &A880
 					; Which is the end of this file!
-00a6: 11 d7 29		LD DE, &29D7	; ???
+00a6: 11 d7 29		LD DE, &29D7	; unused space (currently) after XBIOS, etc?
 00a9: 01 80 32		LD BC, &3280	; 12928 bytes
 					; That's &29D7 -> &5C56
 00ac: ed b0		LDIR

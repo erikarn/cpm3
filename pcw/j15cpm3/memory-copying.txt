@@ -1,0 +1,85 @@
+
+Ok, the initialisation steps look like this:
+
+initial setup:
+
+0000-3fff &80
+4000-7fff &81
+8000-bfff &82
+c000-ffff &83
+
+The file is loaded from 0 -> end, which for this file
+is 0xa87f, 43146 bytes.
+
+* blank f000 -> ffff in &83
+
+* &c000-&ffff &84
+
+* blank &c000->&ffff from pages &84 -> &90
+
+* &c000->&ffff &88 (ccp, buffers, more bios)
+  which is &4000 -> &7fff in SELMEM 3
+
+* file &60fe/&0c80 -> &ed80		&88	SELRAM 2	? @ &6d80
+* file &313f/&27c0 -> &c440		&88	SELRAM 2	? @ &4440
+
+* &c000-&ffff &83 (bios/bdos)
+
+* &c000-&ffff &87 (common)
+
+* file &29d7/&0727 -> &ed9a		&87	COMMON		? &ed9a
+* file &006b/&0126 -> &cd00		&87	COMMON		? &cd00
+
+jump to &cd00
+
+now &0000 -> &0190 are available to be overwritten
+
+* file &30fe/&40 -> &0000 -> &003f	&80	SELRAM 0	zero page @ 0x000
+* file &01b0/&0d85 -> &0080 -> &0305	&80	SELRAM 0	xbios jumpblock / init @ &0080
+* file &58fe/&800 -> &b800 -> &bfff	&82	SELRAM SCR	character set @ &8000->&bfff
+
+now the CP/M style copies happen
+
+* file &6f80 -> &6fff, &6f00 -> &6f7f, &6e80 -> &6eff, &6e00 -> &6e7f, &6d80 -> &6dff
+* file (&6d80 -> &6fff)
+* .. to &FC00 + 640 bytes		&87	COMMON		CP/M resident BIOS
+
+* file &7580 -> &75ff, &7500 -> &757f, &7480 -> &74ff, &7400 -> &747f, ... &7000
+* (file &7000 -> &75ff)
+* .. to &f600 + 1536 bytes		&87	COMMON		CP/M resident BDOS
+
+Now the fun bit happens.
+It relocates a large region of the file - &7600+&3280 (-> &a87f) to &29d7->&5c56.
+It's straddling pages &80 and &81.
+
+* file &7600 -> &a87f			banked BIOS/BDOS contents
+
+Now!
+
+* &8000->&bfff &83 (CP/M BDOS, BIOS banked, keyboard MMIO)
+
+It's now setting things up for the BDOS, BIOS, etc banked bits.
+So, now when pulling the file offsets out, I need to make sure I compensate
+for where they WERE in the file before the Great Relocation.
+
+The memory is now configured as SELMEM 0:
+
+&0000->&3fff &80
+&4000->&7fff &81
+&8000->&bfff &83
+&c000->&ffff &87
+
+&2dd7 -> &2e56, ... , 9 blocks
+-> &ba00 - CP/M banked BIOS		&83	SELRAM 0
+
+&5bd7 -> &5c56, ... , 92 blocks
+-> &8c00 - CP/M banked BDOS		&83	SELRAM 0
+
+
+Then finally, a reverse copy, &29d6 -> &5703, &1aa2 bytes, BACKWARDS
+
+&0f35.. &29d6 -> &3c61..&5703, &1aa2 (6818) bytes	SELRAM
+
+After that it's a bunch of blanked regions of RAM, some hardware probing, then
+finally a JMP &FC00, the CP/M resident BIOS entry point.
+
