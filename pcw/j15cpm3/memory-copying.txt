@@ -21,13 +21,13 @@ is 0xa87f, 43146 bytes.
   which is &4000 -> &7fff in SELMEM 3
 
 * file &60fe/&0c80 -> &ed80		&88	SELRAM 2	? @ &6d80 (ccp.com?)
-* file &313e/&27c0 -> &c440		&88	SELRAM 2	? @ &4440
+* file &313e/&27c0 -> &c440		&88	SELRAM 2	(from john) dot matrix printer driver @ &4440
 
 * &c000-&ffff &83 (bios/bdos)
 
 * &c000-&ffff &87 (common)
 
-* file &29d7/&0727 -> &ed9a		&87	COMMON		? &ed9a
+* file &29d7/&0727 -> &ed9a		&87	COMMON		(from john) FID loader @ &ed9a
 * file &006b/&0126 -> &cd00		&87	COMMON		second stage bootstrap @ &cd00
 
 jump to &cd00
@@ -78,7 +78,7 @@ The memory is now configured as SELMEM 0:
 
 Then finally, a reverse copy, &29d7 -> &5703, &1aa2 bytes, BACKWARDS
 
-&0f35.. &29d7 -> &3c61..&5703, &1aa2 (6818) bytes	&80, &81	SELRAM 0	?
+&0f35.. &29d7 -> &3c61..&5703, &1aa2 (6818) bytes	&80, &81	SELRAM 0	(from john elliott) more XBIOS
 
 After that it's a bunch of blanked regions of RAM, some hardware probing, then
 finally a JMP &FC00, the CP/M resident BIOS entry point.

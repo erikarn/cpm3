@@ -10,13 +10,13 @@
 ; all 0xff's in the source file, so ok
 0x01b0,0x0d85,xbios-jumpblock-init.bin
 ; no gap
-0x0f35,0x1aa2,unknown-4.bin
+0x0f35,0x1aa2,xbios-4.bin
 ; no gap
-0x29d7,0x0727,unknown-3.bin
+0x29d7,0x0727,fid-loader.bin
 ; no gap
 0x30fe,0x0040,zero-page.bin
 ; no gap
-0x313e,0x27c0,unknown-2.bin
+0x313e,0x27c0,dot-matrix-printer.bin
 ; no gap
 0x58fe,0x0800,charset.bin
 ; no gap
