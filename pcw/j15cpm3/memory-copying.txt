@@ -20,15 +20,15 @@ is 0xa87f, 43146 bytes.
 * &c000->&ffff &88 (ccp, buffers, more bios)
   which is &4000 -> &7fff in SELMEM 3
 
-* file &60fe/&0c80 -> &ed80		&88	SELRAM 2	? @ &6d80
-* file &313f/&27c0 -> &c440		&88	SELRAM 2	? @ &4440
+* file &60fe/&0c80 -> &ed80		&88	SELRAM 2	? @ &6d80 (ccp.com?)
+* file &313e/&27c0 -> &c440		&88	SELRAM 2	? @ &4440
 
 * &c000-&ffff &83 (bios/bdos)
 
 * &c000-&ffff &87 (common)
 
 * file &29d7/&0727 -> &ed9a		&87	COMMON		? &ed9a
-* file &006b/&0126 -> &cd00		&87	COMMON		? &cd00
+* file &006b/&0126 -> &cd00		&87	COMMON		second stage bootstrap @ &cd00
 
 jump to &cd00
 

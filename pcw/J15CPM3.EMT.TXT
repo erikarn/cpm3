@@ -544,7 +544,14 @@ looks like jump tables, hm!
 00000f00  e6 9f ba 28 04 d3 f1 46  75 7a d3 f1 5e 36 a5 e6  |...(...Fuz..^6..|
 00000f10  9f aa 28 05 aa d3 f1 7e  70 47 7a e6 8f d3 f1 7e  |..(....~pGz....~|
 00000f20  71 b0 20 07 7a d3 f1 73  14 20 cd 3a 61 00 d3 f1  |q. .z..s. .:a...|
-00000f30  7a ee 80 c9 ff f5 21 e0  58 06 10 36 07 23 36 3d  |z.....!.X..6.#6=|
+00000f30  7a ee 80 c9
+
+This is the start of some unknown block in RAM, loaded into page 0x80
+and it .. isn't copied anywhere? What's going on here?
+(eg is it in the right place?)
+
+00000f35              ff f5 21 e0  58 06 10 36 07 23 36 3d  |z.....!.X..6.#6=|
+
 00000f40  23 10 f8 11 9e 3c cd 0d  f0 11 b3 3c cd 12 f0 f1  |#....<.....<....|
 00000f50  1f 38 08 3a 40 00 e6 20  20 11 c9 11 c8 3c cd 17  |.8.:@..  ....<..|
 00000f60  f0 11 dd 3c 3a 40 00 e6  20 28 03 11 f2 3c c3 1c  |...<:@.. (...<..|
@@ -970,7 +977,11 @@ looks like jump tables, hm!
 000029a0  56 3a 67 58 b7 28 fa f1  c9 f5 cd f6 56 3a 64 58  |V:gX.(......V:dX|
 000029b0  c4 f7 56 f1 c9 21 67 58  7e 2f 77 b7 c0 cd f6 56  |..V..!gX~/w....V|
 000029c0  3e 0a d3 f8 af 32 67 58  c9 af e5 2a 21 11 23 23  |>....2gX...*!.##|
-000029d0  77 e1 3a 67 58 b7 c9 c3  a6 ed c3 a9 ed c3 70 f0  |w.:gX.........p.|
+000029d0  77 e1 3a 67 58 b7 c9
+
+looks like another jump table starts here?
+
+000029d7                       c3  a6 ed c3 a9 ed c3 70 f0  |w.:gX.........p.|
 000029e0  c3 d2 ef c3 80 f1 cd b7  ed cd 5a fc b7 f3 cd 5a  |..........Z....Z|
 000029f0  fc 6a f4 c7 1e fe cd c3  ef 06 01 c5 11 f6 ed cd  |.j..............|
 00002a00  89 ef 30 2d 18 05 cd 93  ef 30 26 10 f9 e5 21 5c  |..0-.....0&...!\|
@@ -1084,11 +1095,15 @@ looks like jump tables, hm!
 000030c0  30 0a 77 23 71 23 70 23  73 23 72 23 c1 10 e9 36  |0.w#q#p#s#r#...6|
 000030d0  ff c9 7c b5 c8 11 0a 00  19 5e 23 56 23 7e 23 e5  |..|......^#V#~#.|
 000030e0  eb 11 00 02 cd c2 f1 e1  7e 23 66 6f 18 e4 dd e9  |........~#fo....|
-000030f0  e9 ff ff ff ff ff ff ff  ff ff ff ff ff ff c3 bf  |................|
+000030f0  e9 ff ff ff ff ff ff ff  ff ff ff ff ff ff
+
+000030fe                                             c3 bf  |................|
 00003100  0b c5 c9 d5 c9 e9 c3 cd  0b dd e9 fd e9 00 c3 e0  |................|
 00003110  0b 00 00 00 00 00 c3 e1  0b 00 00 00 00 00 c3 e2  |................|
 00003120  0b 00 00 00 00 00 c3 ed  0b c3 ec 0b 00 00 f3 18  |................|
-00003130  fd 42 52 45 41 4b c3 d3  07 50 61 74 63 68 21 6f  |.BREAK...Patch!o|
+00003130  fd 42 52 45 41 4b c3 d3  07 50 61 74 63 68
+
+0000313e                                             21 6f  |.BREAK...Patch!o|
 00003140  00 cd aa 0b 22 02 6c 11  08 00 19 eb 21 64 00 19  |....".l.....!d..|
 00003150  22 00 6c eb 3e 38 cd 0d  09 cd f4 44 2a 00 6c cd  |".l.>8.....D*.l.|
 00003160  8d 0a cd 78 4d cd cd 48  3e ff 32 1a 6c 3a 1a 6c  |...xM..H>.2.l:.l|
@@ -1725,9 +1740,11 @@ looks like jump tables, hm!
 000058d0  09 95 8c 95 89 0b 03 40  22 05 0c 07 03 0b 09 c4  |.......@".......|
 000058e0  8e c9 89 07 1a 04 84 08  04 84 1a 07 0b 02 82 0b  |................|
 
+000058f0  8b 02 0f 06 0c 04 07 04  03 06 0f ff ff ff
+
 ; &58FE is here, let's see if this looks like character set data.
 
-000058f0  8b 02 0f 06 0c 04 07 04  03 06 0f ff ff ff 00 00  |................|
+000057fe                                             00 00  |................|
 00005900  66 db db db 66 00 3c 42  81 99 81 42 3c 00 fe c6  |f...f.<B...B<...|
 00005910  c0 c0 c0 c0 c0 00 10 38  38 6c 6c c6 fe 00 3c 42  |.......88ll...<B|
 00005920  a5 99 a5 42 3c 00 00 00  00 24 18 24 00 00 00 00  |...B<....$.$....|
@@ -1856,10 +1873,13 @@ looks like jump tables, hm!
 000060d0  78 0c 7c cc 76 00 32 4c  00 3c 66 66 3c 00 08 0c  |x.|.v.2L.<ff<...|
 000060e0  fe 07 fe 0c 08 00 10 30  7f e0 7f 30 10 00 00 24  |.......0...0...$|
 
+000060f0  7e c3 7e 24 00 00 00 7e  00 7e 00 7e 00 00
+
 ; &60FE is here, end of character set data? Just before the
 ; string LOADER.
 
-000060f0  7e c3 7e 24 00 00 00 7e  00 7e 00 7e 00 00 c3 1a  |~.~$...~.~.~....|
+
+000060fe                                             c3 1a  |~.~$...~.~.~....|
 00006100  04 00 00 00 c3 1b 01 c3  06 00 07 00 00 00 4c 4f  |..............LO|
 00006110  41 44 45 52 20 20 ff 00  00 79 fe 3b c2 09 01 c1  |ADER  ...y.;....|
 00006120  c5 21 00 00 39 31 be 03  22 9a 03 c5 eb 22 98 03  |.!..91.."...."..|
@@ -2060,6 +2080,7 @@ looks like jump tables, hm!
 00006d50  53 59 53 54 45 4d 20 46  49 4c 45 28 53 29 20 45  |SYSTEM FILE(S) E|
 00006d60  58 49 53 54 24 00 00 00  3a 00 00 00 d0 0d 00 00  |XIST$...:.......|
 00006d70  00 01 24 24 24 20 20 20  20 20 53 55 42 00 ff ff  |..$$$     SUB...|
+
 00006d80  fd a7 ba 2a c4 fb 18 08  2a c6 fb 18 03 2a c0 fb  |...*....*....*..|
 00006d90  cd 7a fd 88 ba 2a c2 fb  18 0e 2a be fb 7c ee 80  |.z...*....*..|..|
 00006da0  b5 20 05 3a f8 ff b7 c8  cd 7a fd 78 ba 2a c2 fb  |. .:.....z.x.*..|

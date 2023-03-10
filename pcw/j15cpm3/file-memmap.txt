@@ -7,18 +7,19 @@
 ; no gap
 0x006b,0x0126,bootstrap-2.bin
 ; gap from 0x0191 -> 0x01b0
+; all 0xff's in the source file, so ok
 0x01b0,0x0d85,xbios-jumpblock-init.bin
-; gap from 0x0f35 to 0x29d7 ?
+; gap from 0x0f35 to 0x29d6 ? maybe in-place XBIOS code?
 0x29d7,0x0727,unknown-3.bin
-; gap from 0x305e -> 0x30fe
+; gap from 0x305e -> 0x30fd ? maybe more in-place XBIOS code?
 0x30fe,0x0040,zero-page.bin
-; is there one byte gap here?
-0x313f,0x27c0,unknown-2.bin
-; 1 byte overlap?
+; no gap
+0x313e,0x27c0,unknown-2.bin
+; no gap
 0x58fe,0x0800,charset.bin
 ; no gap
-0x60fe,0x0c80,unknown-1.bin
-; gap at 67de/67df ?
+0x60fe,0x0c80,ccp.bin
+; gap at 6d7e/6d7f? both 0xff
 0x6d80,0x0280,bios-resident.bin
 ; no gap
 0x7000,0x0600,bdos-resident.bin
