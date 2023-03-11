@@ -22,10 +22,14 @@
 ; no gap
 0x60fe,0x0c80,ccp.bin
 ; gap at 6d7e/6d7f? both 0xff
-0x6d80,0x0280,bios-resident.bin
+; reversed in 128 byte sectors
+0x6d80,0x0280,bios-resident-rev.bin
 ; no gap
-0x7000,0x0600,bdos-resident.bin
+; reversed in 128 byte sectors
+0x7000,0x0600,bdos-resident-rev.bin
 ; no gap
-0x7600,0x0480,bios-banked.bin
+; reversed in 128 byte sectors
+0x7600,0x0480,bios-banked-rev.bin
 ; no gap
-0x7a80,0x2e00,bdos-banked.bin
+; reversed in 128 byte sectors
+0x7a80,0x2e00,bdos-banked-rev.bin
