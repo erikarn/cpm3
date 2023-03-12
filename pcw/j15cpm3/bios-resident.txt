@@ -84,7 +84,7 @@ fc60:		c3 00 00		JMP &0000
 
 ; Start of bios WARMBOOT
 fc63:		f3			DI
-fc64:		31 18 ff		LD SP, &FF18
+fc64:		31 18 ff		LD SP, &FF18		; temp SP?
 fc67:		cd 9e fc		CALL &FC9E
 fc6a:		fb			EI
 fc6b:		01 02 01		LD BC, &0102
@@ -93,19 +93,19 @@ fc71:		01 08 0c		LD BC, &0C80
 fc74:		11 80 6d		LD DE, &6D80
 fc77:		21 00 01		LD HL, &0100
 fc7a:		e5			PUSH HL
-fc7b:		18 46			JR ...			; Why a JR here?
-fc9d:		21 ba fd		LD HL, &FDBA
+fc7b:		18 46			JR l_90			; Why a JR here?
+
+fc7d:		21 ba fd		LD HL, &FDBA
 fc80:		22 b8 fd		LD (&FDB8), HL
 fc83:		2a 39 00		LD HL, (&0039)
 fc86:		22 77 fe		LD (&FE77), HL
-fc89:		01 b7 fd		LD BC, &FDB7
+fc89:		01 b7 fd		LD BC, &FDB7		; Infinite loop into RST 38h
 fc8b:		ed 43 39 00		LD (&0039), BC
-fc90:		cd 9e fc		CALL &FC9E
-fc93:		32 38 00		LD (&0038), A
-fc96:		ed 43 39 00		LD (&0039), BC
-fc9a:		fb			EI
+fc90:		cd 9e fc		CALL &FC9E		; Call whatever this is
+fc93:		32 38 00		LD (&0038), A		; Restore
+fc96:		ed 43 39 00		LD (&0039), BC		; the RST 38 vector
+fc9a:		fb			EI			; Re-enable interrupts
 fc9b:		c3 9d ed		JMP &ED9D
-
 
 000000a0  01 cd 3b fd 3e c3 21 03  fc 32 00 00 22 01 00 2a  |..;.>.!..2.."..*|
 000000b0  fe fb 32 05 00 22 06 00  d1 2e 00 f9 eb e9 ed 43  |..2..".........C|
@@ -135,34 +135,367 @@ fcbe:		ed 43 71 fe		LD (&FE71), BC		; store src (C) /dest (B)
 								; for a MOVE call.
 fcc2:		c9			RET
 
-; MOVE entry point
-fcc3:		3a 71 fe		LD A, (&FE71)
-
 000000c0  71 fe c9 3a 71 fe 3c 20  05 eb ed b0 eb c9 cd 7a  |q..:q.< .......z|
 000000d0  fd d3 fc d9 d5 e5 d9 c5  3a 72 fe cd fb fc eb d9  |........:r......|
 000000e0  eb 3a 71 fe cd fb fc d9  c1 e5 d5 c5 cd 04 01 c1  |.:q.............|
+
+; MOVE entry point
+fcc3:		3a 71 fe		LD A, (&FE71)
+fcc6:		3c			INC A
+fcc7:		20 05			JR NZ, l_89
+fcc9:		eb			EX DE, HL
+fcca:		ed b0			LDIR
+fccc:		eb			EX DE, HL
+fccd:		c9			RET
+
+l_89:
+fcce:		cd 7a fd		CALL &FD7A		; XBIOS @ FCD3?!
+fcd1:		d3 fc			DEFW &FCD3
+fcd3:		d9			EXX			; Exchange BC/DE/HL and alt
+fcd4:		d5			PUSH DE
+fcd5:		e5			PUSH HL
+fcd6:		d9			EXX			; Exchange BC/DE/HL and alt
+fcd7:		c5			PUSH BC
+fcd8:		3a 72 fe		LD A, (&FE72)
+fcdb:		cd fb fc		CALL &FCFB
+fcde:		eb			EX DE, HL
+fcdf:		d9			EXX			; Exchange BC/DE/HL and alt
+fce0:		eb			EX DE, HL
+fce1:		3a 71 fe		LD A, (&FE71)
+
+l_90:
+fce4:		cd fb fc		CALL &FCFB
+fce7:		d9			EXX
+fce8:		c1			POP BC
+fce9:		e5			PUSH HL
+fcea:		d5			PUSH DE
+fceb:		c5			PUSH BC
+fcec:		cd 04 01		CALL &0104		; TPA? Or CP/M hidden?
+fcef:		c1			POP BC
+fcf0:		e1			POP HL
+fcf1:		09			ADD HL, BC
+fcf2:		eb			EX DE, HL
+fcf3:		e1			POP HL
+fcf4:		09			ADD HL, BC
+fcf5:		d9			EXX
+fcf6:		e1			POP HL
+fcf7:		d1			POP DE
+fcf8:		d9			EXX
+fcf9:		18 33			JR unknown_112
+
 000000f0  e1 09 eb e1 09 d9 e1 d1  d9 18 33 fe 02 30 29 1f  |..........3..0).|
 00000100  7c 17 17 17 e6 07 f6 80  d9 fe 82 2e 83 28 07 6f  ||............(.o|
 00000110  fe 83 20 02 2e 87 67 3c  ac e6 03 ac fe 82 26 83  |.. ...g<......&.|
 00000120  c8 67 fe 83 c0 26 87 c9  d9 c6 86 67 6f c9 3e ff  |.g...&.....go.>.|
+
+; internal function?
+fcfb:		fe 02			CP &02
+fcfd:		30 29			JR NC, unknown_111
+fcff:		1f			RRA
+fd00:		7c			LD A, HL
+fd01:		17			RLA
+fd02:		17			RLA
+fd03:		17			RLA
+fd04:		e6 07			AND &07
+fd06:		f6 80			OR &80
+fd08:		d9			EXX
+fd09:		fe 82			CP &82
+fd0b:		2e 83			LD L, &83
+fd0d:		28 07			JR Z, unknown_110
+fd0f:		6f			LD L, A
+fd10:		fe 83			CP &83
+fd12:		20 02			JR NZ, unknown_110
+fd14:		2e 87			LD L, &87
+
+unknown_110:
+fd16:		67			LD H, A
+fd17:		3c			INC A
+fd18:		ac			XOR A, H
+fd19:		e6 03			AND &03
+fd1b:		ac			XOR A, H
+fd1c:		fe 82			CP &82
+fd1e:		26 83			LD H, &83
+fd20:		c8			RET Z
+fd21:		67			LD H, A
+fd22:		fe 83			CP &83
+fd24:		c0			RET NZ
+fd25:		26 87			LD H, &87
+fd27:		c9			RET
+
+unknown_111:
+fd28:		d9			EXX
+fd29:		c6 86			ADD A, &86
+fd2b:		67			LD H, A
+fd2c:		6f			LD L, A
+fd2d:		c9			RET
+
+unknown_112:
+fd2e:		3e ff			LD A, &FF
+fd30:		32 71 fe		LD (&FE71), A
+fd33:		af			XOR A, A
+
+; SELMEM entry point
+fd34:		f3			DI
+fd35:		cd 3b fd		CALL &FD3B
+fd38:		fb			EI
+fd39:		c9			RET
+
 00000130  32 71 fe af f3 cd 3b fd  fb c9 af 32 70 fe e5 6f  |2q....;....2p..o|
 00000140  3e 80 d3 f0 7d 3d 28 14  3c 21 81 83 28 09 2e 88  |>...}=(.<!..(...|
 00000150  fe 02 28 03 c6 86 6f 22  61 00 18 0a 21 85 86 22  |..(...o"a...!.."|
+
+fd3a:		af			XOR A, A
+
+; internal selmem?
+fd3b:		32 70 fe		LD (&FE70), A
+fd3e:		e5			PUSH HL
+fd3f:		6f			LD L, A
+fd40:		3e 80			LD A, &80
+fd42:		d3 f0			OUT (&F0), A		; &0000->&3FFF = Bank &80
+fd44:		7d			LD A, L
+fd45:		3d			DEC A
+fd46:		28 14			JR Z, l_120
+fd48:		3c			INC A
+fd49:		21 81 83		LD HL, &8381		; bank numbers?
+fd4c:		28 09			JR Z, l_121
+fd4e:		2e 88			LD L, &88
+fd50:		fe 02			CP &02
+fd52:		28 03			JR Z, l_121
+fd54:		c6 86			ADD A, &86
+
+l_120:
+fd56:		6f			LD L, A
+
+l_121:
+fd57:		22 61 00		LD (&0061), HL
+fd5a:		18 0a			JR l_122
+fd5c:		21 85 86		LD HL, &8685		; bank numbers?
+fd5f:		22 61 00		LD (&0061), HL
+fd62:		3e 84			LD A, &84
+fd64:		d3 f0			OUT (&F0), A		; &0000->&3FFF = Bank ...
+
 00000160  61 00 3e 84 d3 f0 7d d3  f1 7c d3 f2 e1 c9 22 75  |a.>...}..|...."u|
+
+l_122:
+fd66:		7d			LD A, L
+fd67:		d3 f1			OUT (&F1), A		; &4000->&7FFF = Bank in L
+fd69:		7c			LD A, H
+fd6a:		d3 f2			OUT (&F2), A		; &8000->&BFFF = Bank in H
+fd6c:		e1			POP HL
+fd6d:		c9			RET
+
+; USERF entry point (ie, calling into XBIOS)
+fd6e:		22 75 fe		LD (&FE75), HL		; store HL
+fd71:		e1			POP HL			; Get return address -
+								; which is the arg.
+fd72:		e5			PUSH HL			; back on stack you go
+fd73:		23			INC HL			; HL now points to
+fd74:		23			INC HL			; the instruction after
+								; the arg
+fd75:		e3			EX (SP), HL		; update stack return addr
+fd76:		e5			PUSH HL			; ?
+fd77:		2a 75 fe		LD HL, (&FE75)		; restore HL
+; Some intermediary internal call routine as well?
+; it looks like it takes the two bytes (word) after the
+; call instruction as an XBIOS address to switch bank and
+; jump into?
+fd7a:		f3			DI
+fd7b:		08			EX AF, AF'		; Ex AF and alt
+fd7c:		d9			EXX			; Ex BC, DE, HL and alt
+fd7d:		e3			EX (SP), HL		; Exchange HL with what's @ SP
+								; .. which should be the
+								; argument
+								; so arg in HL, (SP) now has
+								; what was in HL
+fd7e:		ed 73 73 fe		LD (&FE73), SP		; Store SP for now
+fd82:		31 18 ff		LD SP, &FF18		; temp SP?
+fd85:		d5			PUSH DE
+fd86:		f5			PUSH AF
+fd87:		5e			LD E, (HL)
+fd88:		23			INC HL
+fd89:		56			LD D, (HL)
+fd8a:		3a 70 fe		LD A, (&FE70)
+fd8d:		f5			PUSH AF
+fd8e:		cd 3a fd		CALL &FD3A
+fd91:		2a 77 fe		LD HL, (&FE77)
+fd94:		22 b8 fd		LD (&FDB8), HL
+fd97:		cd b2 fd		CALL &FDB2
+fd9a:		f3			DI
+fd9b:		08			EX AF, AF'
+fd9c:		d9			EXX
+fd9d:		21 ba fd		LD HL, &FDBA
+fda0:		22 b8 fd		LD (&FDB8), HL
+fda3:		f1			POP AF
+fda4:		cd 3b fd		CALL &FD3B
+fda7:		f1			POP AF
+fda8:		d1			POP DE
+fda9:		ed 7b 73 fe		LD SP, (&FE73)		; restore SP
+fdac:		fe e1			CP &E1
+fdae:		08			EX AF, AF'
+fdaf:		d9			EXX
+fdb0:		fb			EI
+fdb1:		c9			RET
+
 00000170  fe e1 e5 23 23 e3 e5 2a  75 fe f3 08 d9 e3 ed 73  |...##..*u......s|
 00000180  73 fe 31 18 ff d5 f5 5e  23 56 3a 70 fe f5 cd 3a  |s.1....^#V:p...:|
 00000190  fd 2a 77 fe 22 b8 fd cd  b2 fd f3 08 d9 21 ba fd  |.*w."........!..|
 000001a0  22 b8 fd f1 cd 3b fd f1  d1 ed 7b 73 fe e1 08 d9  |"....;....{s....|
 000001b0  fb c9 d5 08 d9 fb c9 c3  b7 fd f3 ed 73 73 fe 31  |............ss.1|
+
+; Internal routine?
+fdb2:		d5			PUSH DE		; store for returnining into
+fdb3:		08			EX AF, AF'	; flip norm/alt reg
+fdb4:		d9			EXX		; ...
+fdb5:		fb			EI		; re-enable interrupts
+fdb6:		c9			RET		; Jump to where DE points to?
+
+; Infinite loop function
+; likely used to handle "things crashed" sideways so they could
+; debug it.
+fdb7:		c3 b7 fd		JMP &FDB7
+
+; internal function?
+fdba:		f3			DI
+fdbb:		ed 73 73 fe		LD (&FE73), SP		; temp store SP
+fdbf:		31 18 ff		LD SP, &FF18		; temp SP?
+
 000001c0  18 ff f5 e5 2a 77 fe 22  b8 fd 3e 80 d3 f0 ff f3  |....*w."..>.....|
+
+fdc2:		f5			PUSH AF
+fdc3:		e5			PUSH HL
+fdc4:		2a 77 fe		LD HL, (&FE77)
+fdc7:		22 b8 fd		LD (&FDB8), HL
+fdca:		3e 80			LD A, &80
+fdcc:		d3 f0			OUT (&F0), A		; &0000->&3FFF = Bank &80
+fdce:		ff			RST 38			; restart &0038
+
 000001d0  3a 70 fe 3d 20 04 3e 84  d3 f0 21 ba fd 22 b8 fd  |:p.= .>...!.."..|
+
+fdcf:		f3			DI
+fdd0:		3a 70 fe		LD A, (&FE70)
+fdd3:		3d			DEC A
+fdd4:		20 04			JR NZ, l_150
+fdd6:		3e 84			LD A, &84
+fdd8:		d3 f0			OUT (&F0), A		; &0000->&3FFF = bank &84
+
+l_150:
+fdda:		21 ba fd		LD HL, &FDBA
+fddd:		22 b8 fd		LD (&FDB8), HL
+
 000001e0  e1 f1 ed 7b 73 fe fb c9  cd 7a fd 40 bb 21 50 ff  |...{s....z.@.!P.|
+
+fde0:		e1			POP HL
+fde1:		f1			POP AF
+fde2:		ed 7b 7e fe		LD SP, (&FE7E)		; restore SP
+fde6:		fb			EI
+fde7:		c9			RET
+
+; DEVINI entry point
+fde8:		cd 7a fd		CALL &FD7A		; XBIOS @ &BB40
+fdeb:		40 bb			DEFW &BB40
+
+; DEVTBL entry point
+fded:		21 50 ff		LD HL, &FF50
+
 000001f0  c9 2a c4 fb 18 08 2a c6  fb 18 03 2a c0 fb cd 7a  |.*....*....*...z|
+
+; TIME entry point (convenient NULL return point, ha)
+fdf0:		c9			RET
+
+; PUNCH entry point
+fdf1:		2a c4 fb		LD HL, (&FBC4)
+fdf4:		18 08			JR l_160
+
+; LIST entry point
+fdf6:		2a c6 fb		LD HL, (&FBC6)
+fdf9:		18 03			JR l_160
+
+; CONOUT entry point
+fdfb:		2a c0 fb		LD HL, (&FBC0)
+
+l_160:
+fdfe:		cd 7a fd		CALL &FD7A		; XBIOS @ &BAA7
+fe01:		a7 ba			DEFW &BAA7
+
 00000200  fd a7 ba 2a c4 fb 18 08  2a c6 fb 18 03 2a c0 fb  |...*....*....*..|
+
+
+; AUXOST entry point
+fe03:		2a c4 fb		LD HL, (&FBC4)
+fe06:		18 08			JR l_165
+
+; LISTST entry point
+fe08:		2a c6 fb		LD HL, (&FBC6)
+fe0b:		18 03			JR l_165
+
+; CONOST entry point
+fe0d:		2a c0 fb		LD HL, (&FBC0)
+
 00000210  cd 7a fd 88 ba 2a c2 fb  18 0e 2a be fb 7c ee 80  |.z...*....*..|..|
+
+l_165:
+fe10:		cd 7a fd		CALL &FD7A		; XBIOS @ &BA88
+fe13:		88 ba			DEFW &BA88
+
+; AUXIST entry point
+fe15:		2a c2 fb		LD HL, (&FBC2)
+fe18:		18 0e			JR l_170
+
+; CONST entry point
+fe1a:		2a be fb		LD HL, (&FBBE)
+fe1d:		7c			LD A, H
+fe1e:		ee 80			XOR &80
+
 00000220  b5 20 05 3a f8 ff b7 c8  cd 7a fd 78 ba 2a c2 fb  |. .:.....z.x.*..|
+
+fe20:		b5			OR A, L
+fe21:		20 05			JR NZ, l_170
+fe23:		3a f8 ff		LD A, (&F8FF)
+fe26:		b7			OR A, A
+fe27:		c8			RET Z
+
+l_170:
+fe28:		cd 7a fd		CALL &FD7A		; XBIOS @ &BA78
+fe2b:		78 ba			DEFW &BA78
+
+; READER entry point
+fe2d:		2a c2 fb		LD HL, (&FBC2)
+
 00000230  18 03 2a be fb cd 7a fd  35 bb 21 4d fe c9 cd 7a  |..*...z.5.!M...z|
+
+fe30:		18 03			JR l_180
+
+; CONIN entry point
+fe32:		2a be fb		LD HL, (&FBBE)
+
+l_180:
+fe35:		cd 7a fd		CALL &FD7A		; XBIOS @ &BB35
+fe38:		35 bb			DEFW &BB35
+
+; DRVTBL entry point
+fe3a:		21 4d fe		LD HL, &FE4D
+fe3d:		c9			RET
+
+; SELDSK entry point
+fe3e:		cd 7a fd		CALL &FD7A		; XBIOS @ &BBA0
+fe41:		a0 bb			DEFW &BBA0
+
 00000240  fd a0 bb cd 7a fd b8 bb  cd 7a fd bc bb a3 bd c0  |....z....z......|
+
+; READ entry point
+fe43:		cd 7a fd		CALL &FD7A
+fe46:		b8 bb			DEFW &BBB8
+
+; WRITE entry point
+fe48:		cd 7a fd		CALL &FD7A		; XBIOS @ &BCBB
+fe4b:		bc bb			DEFW &BCBB
+
+; Referenced in CONIN as data?  Maybe addresses that need calling, or
+; have buffers, or something?  I'm not sure.  They certainly aren't
+; instructions.
+fe4d:		a3 bd			DEFW &BDA3
+fe4f:		c0 bd			DEFW &BDC0
+
 00000250  bd 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 00000260  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 00000270  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
