@@ -1,0 +1,74 @@
+; This is the initial bootstrap code that is run after
+; the file is loaded.
+;
+; It initialises memory, copies over a couple of blocks,
+; relocates the bootstrap-2 code high so the low areas
+; can be initialised, and jumps into it.
+;
+; I've verified that the generated output matches
+; the binary contents from the PCW file.  The earlier
+; diassembly had a couple of mistakes, so be careful!
+
+
+org 0x0000
+
+
+entry:		LD BC, 0x1075		; excess?
+		LD SP, 0xCF00		; SP <- &CF00
+
+		LD HL, 0xFFF0		; blank memory from
+		LD DE, 0xFFF1		; &fff0 -> &ffff
+		LD BC, 0x000F
+		LD (HL), 0x00
+		LDIR
+
+; Looks like this is blanking RAM in each page
+		LD A, 0x84		; Page 4
+j_2:		OUT (0xF3), A		; .. in &C000->FFFF
+
+		LD HL, 0xC000
+		LD DE, 0xC001
+		LD BC, 0x3FFF
+		LD (HL), L		; c000 <- 0
+		CP 0x89
+		JR NZ, j_1
+		LD (HL), 0xE5		; c000 <- 0xe5, why?
+j_1:		LDIR
+		INC A
+		CP 0x90
+		JR NZ, j_2
+
+		LD A, 0x88		; Page 8 (CCP, buffers, more BIOS)
+					; This is &4000->&7fff in SELMEM 3
+		OUT (0xF3), A		; .. in &C000->FFFF
+
+		LD HL, 0x60FE		; CCP
+		LD DE, 0xED80		; (&6D80)
+		LD BC, 0x0C80
+		LDIR
+
+		LD HL, 0x313E		; BIOS - dot matrix printer driver
+		LD DE, 0xC440		; (&4440)
+		LD BC, 0x27C0
+		LDIR
+
+		LD A, 0x83		; Page 3 (BIOS/BDOS)
+		OUT (0xF3), A		; .. in &C000->&FFFF
+
+		LD A, 0x87		; Page 7 (common)
+		OUT (0xF3), A		; .. in &C000->&FFFF
+
+		LD HL, 0x29D7		; FID loader
+		LD DE, 0xED9A		;
+		LD BC, 0x0727		; 1831 bytes
+		LDIR
+
+		LD DE, 0xCD00		; Copy &006B -> &CD00
+		PUSH DE			; Save to RET into
+		LD HL, 0x006B
+		LD BC, 0x0126		; 294 bytes
+		LDIR
+
+		LD A, (0x0000)	; .. this is &01 ? Why?
+		RET		; pop de, continue execution at &CD00
+

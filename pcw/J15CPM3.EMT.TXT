@@ -50,8 +50,7 @@ Bootloader block:
 0020: 75		LD (HL), L		; c000 <- 0
 0021: FE 89		CP &89
 0023: 20 02		JR NZ, ...
-0025: 36		INC H
-0026: e5		PUSH HL
+0025: 36 e5		LD (HL), &E5
 0027: ed b0		LDIR
 0029: 3c		INC A
 002a: fe 90		CP &90
