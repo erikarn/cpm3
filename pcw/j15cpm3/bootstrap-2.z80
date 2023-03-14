@@ -1,0 +1,252 @@
+
+; This is the start of the code copied up into &CD00
+; to contine bootstrapping.
+;
+; I've compared the output of this to the EMT file,
+; and they match.
+;
+; What is the memory region configuration at this point?
+; Bootloader has it setup as:
+; 0x80, 0x81, 0x82, 0x83
+;
+; And &C000->&FFFF is being used here for initialisation, so
+; whatever file we're loading, it can't be bigger than &C000 bytes
+; (41952.)
+;
+; And now we're at:
+;
+; &0000 -> &3fff - ?
+; &4000 -> &7fff - ?
+; &8000 -> &bfff - ?
+; &c000 -> &ffff - &87 (page 7 - TPA/common)
+
+; Copy the page 0 contents over.  At this point it overwrites what's between
+; &0000 -> &003F.
+
+org 0xcd00
+
+		PUSH AF
+		LD HL, 0x30FE	; is this the initial page 0 contents?
+		LD DE, 0x0000	; Copy it into &00 -> &3F
+		LD BC, 0x0040
+		LDIR
+
+; Copy the XBIOS jump block and initialisation.
+; At this point it's overwritten what's between
+; &0080 -> &0E05.
+
+		LD HL, 0x01B0	; XBIOS jumpblock, initialisation
+		LD DE, 0x0080	; goes to &80 in page &80.
+		LD BC, 0x0D85
+		LDIR
+
+; Copy what I think is the character set over.
+; This copies &58FE to &60FD to &B800 -> &BFFF.
+
+		LD HL, 0x58FE
+		LD DE, 0xB800	; is this .. the character set?
+					; it's in page &82, that's mapped
+					;  &8000 -> &BFFF .
+		LD BC, 0x0800	; 2048 bytes
+		LDIR
+
+; The first time copy_record (&CE1C) is called.
+; Now remember the first thing that happens is DEC H is run, before
+; it copies things backwards.  So, HL is &7080, but after the first
+; DEC H it'll be &6F80.
+
+; .. So, this is from &6F80 in 128 byte blocks, going backwards each block
+		LD HL, 0x7080	; From &6F80 ?
+		LD DE, 0xFC00	; CP/M resident BIOS, forwards
+		LD A, 0x05	; 5 * 128 = 640 bytes
+		CALL copy_record
+
+; .. and this'd be &7580 in 128 byte blocks, going backwards each block
+		LD HL, 0x7680	; From &7580 ?
+		LD DE, 0xF600	; CP/M resident BDOS?
+		LD A, 0x0C	; 12 * 128 = 1536 bytes
+		CALL copy_record
+
+; Now remember the CE1C call is copying 128 byte blocks,
+; but then the source blocks go backwards. So, the first
+; 128 byte block is &7580 -> &75FF, and our copy here
+; starts at &7600.  Phew.
+		LD HL, 0x7600	; &7600 -> &A880
+					; Which is the end of this file!
+		LD DE, 0x29D7	; unused space (currently) after XBIOS, etc?
+		LD BC, 0x3280	; 12928 bytes
+					; That's &29D7 -> &5C56
+		LDIR
+
+; So at this point &29D7 -> &5C56 has been overwritten, which
+; is straddling page &80 (CP/M hidden, BIOS jumpblock) and &81 (more CP/M).
+
+		LD A, 0x83	; Page 3
+		OUT (0xF2), A	; &8000 -> &BFFF
+
+; At this point &8000 -> &BFFF is now setup to page &83, which is the
+; CP/M stuff (BIOS/BDOS, keyboard MMIO region.)
+; Anything copied into here is going into the CP/M banked
+; config (pages &80, 0x81, 0x83, 0x87.)
+;
+; This means that the stuff in page &82 that was mapped
+; between &8000 -> &BFFF is no longer accessible.
+
+; Which is good, because this code is literally now copying data
+; from the big 13k area that was just relocated down into
+; page &80 and &81.  Note that 1152 + 11776 bytes adds up to the
+; 12928 byte block that was just relocated above.
+
+		LD HL, 0x2ED7	; Copy from &2DD7
+		LD DE, 0xBA00	; CP/M banked BIOS
+		LD A, 0x09	; 9 * 128 = 1152 bytes
+		CALL copy_record
+
+		LD HL, 0x5CD7	; Copy from &5BD7
+		LD DE, 0x8C00	; CP/M banked BDOS
+		LD A, 0x5C	; 92 * 128 = 11776 bytes
+		CALL copy_record
+
+; What's it copying, and why is it copying it backwards instead
+; of forwards?  They don't .. overlap do they?
+		LD HL, 0x29D6	; from &29D6 -> &0F35
+		LD DE, 0x5703	; From &5703 -> &3C61
+					; This is at the beginning of the
+					; data segments area.
+					; Counts backward, 0x1AA2 bytes.
+		LD BC, 0x1AA2	; 6818 bytes
+		LDDR
+
+		XOR A, A		; A = 0
+		LD HL, 0x0E05		; Blank &0E05 + &032D
+		LD DE, 0x0E06
+		LD BC, 0x032C		; 812 bytes + 1 = 813 bytes
+		LD (HL), A		; Zero first byte before LDIR
+		LDIR
+
+		LD HL, 0x5704		; Blank &5704, 0x022C bytes
+		LD DE, 0x5705		; data segments for drivers?
+		LD BC, 0x022B		; 555 bytes + 1 = 556 bytes
+		LD (HL), A
+		LDIR
+
+		LD HL, 0xBE10		; zero &BE10, 0x0140 bytes
+		LD DE, 0xBE11
+		LD BC, 0x013F		; 319 + 1 = 320 bytes
+		LD (HL), A
+		LDIR
+
+		LD HL, 0x0040		; blank &0040, 0x40 bytes
+		LD DE, 0x0041
+		LD BC, 0x003F		; 63 + 1 = 64 bytes
+		LD (HL), A
+		LDIR
+
+; After this i'm not entirely certain of what's going on
+; This looks like it's checking what attached basic hardware
+; it supports (printer, serial?)
+
+		POP AF
+		LD (0x000F), A
+		LD C, 0xFD		; Printer status register?
+		IN A, (C)		; Get printer status?
+		AND 0x20
+		LD HL, 0x0040
+		LD (HL), 0x04
+		JR NZ, j_1
+		LD (HL), 0x10
+j_1:
+		LD C, 0x01
+j_7:
+		LD B, 0x04
+j_2:
+		IN A, (0x85)
+		AND 0x01
+		JR NZ, j_3
+		IN A, (0x87)
+		AND 0x01
+		JR Z, j_3
+		DJNZ j_2
+		SET 5, (HL)
+		JR j_4
+j_3:
+		LD A, C
+		OR A, A
+		JR Z, j_4
+		OUT (0x86), A
+		ADD A, A
+		LD C, A
+		JR j_7
+j_4:
+		DI
+		PUSH HL
+		CALL probe_dart		; Probe DART?
+		POP HL
+		JR NC, j_5
+		IN A, (0xE1)		; CPS8256?
+		AND 0x08
+		SET 3, (HL)
+j_5:
+		JP 0xFC00		; &FC00 is the CP/M resident BIOS start
+
+; This is &CDDD after the initial boot relocation.
+
+probe_dart:
+		LD A, 0x36
+		OUT (0xE7), A
+		LD A, 0x0D
+		OUT (0xE4), A
+		XOR A, A		; A <- 0
+		OUT (0xE4), A
+		LD A, 0x76
+		OUT (0xE7), A
+		LD A, 0x0D
+		OUT (0xE5), A
+		XOR A, A		; A <- 0
+		OUT (0xE5), A
+		LD BC, 0x08E1		; B = 8 bytes, C = &E1 (DART control)
+		LD HL, dart_data	; &017f in original memory
+		OTIR			; loop { (HL)->(C), HL++, B--} until B=0
+		LD C, 0xE3
+		LD HL, 0x02A5
+		CALL dart_2		; &0171 in the original memory
+		RET NC
+		LD L, 0x5A
+dart_2:
+		OUT (C), H
+		OUT (C), L
+		OUT (C), H
+		IN A, (C)
+		XOR L			; XOR A, L
+		AND 0xF8
+		RET NZ
+		SCF
+		RET
+
+; These are register pairs being sent to &E1, the DART control,
+; for I/O setup.
+dart_data:
+defb		0x18, 0x04, 0x44, 0x05, 0x6a, 0x03, 0xe1, 0x10
+
+; Ok, this is where i wonder if I've disassmbled this right.
+; The earlier code has relocated code @ &006b -> &cd00; and
+; then there's calls to &ce1c which translate to &0187 in this
+; file.
+
+; In any case, this routine does look like a 128 byte load.
+; My guess is that the source address is 128
+; bytes above where it needs to be, and after a 128 byte load
+; (and HL is +128) it's doing HL = HL - 256, which is effectively
+; doing HL = HL - 128.  Ie, it's working its way backwards in
+; 128 byte blocks.
+
+; &CE1C relocated function:
+;
+copy_record:
+j_8:
+		DEC H
+		LD BC, 0x0080		; 128 byte move
+		LDIR
+		DEC A
+		JR NZ, j_8
+		RET
