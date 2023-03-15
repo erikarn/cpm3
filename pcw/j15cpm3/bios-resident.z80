@@ -2,6 +2,8 @@
 ; This is the resident BIOS code.
 
 ; This is loaded into &fc00; common memory.
+; It's been assembled with z80asm and compared against the original
+; binary file to ensure they match.
 
 org 0xfc00
 
@@ -86,7 +88,7 @@ entry_WARMBOOT:
 		LD DE, 0x6D80		; start of in-memory copy of CCP.COM
 		LD HL, 0x0100		; where to copy it
 		PUSH HL
-		JR l_90			; Why a JR here?
+		JR entry_MOVE		; and jump into MOVE
 
 		LD HL, internal_10
 		LD (label_fdb7+1), HL
@@ -177,7 +179,7 @@ internal_11:
 		CP 0x02
 		JR NC, unknown_111
 		RRA
-		LD A, (HL)
+		LD A, H
 		RLA
 		RLA
 		RLA
@@ -246,13 +248,11 @@ l_fd3b:
 		CP 0x02
 		JR Z, l_121
 		ADD A, 0x86
-
-l_120:
-			LD L, A
-
+		LD L, A
 l_121:
 		LD (0x0061), HL
 		JR l_122
+l_120:
 		LD HL, 0x8685		; bank numbers?
 		LD (0x0061), HL
 		LD A, 0x84
@@ -318,7 +318,7 @@ xbios_jump_entry:
 		POP AF
 		POP DE
 		LD SP, (temp_sp)	; restore SP
-		CP 0xE1
+		POP HL
 		EX AF, AF'
 		EXX
 		EI
@@ -435,7 +435,7 @@ entry_CONST:
 
 		OR L
 		JR NZ, l_170
-		LD A, (0xF8FF)
+		LD A, (0xFFF8)
 		OR A
 		RET Z
 
@@ -473,30 +473,40 @@ entry_READ:
 
 ; WRITE entry point
 entry_WRITE:
-		CALL xbios_jump_entry		; XBIOS @ &BCBB
-		DEFW 0xBCBB
+		CALL xbios_jump_entry		; XBIOS @ &BBBC
+		DEFW 0xBBBC
 
 ; DRVTBL table contents
 drvtbl_table:
 		DEFW 0xBDA3
 		DEFW 0xBDC0
 
+tail_padding:
+
+		DEFB 0x00
+		DEFW 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+		DEFW 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
 ; needs to be padded to be a size = &280.
 ; Since it looks like the last 17 bytes (&FE70 -> &FE7F) are used
 ; for temporary storage?
 
-; one byte
-selmem_a: equ 0xfe70
+; one byte @ 0xFE70
+selmem_a:	DEFB 0x00
 
 ; two bytes
-selmem_copysrc: equ 0xfe71
-selmem_copydst: equ 0xfe72
+selmem_copysrc: DEFB 0x00
+selmem_copydst: DEFB 0x00
 
 ; two bytes
-temp_sp: equ 0xfe73
+temp_sp:	DEFW 0x00
 
 ; two bytes
-userf_hl: equ 0xfe75
+userf_hl:	DEFW 0x00
 
 ; two bytes
-xbios_hl: equ 0xfe77
+xbios_hl:	DEFW 0x00
+
+tail_padding_2:
+		DEFB 0x00
+		DEFW 0x00, 0x00, 0x00
