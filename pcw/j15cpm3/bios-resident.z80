@@ -76,208 +76,208 @@ bios_RESERV2:
 
 ; Start of bios WARMBOOT
 entry_WARMBOOT:
-fc63:		f3			DI
-fc64:		31 18 ff		LD SP, 0xFF18		; temp SP?
-fc67:		cd 9e fc		CALL label_fc9e
-fc6a:		fb			EI
-fc6b:		01 02 01		LD BC, 0x0102
-fc6e:		cd be fc		CALL entry_XMOVE
-fc71:		01 08 0c		LD BC, 0x0C80
-fc74:		11 80 6d		LD DE, 0x6D80
-fc77:		21 00 01		LD HL, 0x0100
-fc7a:		e5			PUSH HL
-fc7b:		18 46			JR l_90			; Why a JR here?
+		DI
+		LD SP, 0xFF18		; temp SP?
+		CALL label_fc9e
+		EI
+		LD BC, 0x0102
+		CALL entry_XMOVE
+		LD BC, 0x0C80		; length of ...
+		LD DE, 0x6D80		; start of in-memory copy of CCP.COM
+		LD HL, 0x0100		; where to copy it
+		PUSH HL
+		JR l_90			; Why a JR here?
 
-fc7d:		21 ba fd		LD HL, internal_10
-fc80:		22 b8 fd		LD (&FDB8), HL
-fc83:		2a 39 00		LD HL, (&0039)
-fc86:		22 77 fe		LD (&FE77), HL
-fc89:		01 b7 fd		LD BC, 0xFDB7		; Infinite loop into RST 38h
-fc8b:		ed 43 39 00		LD (&0039), BC
-fc90:		cd 9e fc		CALL label_fc9e		; Call whatever this is
-fc93:		32 38 00		LD (&0038), A		; Restore
-fc96:		ed 43 39 00		LD (&0039), BC		; the RST 38 vector
-fc9a:		fb			EI			; Re-enable interrupts
-fc9b:		c3 9d ed		JP 0xED9D
+		LD HL, internal_10
+		LD (label_fdb7+1), HL
+		LD HL, (0x0039)
+		LD (xbios_hl), HL
+		LD BC, label_fdb7; Infinite loop into RST 38h
+		LD (0x0039), BC
+		CALL label_fc9e		; Call whatever this is
+		LD (0x0038), A		; Restore
+		LD (0x0039), BC		; the RST 38 vector
+		EI			; Re-enable interrupts
+		JP 0xED9D		; ???
 
 ; Internal routine?
 label_fc9e:
-fc9e:		f3			DI
-fc9f:		3e 01			LD A, 0x01
-fca1:		cd 3b fd		CALL l_fd3b
-fca4:		3e c3			LD A, 0xC3		; JP instruction
-fca6:		21 03 fc		LD HL, bios_WBOOT	; &FC03 address
-fca9:		32 00 00		LD (0x0000), A		; Program into JP &0000
-fcac:		22 01 00		LD (0x0001), HL
-fcaf:		2a fe fb		LD HL, (0xFBFE)		; Load address from &FBFE
-fcb2:		32 05 00		LD (0x0005), A		; JP @ &0005
-fcb5:		22 06 00		LD (0x0006), HL		; Program into JP &0005
-fcb8:		d1			POP DE			: Get return address
-fcb9:		2e 00			LD L, 0x00
-fcbb:		f9			LD SP, HL		; SP = address from &FBFE,
-								; but with &00 lower byte
-fcbc:		eb			EX DE, HL		; DE<->HL, HL now has
-								; return address
-fcbd:		e9			JP HL			; jump to return address
+		DI
+		LD A, 0x01
+		CALL l_fd3b
+		LD A, 0xC3		; JP instruction
+		LD HL, bios_WBOOT	; &FC03 address
+		LD (0x0000), A		; Program into JP &0000
+		LD (0x0001), HL
+		LD HL, (0xFBFE)		; Load address from &FBFE
+		LD (0x0005), A		; JP @ &0005
+		LD (0x0006), HL		; Program into JP &0005
+		POP DE			; Get return address
+		LD L, 0x00
+		LD SP, HL		; SP = address from &FBFE,
+					; but with &00 lower byte
+		EX DE, HL		; DE<->HL, HL now has
+					; return address
+		JP (HL)			; jump to return address
 
 ; XMOVE entry point
 entry_XMOVE:
-fcbe:		ed 43 71 fe		LD (0xFE71), BC		; store src (C) /dest (B)
-								; banks in &FE71
-								; for a MOVE call.
-fcc2:		c9			RET
+		LD (selmem_copysrc), BC	; store src (C) /dest (B)
+					; banks in &FE71
+					; for a MOVE call.
+		RET
 
 ; MOVE entry point
 entry_MOVE:
-fcc3:		3a 71 fe		LD A, (0xFE71)
-fcc6:		3c			INC A
-fcc7:		20 05			JR NZ, l_89
-fcc9:		eb			EX DE, HL
-fcca:		ed b0			LDIR
-fccc:		eb			EX DE, HL
-fccd:		c9			RET
+		LD A, (selmem_copysrc)
+		INC A
+		JR NZ, l_89
+		EX DE, HL
+		LDIR
+		EX DE, HL
+		RET
 
 l_89:
-fcce:		cd 7a fd		CALL xbios_jump_entry		; XBIOS @ FCD3?
-fcd1:		d3 fc			DEFW 0xFCD3
-fcd3:		d9			EXX			; Exchange BC/DE/HL and alt
-fcd4:		d5			PUSH DE
-fcd5:		e5			PUSH HL
-fcd6:		d9			EXX			; Exchange BC/DE/HL and alt
-fcd7:		c5			PUSH BC
-fcd8:		3a 72 fe		LD A, (0xFE72)
-fcdb:		cd fb fc		CALL internal_11
-fcde:		eb			EX DE, HL
-fcdf:		d9			EXX			; Exchange BC/DE/HL and alt
-fce0:		eb			EX DE, HL
-fce1:		3a 71 fe		LD A, (&FE71)
+		CALL xbios_jump_entry		; XBIOS @ FCD3?
+		DEFW 0xFCD3
+		EXX			; Exchange BC/DE/HL and alt
+		PUSH DE
+		PUSH HL
+		EXX			; Exchange BC/DE/HL and alt
+		PUSH BC
+		LD A, (selmem_copydst)
+		CALL internal_11
+		EX DE, HL
+		EXX			; Exchange BC/DE/HL and alt
+		EX DE, HL
+		LD A, (selmem_copysrc)
 
 l_90:
-fce4:		cd fb fc		CALL internal_11
-fce7:		d9			EXX
-fce8:		c1			POP BC
-fce9:		e5			PUSH HL
-fcea:		d5			PUSH DE
-fceb:		c5			PUSH BC
-fcec:		cd 04 01		CALL &0104		; TPA? Or CP/M hidden?
-fcef:		c1			POP BC
-fcf0:		e1			POP HL
-fcf1:		09			ADD HL, BC
-fcf2:		eb			EX DE, HL
-fcf3:		e1			POP HL
-fcf4:		09			ADD HL, BC
-fcf5:		d9			EXX
-fcf6:		e1			POP HL
-fcf7:		d1			POP DE
-fcf8:		d9			EXX
-fcf9:		18 33			JR unknown_112
+		CALL internal_11
+		EXX
+		POP BC
+		PUSH HL
+		PUSH DE
+		PUSH BC
+		CALL 0x0104		; TPA? Or CP/M hidden?
+		POP BC
+		POP HL
+		ADD HL, BC
+		EX DE, HL
+		POP HL
+		ADD HL, BC
+		EXX
+		POP HL
+		POP DE
+		EXX
+		JR unknown_112
 
 ; internal function?
 internal_11:
-fcfb:		fe 02			CP &02
-fcfd:		30 29			JR NC, unknown_111
-fcff:		1f			RRA
-fd00:		7c			LD A, HL
-fd01:		17			RLA
-fd02:		17			RLA
-fd03:		17			RLA
-fd04:		e6 07			AND &07
-fd06:		f6 80			OR 0x80
-fd08:		d9			EXX
-fd09:		fe 82			CP &82
-fd0b:		2e 83			LD L, 0x83
-fd0d:		28 07			JR Z, unknown_110
-fd0f:		6f			LD L, A
-fd10:		fe 83			CP &83
-fd12:		20 02			JR NZ, unknown_110
-fd14:		2e 87			LD L, 0x87
+		CP 0x02
+		JR NC, unknown_111
+		RRA
+		LD A, (HL)
+		RLA
+		RLA
+		RLA
+		AND 0x07
+		OR 0x80
+		EXX
+		CP 0x82
+		LD L, 0x83
+		JR Z, unknown_110
+		LD L, A
+		CP 0x83
+		JR NZ, unknown_110
+		LD L, 0x87
 
 unknown_110:
-fd16:		67			LD H, A
-fd17:		3c			INC A
-fd18:		ac			XOR A, H
-fd19:		e6 03			AND &03
-fd1b:		ac			XOR A, H
-fd1c:		fe 82			CP &82
-fd1e:		26 83			LD H, 0x83
-fd20:		c8			RET Z
-fd21:		67			LD H, A
-fd22:		fe 83			CP &83
-fd24:		c0			RET NZ
-fd25:		26 87			LD H, 0x87
-fd27:		c9			RET
+		LD H, A
+		INC A
+		XOR H
+		AND 0x03
+		XOR H
+		CP 0x82
+		LD H, 0x83
+		RET Z
+		LD H, A
+		CP 0x83
+		RET NZ
+		LD H, 0x87
+		RET
 
 unknown_111:
-fd28:		d9			EXX
-fd29:		c6 86			ADD A, 0x86
-fd2b:		67			LD H, A
-fd2c:		6f			LD L, A
-fd2d:		c9			RET
+		EXX
+		ADD A, 0x86
+		LD H, A
+		LD L, A
+		RET
 
 unknown_112:
-fd2e:		3e ff			LD A, 0xFF
-fd30:		32 71 fe		LD (&FE71), A
-fd33:		af			XOR A, A
+		LD A, 0xFF
+		LD (selmem_copysrc), A
+		XOR A
 
 ; SELMEM entry point
 entry_SELMEM:
-fd34:		f3			DI
-fd35:		cd 3b fd		CALL l_fd3b
-fd38:		fb			EI
-fd39:		c9			RET
+		DI
+		CALL l_fd3b
+		EI
+		RET
 
 internal_12:
-fd3a:		af			XOR A, A
+			XOR A
 
 ; internal selmem?
-l_fd3b
-fd3b:		32 70 fe		LD (&FE70), A
-fd3e:		e5			PUSH HL
-fd3f:		6f			LD L, A
-fd40:		3e 80			LD A, 0x80
-fd42:		d3 f0			OUT (&F0), A		; &0000->&3FFF = Bank &80
-fd44:		7d			LD A, L
-fd45:		3d			DEC A
-fd46:		28 14			JR Z, l_120
-fd48:		3c			INC A
-fd49:		21 81 83		LD HL, 0x8381		; bank numbers?
-fd4c:		28 09			JR Z, l_121
-fd4e:		2e 88			LD L, 0x88
-fd50:		fe 02			CP &02
-fd52:		28 03			JR Z, l_121
-fd54:		c6 86			ADD A, 0x86
+l_fd3b:
+		LD (selmem_a), A
+		PUSH HL
+		LD L, A
+		LD A, 0x80
+		OUT (0xF0), A		; &0000->&3FFF = Bank &80
+		LD A, L
+		DEC A
+		JR Z, l_120
+		INC A
+		LD HL, 0x8381		; bank numbers?
+		JR Z, l_121
+		LD L, 0x88
+		CP 0x02
+		JR Z, l_121
+		ADD A, 0x86
 
 l_120:
-fd56:		6f			LD L, A
+			LD L, A
 
 l_121:
-fd57:		22 61 00		LD (&0061), HL
-fd5a:		18 0a			JR l_122
-fd5c:		21 85 86		LD HL, 0x8685		; bank numbers?
-fd5f:		22 61 00		LD (&0061), HL
-fd62:		3e 84			LD A, 0x84
-fd64:		d3 f0			OUT (&F0), A		; &0000->&3FFF = Bank ...
+		LD (0x0061), HL
+		JR l_122
+		LD HL, 0x8685		; bank numbers?
+		LD (0x0061), HL
+		LD A, 0x84
+		OUT (0xF0), A		; &0000->&3FFF = Bank ...
 
 l_122:
-fd66:		7d			LD A, L
-fd67:		d3 f1			OUT (&F1), A		; &4000->&7FFF = Bank in L
-fd69:		7c			LD A, H
-fd6a:		d3 f2			OUT (&F2), A		; &8000->&BFFF = Bank in H
-fd6c:		e1			POP HL
-fd6d:		c9			RET
+		LD A, L
+		OUT (0xF1), A		; &4000->&7FFF = Bank in L
+		LD A, H
+		OUT (0xF2), A		; &8000->&BFFF = Bank in H
+		POP HL
+		RET
 
 ; USERF entry point (ie, calling into XBIOS)
 entry_USERF:
-fd6e:		22 75 fe		LD (&FE75), HL		; store HL
-fd71:		e1			POP HL			; Get return address -
-								; which is the arg.
-fd72:		e5			PUSH HL			; back on stack you go
-fd73:		23			INC HL			; HL now points to
-fd74:		23			INC HL			; the instruction after
-								; the arg
-fd75:		e3			EX (SP), HL		; update stack return addr
-fd76:		e5			PUSH HL			; ?
-fd77:		2a 75 fe		LD HL, (&FE75)		; restore HL
+		LD (userf_hl), HL	; store HL
+		POP HL			; Get return address -
+					; which is the arg.
+		PUSH HL			; back on stack you go
+		INC HL			; HL now points to
+		INC HL			; the instruction after
+					; the arg
+		EX (SP), HL		; update stack return addr
+		PUSH HL			; ?
+		LD HL, (userf_hl)	; restore HL
 
 ; Some intermediary internal call routine as well?
 ; it looks like it takes the two bytes (word) after the
@@ -287,50 +287,50 @@ fd77:		2a 75 fe		LD HL, (&FE75)		; restore HL
 ; Original @ &FD7A
 
 xbios_jump_entry:
-fd7a:		f3			DI
-fd7b:		08			EX AF, AF'		; Ex AF and alt
-fd7c:		d9			EXX			; Ex BC, DE, HL and alt
-fd7d:		e3			EX (SP), HL		; Exchange HL with what's @ SP
-								; .. which should be the
-								; argument
-								; so arg in HL, (SP) now has
-								; what was in HL
-fd7e:		ed 73 73 fe		LD (&FE73), SP		; Store SP for now
-fd82:		31 18 ff		LD SP, 0xFF18		; temp SP?
-fd85:		d5			PUSH DE
-fd86:		f5			PUSH AF
-fd87:		5e			LD E, (HL)
-fd88:		23			INC HL
-fd89:		56			LD D, (HL)
-fd8a:		3a 70 fe		LD A, (&FE70)
-fd8d:		f5			PUSH AF
-fd8e:		cd 3a fd		CALL internal_12
-fd91:		2a 77 fe		LD HL, (&FE77)
-fd94:		22 b8 fd		LD (&FDB8), HL
-fd97:		cd b2 fd		CALL internal_13
-fd9a:		f3			DI
-fd9b:		08			EX AF, AF'
-fd9c:		d9			EXX
-fd9d:		21 ba fd		LD HL, internal_10
-fda0:		22 b8 fd		LD (&FDB8), HL
-fda3:		f1			POP AF
-fda4:		cd 3b fd		CALL l_fd3b
-fda7:		f1			POP AF
-fda8:		d1			POP DE
-fda9:		ed 7b 73 fe		LD SP, (&FE73)		; restore SP
-fdac:		fe e1			CP &E1
-fdae:		08			EX AF, AF'
-fdaf:		d9			EXX
-fdb0:		fb			EI
-fdb1:		c9			RET
+		DI
+		EX AF, AF'		; Ex AF and alt
+		EXX			; Ex BC, DE, HL and alt
+		EX (SP), HL		; Exchange HL with what's @ SP
+					; .. which should be the
+					; argument
+					; so arg in HL, (SP) now has
+					; what was in HL
+		LD (temp_sp), SP	; Store SP for now
+		LD SP, 0xFF18		; temp SP?
+		PUSH DE
+		PUSH AF
+		LD E, (HL)
+		INC HL
+		LD D, (HL)
+		LD A, (selmem_a)
+		PUSH AF
+		CALL internal_12
+		LD HL, (xbios_hl)
+		LD (label_fdb7+1), HL
+		CALL internal_13
+		DI
+		EX AF, AF'
+		EXX
+		LD HL, internal_10
+		LD (label_fdb7+1), HL
+		POP AF
+		CALL l_fd3b
+		POP AF
+		POP DE
+		LD SP, (temp_sp)	; restore SP
+		CP 0xE1
+		EX AF, AF'
+		EXX
+		EI
+		RET
 
-; Internal routine?
+; Internal routine - &fdb2
 internal_13:
-fdb2:		d5			PUSH DE		; store for returnining into
-fdb3:		08			EX AF, AF'	; flip norm/alt reg
-fdb4:		d9			EXX		; ...
-fdb5:		fb			EI		; re-enable interrupts
-fdb6:		c9			RET		; Jump to where DE points to?
+		PUSH DE		; store for returnining into
+		EX AF, AF'	; flip norm/alt reg
+		EXX		; ...
+		EI		; re-enable interrupts
+		RET		; Jump to where DE points to?
 
 ; Infinite loop function, which does get overwritten?
 ; likely used to handle "things crashed" sideways so they could
@@ -338,147 +338,165 @@ fdb6:		c9			RET		; Jump to where DE points to?
 ;
 ; Hm, maybe it's a jump table indirection?  Code is overwriting
 ; the address at FDB8.
-fdb7:		c3 b7 fd		JP 0xFDB7
 
-; internal function?
+label_fdb7:
+	defb 0xc3, 0xb7, 0xfd		; JP &FDB7
+
+; internal function - &fdba
 internal_10:
-fdba:		f3			DI
-fdbb:		ed 73 73 fe		LD (&FE73), SP		; temp store SP
-fdbf:		31 18 ff		LD SP, 0xFF18		; temp SP?
+		DI
+		LD (temp_sp), SP	; temp store SP
+		LD SP, 0xFF18		; temp SP?
 
-fdc2:		f5			PUSH AF
-fdc3:		e5			PUSH HL
-fdc4:		2a 77 fe		LD HL, (&FE77)
-fdc7:		22 b8 fd		LD (&FDB8), HL
-fdca:		3e 80			LD A, 0x80
-fdcc:		d3 f0			OUT (&F0), A		; &0000->&3FFF = Bank &80
-fdce:		ff			RST 38			; restart &0038
+		PUSH AF
+		PUSH HL
+		LD HL, (xbios_hl)
+		LD (label_fdb7+1), HL
+		LD A, 0x80
+		OUT (0xF0), A		; &0000->&3FFF = Bank &80
+		RST 0x38		; restart &0038
 
-fdcf:		f3			DI
-fdd0:		3a 70 fe		LD A, (&FE70)
-fdd3:		3d			DEC A
-fdd4:		20 04			JR NZ, l_150
-fdd6:		3e 84			LD A, 0x84
-fdd8:		d3 f0			OUT (&F0), A		; &0000->&3FFF = bank &84
+		DI
+		LD A, (selmem_a)
+		DEC A
+		JR NZ, l_150
+		LD A, 0x84
+		OUT (0xF0), A		; &0000->&3FFF = bank &84
 
 l_150:
-fdda:		21 ba fd		LD HL, internal_10
-fddd:		22 b8 fd		LD (&FDB8), HL
+		LD HL, internal_10
+		LD (label_fdb7+1), HL
 
-fde0:		e1			POP HL
-fde1:		f1			POP AF
-fde2:		ed 7b 7e fe		LD SP, (&FE7E)		; restore SP
-fde6:		fb			EI
-fde7:		c9			RET
+		POP HL
+		POP AF
+		LD SP, (temp_sp)	; restore SP
+		EI
+		RET
 
 ; DEVINI entry point
 entry_DEVINI:
-fde8:		cd 7a fd		CALL xbios_jump_entry		; XBIOS @ &BB40
-fdeb:		40 bb			DEFW 0xBB40
+		CALL xbios_jump_entry		; XBIOS @ &BB40
+		DEFW 0xBB40
 
 ; DEVTBL entry point
 entry_DEVTBL:
-fded:		21 50 ff		LD HL, 0xFF50
+		LD HL, 0xFF50
 
 ; TIME entry point (convenient NULL return point, ha)
 entry_TIME:
-fdf0:		c9			RET
+		RET
 
 ; PUNCH entry point
 entry_PUNCH:
-fdf1:		2a c4 fb		LD HL, (&FBC4)
-fdf4:		18 08			JR l_160
+		LD HL, (0xFBC4)
+		JR l_160
 
 ; LIST entry point
 entry_LIST:
-fdf6:		2a c6 fb		LD HL, (&FBC6)
-fdf9:		18 03			JR l_160
+		LD HL, (0xFBC6)
+		JR l_160
 
 ; CONOUT entry point
 entry_CONOUT:
-fdfb:		2a c0 fb		LD HL, (&FBC0)
+		LD HL, (0xFBC0)
 
 l_160:
-fdfe:		cd 7a fd		CALL xbios_jump_entry		; XBIOS @ &BAA7
-fe01:		a7 ba			DEFW 0xBAA7
+		CALL xbios_jump_entry		; XBIOS @ &BAA7
+		DEFW 0xBAA7
 
 ; AUXOST entry point
 entry_AUXOST:
-fe03:		2a c4 fb		LD HL, (&FBC4)
-fe06:		18 08			JR l_165
+		LD HL, (0xFBC4)
+		JR l_165
 
 ; LISTST entry point
 entry_LISTST:
-fe08:		2a c6 fb		LD HL, (&FBC6)
-fe0b:		18 03			JR l_165
+		LD HL, (0xFBC6)
+		JR l_165
 
 ; CONOST entry point
 entry_CONOST:
-fe0d:		2a c0 fb		LD HL, (&FBC0)
+		LD HL, (0xFBC0)
 
 l_165:
-fe10:		cd 7a fd		CALL xbios_jump_entry		; XBIOS @ &BA88
-fe13:		88 ba			DEFW 0xBA88
+		CALL xbios_jump_entry		; XBIOS @ &BA88
+		DEFW 0xBA88
 
 ; AUXIST entry point
 entry_AUXIST:
-fe15:		2a c2 fb		LD HL, (&FBC2)
-fe18:		18 0e			JR l_170
+		LD HL, (0xFBC2)
+		JR l_170
 
 ; CONST entry point
 entry_CONST:
-fe1a:		2a be fb		LD HL, (&FBBE)
-fe1d:		7c			LD A, H
-fe1e:		ee 80			XOR 0x80
+		LD HL, (0xFBBE)
+		LD A, H
+		XOR 0x80
 
-fe20:		b5			OR A, L
-fe21:		20 05			JR NZ, l_170
-fe23:		3a f8 ff		LD A, (&F8FF)
-fe26:		b7			OR A, A
-fe27:		c8			RET Z
+		OR L
+		JR NZ, l_170
+		LD A, (0xF8FF)
+		OR A
+		RET Z
 
 l_170:
-fe28:		cd 7a fd		CALL xbios_jump_entry		; XBIOS @ &BA78
-fe2b:		78 ba			DEFW 0xBA78
+		CALL xbios_jump_entry		; XBIOS @ &BA78
+		DEFW 0xBA78
 
 ; READER entry point
 entry_READER:
-fe2d:		2a c2 fb		LD HL, (&FBC2)
-
-fe30:		18 03			JR l_180
+		LD HL, (0xFBC2)
+		JR l_180
 
 ; CONIN entry point
 entry_CONIN:
-fe32:		2a be fb		LD HL, (&FBBE)
+		LD HL, (0xFBBE)
 
 l_180:
-fe35:		cd 7a fd		CALL xbios_jump_entry		; XBIOS @ &BB35
-fe38:		35 bb			DEFW 0xBB35
+		CALL xbios_jump_entry		; XBIOS @ &BB35
+		DEFW 0xBB35
 
 ; DRVTBL entry point
 entry_DRVTBL:
-fe3a:		21 4d fe		LD HL, 0xFE4D
-fe3d:		c9			RET
+		LD HL, drvtbl_table
+		RET
 
 ; SELDSK entry point
 entry_SELDSK:
-fe3e:		cd 7a fd		CALL xbios_jump_entry		; XBIOS @ &BBA0
-fe41:		a0 bb			DEFW 0xBBA0
+		CALL xbios_jump_entry		; XBIOS @ &BBA0
+			DEFW 0xBBA0
 
 ; READ entry point
 entry_READ:
-fe43:		cd 7a fd		CALL xbios_jump_entry
-fe46:		b8 bb			DEFW 0xBBB8
+		CALL xbios_jump_entry
+		DEFW 0xBBB8
 
 ; WRITE entry point
 entry_WRITE:
-fe48:		cd 7a fd		CALL xbios_jump_entry		; XBIOS @ &BCBB
-fe4b:		bc bb			DEFW 0xBCBB
+		CALL xbios_jump_entry		; XBIOS @ &BCBB
+		DEFW 0xBCBB
 
 ; DRVTBL table contents
-fe4d:		a3 bd			DEFW 0xBDA3
-fe4f:		c0 bd			DEFW 0xBDC0
+drvtbl_table:
+		DEFW 0xBDA3
+		DEFW 0xBDC0
 
 ; needs to be padded to be a size = &280.
 ; Since it looks like the last 17 bytes (&FE70 -> &FE7F) are used
 ; for temporary storage?
+
+; one byte
+selmem_a: equ 0xfe70
+
+; two bytes
+selmem_copysrc: equ 0xfe71
+selmem_copydst: equ 0xfe72
+
+; two bytes
+temp_sp: equ 0xfe73
+
+; two bytes
+userf_hl: equ 0xfe75
+
+; two bytes
+xbios_hl: equ 0xfe77
