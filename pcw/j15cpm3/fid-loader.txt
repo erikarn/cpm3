@@ -9,11 +9,9 @@ org 0xed9a
 0009: c3 d2 ef		JP 0xEFD2
 000c: c3 80 f1		JP 0xF180
 
-000f: cd b7 ed		JP 0xEDB7
-0012: cd 5a fc		JP 0xFC5A
-
-0015: b7		OR A
-0016: f3		DI
+000f: cd b7 ed		CALL 0xEDB7
+0012: cd 5a fc		CALL 0xFC5A		; ?
+0015: b7 fd		DEFW 0xFDB7		; ?
 0017: cd 5a fc		CALL 0xFC5A		; ?
 001a: f4 c7		DEFW 0xC7F4		; .. ? Not instructions!
 001c: 1e fe		LD E, 0xFE
@@ -63,6 +61,26 @@ loop_0049:
 
 0068: 00 00 00
 
+00000000  c3 a6 ed c3 a9 ed c3 70  f0 c3 d2 ef c3 80 f1 cd  |.......p........|
+00000010  b7 ed cd 5a fc b7 f3 cd  5a fc 6a f4 c7 1e fe cd  |...Z....Z.j.....|
+00000020  c3 ef 06 01 c5 11 f6 ed  cd 89 ef 30 2d 18 05 cd  |...........0-...|
+00000030  93 ef 30 26 10 f9 e5 21  5c 00 e5 36 00 11 5d 00  |..0&...!\..6..].|
+00000040  01 23 00 ed b0 d1 e1 06  0b d5 23 13 7e e6 7f 12  |.#........#.~...|
+00000050  10 f8 d1 cd 05 ee c1 04  18 ca c1 c9 01 3f 3f 3f  |.............???|
+00000060  3f 3f 3f 3f 3f 46 49 3f  00 00 00 cd bb ef d0 cd  |?????FI?........|
+00000070  c3 ee d2 bf ef 3a 67 00  32 ba ee d5 11 03 02 21  |.....:g.2......!|
+00000080  b0 ee 06 0b 1a be 20 2b  13 23 10 f8 cd f5 ee 44  |...... +.#.....D|
+00000090  4d 11 00 01 21 00 00 1a  13 85 6f 8c 95 67 0b 78  |M...!.....o..g.x|
+000000a0  b1 20 f4 ed 5b 10 02 4b  ed 42 4a b7 ed 42 b7 ed  |. ..[..K.BJ..B..|
+000000b0  52 28 04 d1 c3 bf ef e1  e5 23 11 03 02 01 0b 00  |R(.......#......|
+000000c0  ed b0 d1 cd 5a fc bb ee  22 1e 02 cd bf ef d0 2a  |....Z..."......*|
+000000d0  01 01 ed 5b 04 01 19 eb  cd c0 f2 d0 d5 e5 cd 21  |...[...........!|
+000000e0  ef e1 30 28 01 01 00 e5  cd 57 fc e1 ed 4b 01 01  |..0(.....W...K..|
+000000f0  11 00 02 e5 cd 4b fc e1  e5 22 9e ee 0e 03 11 00  |.....K..."......|
+00000100  00 cd 5a fc 00 00 f5 cd  0f ef f1 e1 d1 d2 bd f1  |..Z.............|
+00000110  cd 5a fc bf ee c9 1a 1a  1a 1a 1a 1a 1a 1a 46 49  |.Z............FI|
+
+
 006b: cd bb ef		CALL 0xEFBB
 006e: d0		RET NC
 006f: cd c3 ee		CALL 0xEEC3
@@ -83,28 +101,89 @@ loop_0049:
 008f: 44		LD B, H
 0090: 4d		LD C, L
 0091: 11 00 01		LD DE, 0x0100
+0094: 21 00 00		LD HL, 0x0000
+0097: 1a		LD A, (DE)
+0098: 13		INC DE
+0099: 85		ADD A, L
+009a: 6f		LD L, A
+009b: 8c		ADC A, H
+009c: 95		SUB A, L
+009d: 67		LD H, A
+009e: 0b		DEC BC
+009f: 78		LD A, B
+00a0: b1		OR A, C
+00a1: 20 f4		JR NZ, ...
+00a3: ed 5b 10 02	LD DE, (0x0210)
+00a7: 4b		LD C, E
+00a8: ed 42		SBC HL, BC
+00aa: 4a		LD C, D
+00ab: b7		OR A, A
+00ac: ed 42		SBC HL, BC
+00ae: b7		OR A, A
+00af: ed 52		SBC HL, DE
+00b1: 28 04		JR Z, ...
+00b3: d1		POP DE
+00b4: c3 bf ef		JP 0xEFBF
+00b7: e1		POP HL
+00b8: e5		PUSH HL
+00b9: 23		INC HL
+00ba: 11 03 02		LD DE, 0x0203
+00bd: 01 0b 00		LD BC, 0x000B
+00c0: ed b0		LDIR
+00c2: d1		POP DE
+00c3: cd 5a fc		CALL 0xFC5A		; ?
+00c6: bb ee		DEFW 0xEEBB		; ?
+00c8: 22 1e 02		LD (0x021E), HL
+00cb: cd bf ef		CALL &EFBF
+00ce: d0		RET NC
+00cf: 2a 01 01		LD HL, (0x0101)
+00d2: ed 5b 04 01	LD DE, (0x0104)
+00d6: 19		ADD HL, DE
+00d7: eb		EX DE, HL
+00d8: cd c0 f2		CALL &F2C0
+00db: d0		RET NC
+00dc: d5		PUSH DE
+00dd: e5		PUSH HL
+00de: cd 21 ef		CALL 0xEF21
+00e1: e1		POP HL
+00e2: 30 28		JR NC, ...
+00e4: 01 01 00		LD BC, 0x0001
+00e7: e5		PUSH HL
+00e8: cd 57 fc		CALL 0xFC57
+00eb: e1		POP HL
+00ec: ed 4b 01 01	LD BC, (0x0101)
+00f0: 11 00 02		LD DE, 0x0200
+00f3: e5		PUSH HL
+00f4: cd 4b fc		CALL 0xFC4B
+00f7: e1		POP HL
+00f8: e5		PUSH HL
+00f9: 22 9e ee		LD (&EE9C), HL
+00fc: 0e 03		LD C, 0x03
+00fe: 11 00 00		LD DE, 0x0000		; inline modification?
+0101: cd 5a fc		CALL 0xFC5A
+0104: 00 00		DEFW 0x0000		; inline modification?
+0106: f5		PUSH AF
+0107: cd 0f ef		CALL &EF0F
+010a: f1		POP AF
+010b: e1		POP HL
+010c: d1		POP DE
+010d: d2 bd f1		JP NC, 0xF1BD
 
-00000000  c3 a6 ed c3 a9 ed c3 70  f0 c3 d2 ef c3 80 f1 cd  |.......p........|
-00000010  b7 ed cd 5a fc b7 f3 cd  5a fc 6a f4 c7 1e fe cd  |...Z....Z.j.....|
-00000020  c3 ef 06 01 c5 11 f6 ed  cd 89 ef 30 2d 18 05 cd  |...........0-...|
-00000030  93 ef 30 26 10 f9 e5 21  5c 00 e5 36 00 11 5d 00  |..0&...!\..6..].|
-00000040  01 23 00 ed b0 d1 e1 06  0b d5 23 13 7e e6 7f 12  |.#........#.~...|
-00000050  10 f8 d1 cd 05 ee c1 04  18 ca c1 c9 01 3f 3f 3f  |.............???|
-00000060  3f 3f 3f 3f 3f 46 49 3f  00 00 00 cd bb ef d0 cd  |?????FI?........|
-00000070  c3 ee d2 bf ef 3a 67 00  32 ba ee d5 11 03 02 21  |.....:g.2......!|
-00000080  b0 ee 06 0b 1a be 20 2b  13 23 10 f8 cd f5 ee 44  |...... +.#.....D|
+0110: cd 5a fc		CALL 0xFC5A
+0113: bf ee		DEFW 0xEEBF
+0115: c9		RET
 
-00000090  4d 11 00 01 21 00 00 1a  13 85 6f 8c 95 67 0b 78  |M...!.....o..g.x|
+0116: 1a 1a 1a 1a 1a 1a 1a 1a	DEFB 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a
+011e: 46 49 44			DEFB 0x46, 0x49, 0x44		; 'FID'
 
-000000a0  b1 20 f4 ed 5b 10 02 4b  ed 42 4a b7 ed 42 b7 ed  |. ..[..K.BJ..B..|
-000000b0  52 28 04 d1 c3 bf ef e1  e5 23 11 03 02 01 0b 00  |R(.......#......|
-000000c0  ed b0 d1 cd 5a fc bb ee  22 1e 02 cd bf ef d0 2a  |....Z..."......*|
-000000d0  01 01 ed 5b 04 01 19 eb  cd c0 f2 d0 d5 e5 cd 21  |...[...........!|
-000000e0  ef e1 30 28 01 01 00 e5  cd 57 fc e1 ed 4b 01 01  |..0(.....W...K..|
-000000f0  11 00 02 e5 cd 4b fc e1  e5 22 9e ee 0e 03 11 00  |.....K..."......|
-00000100  00 cd 5a fc 00 00 f5 cd  0f ef f1 e1 d1 d2 bd f1  |..Z.............|
-00000110  cd 5a fc bf ee c9 1a 1a  1a 1a 1a 1a 1a 1a 46 49  |.Z............FI|
+0121: 2a 04 59		LD HL, (0x5904)
+0124: ret		RET
+
+0125: 22 04 59		LD (0x5904), HL
+0128: c9		RET
+
 00000120  44 2a 04 59 c9 22 04 59  c9 21 00 01 cd a7 ef d0  |D*.Y.".Y.!......|
+
 00000130  cd f5 ee 7d 29 6c 26 00  e6 7f 28 01 23 2b 44 4d  |...})l&...(.#+DM|
 00000140  21 80 ff 09 3f d0 21 80  01 cd a7 ef d0 7d c6 80  |!...?.!......}..|
 00000150  6f 8c 95 67 0b 78 b1 20  f0 37 c9 d5 c5 2a 01 01  |o..g.x. .7...*..|
