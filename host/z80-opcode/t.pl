@@ -7,12 +7,26 @@ use strict;
 # $ = one byte
 
 my $arg = $ARGV[1];
+my $inst_prefix = $ARGV[2];
+my $addin = 0;
+
+if (defined($inst_prefix)) {
+	$inst_prefix = $inst_prefix . ",";
+	$addin = 2;
+} else {
+	$inst_prefix = "";
+	$addin = 1;
+}
 
 while (<>) {
 	chomp;
 	my (@a) = split(/	/);
 
-	printf "\t{ .opcode = { 0x%s }, .str = \"%s\", .numbytes = %d, .argtype = %d, },\n",
-	     $a[1], $a[$arg], $a[$arg+1], 0;
+	if (!defined $a[$arg+1]) {
+		next;
+	};
+
+	printf "\t{ .opcode = { %s 0x%s }, .opcode_len = %d, .str = \"%s\", .numbytes = %d, .argtype = %d, },\n",
+	     $inst_prefix, $a[1], $addin, $a[$arg], $a[$arg+1], 0;
 }
 
