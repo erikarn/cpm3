@@ -177,13 +177,48 @@ loop_0049:
 011e: 46 49 44			DEFB 0x46, 0x49, 0x44		; 'FID'
 
 0121: 2a 04 59		LD HL, (0x5904)
-0124: ret		RET
+0124: c9		RET
 
 0125: 22 04 59		LD (0x5904), HL
 0128: c9		RET
 
-00000120  44 2a 04 59 c9 22 04 59  c9 21 00 01 cd a7 ef d0  |D*.Y.".Y.!......|
+0129: 21 00 01		LD HL, 0x0100
+012c: cd a7 ef		CALL 0xEFA7
+012f: d0		RET NC
+0130: cd f5 ee		CALL 0xEEF5
+0133: ee 7d		XOR 0x7D		; or arg to call?
+0134: 29		ADD HL, HL
+0135: 6c		LD L, H
+0136: 26 00		LD H, 0x00
+0138: e6 7f		AND 0x7F
+013a: 28 01		JR Z, ...
+013c: 23		INC HL
+013d: 2b		DEC HL
+013e: 44		LD B, H
+013f: 4d		LC C, L
+0140: 21 80 ff		LD HL, 0xFF80
+0143: 09		ADD HL, BC
+0144: 3f		CCF
+0145: d0		RET NC
+0146: 21 80 01		LD HL, 0x0180
+0149: cd a7 ef		CALL 0xEFA7
+014c: d0		RET NC
+014d: 7d		LD A, L
+014e: c6 80		ADD A, 0x80
 
+0150: 6f		LD L, A
+0151: 8c		ADC A, H
+0152: 95		SUB A, L
+0153: 67		LD H, A
+0154: 0b		DEC BC
+0155: 78		LD C, (HL)
+0156: b1		OR A, C
+0157: 80		ADD A, B
+0158: f0		RET P
+0159: 37		SCF
+015a: c9		RET
+
+00000120  44 2a 04 59 c9 22 04 59  c9 21 00 01 cd a7 ef d0  |D*.Y.".Y.!......|
 00000130  cd f5 ee 7d 29 6c 26 00  e6 7f 28 01 23 2b 44 4d  |...})l&...(.#+DM|
 00000140  21 80 ff 09 3f d0 21 80  01 cd a7 ef d0 7d c6 80  |!...?.!......}..|
 00000150  6f 8c 95 67 0b 78 b1 20  f0 37 c9 d5 c5 2a 01 01  |o..g.x. .7...*..|
@@ -194,7 +229,83 @@ loop_0049:
 000001a0  7e 00 fe ff 28 06 84 dd  77 00 18 08 e5 c5 cd 60  |~...(...w......`|
 000001b0  ef c1 e1 d0 10 07 06 08  fd 23 fd 4e 00 dd 23 1b  |.........#.N..#.|
 000001c0  7a b3 20 d7 37 c9 dd 7e  ff 06 04 21 7d ef be 23  |z. .7..~...!}..#|
+
+015b: d5		PUSH DE
+015c: c5		PUSH BC
+015d: 2a 01 01		LD HL, (0x0101)
+0160: 54		LD D, H
+0161: 5d		LD E, L
+0162: 06 03		LD B, 0x03
+0163: cb 3c		SRL H
+0165: cb 1d		RR L
+0167: 1d		DEC E
+0168: 10 fa		DJNZ ...
+016a: 7b		LD A, E
+016b: e6 07		AND 0x07
+016d: 28 01		JR Z, ...
+016f: 23		INC HL
+0170: 19		ADD HL, DE
+0171: 24		INC H
+0172: c1		POP BC
+0173: d1		POP DE
+0174: c9		RET
+
+0175: cd 5a fc		CALL 0xFC5A
+0178: 1f ef		DEFW 0xEF1F
+017a: 23		INC HL
+017b: 4f		LD C, A
+017c: 3c		INC A
+017d: c8		RET Z
+017e: e5		PUSH HL
+017f: cd 0c fc		CALL 0xFC0C
+0182: e1		POP HL
+0183: 18 f0		JR ...
+
+0185: 7e		LD A, (HL)
+0186: c9		RET
+
+0187: 25		DEC H
+0188: ed 5b 01 01	LD DE, (0x0101)
+018c: dd 21 00 02	LD IX, 0x0200		; First time I've seen
+0190: fd 21 00 02	LD IY, 0x0200		; IX/IY used in these code files!
+0194: fd 19		ADD IY, DE
+0196: 06 08		LD B, 0x08
+0198: fd 4e 00		LD C, (IY+0)
+019b: cb 21		SLA C
+019d: 30 15		JR NC, ...
+019f: dd 7e 00		LD A, (IX+0)
+01a2: fe ff		CP 0xFF
+01a4: 28 06		JR Z, ...
+01a6: 84		ADD A, H
+0a17: dd 77 00		LD (IX+0), A
+01aa: 18 08		JR ...
+01ac: e5		PUSH HL
+01ad: c5		PUSH BC
+01ae: cd 60 ef		CALL 0xEF60
+01b1: c1		POP BC
+01b2: e1		POP HL
+01b3: d0		RET NC
+01b4: 10 07		DJNZ ...
+01b6: 06 08		LD B, 0x08
+01b8: fd 23		INC IY
+01ba: fd 4e 00		LD C, (IY+0)
+01bd: dd 23		INC IX
+01bf: 1b		DEC DE
+01c0: 7a		LD A, D
+01c1: b3		OR A, E
+01c2: 20 d7		JR NZ, ...
+01c4: 37		SCF
+01c5: c9		RET
+
+01c6: dd 7e ff		LD A, (IX+0xFF)
+01c9: 06 04		LD B, 0x04
+01cb: 21 7d ef		LD HL, 0xEF7D
+01ce: be		OR A, E
+01cf: 23		INC HL
+
+
 000001d0  20 0b 7e dd 77 ff 23 7e  dd 77 00 37 c9 23 23 10  | .~.w.#~.w.7.##.|
+
 000001e0  ed b7 c9 00 70 f0 01 d2  ef 02 f5 00 03 83 00 21  |....p..........!|
 000001f0  80 00 cd b3 ef 3e 11 18  02 3e 12 cd c5 ef d0 87  |.....>...>......|
 00000200  87 87 87 87 c6 80 6f ce  00 95 67 37 c9 cd b3 ef  |......o...g7....|
