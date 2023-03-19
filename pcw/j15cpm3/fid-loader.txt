@@ -987,14 +987,14 @@ loop_0049:
 
 000005a0  38 03 f1 37 c9 c1 b7 c9  79 ae c0 d5 c5 e5 23 7e  |8..7....y.....#~|
 
-05a0: 38 03		JR C, label_0585
-0582: f1		POP AF
-0583: 37		SCF
-0584: c9		RET
-label_0585:
-0585: c1		POP BC
-0586: b7		OR A, A
-0587: c9		RET
+05a0: 38 03		JR C, label_05a5
+05a2: f1		POP AF
+05a3: 37		SCF
+05a4: c9		RET
+label_05a5:
+05a5: c1		POP BC
+05a6: b7		OR A, A
+05a7: c9		RET
 
 000005b0  2f 3c 83 5f 8a 93 57 23  23 7e 93 4f 23 7e 9a 47  |/<._..W##~.O#~.G|
 000005c0  e1 38 04 f1 f1 37 c9 c1  d1 b7 c9 0e ff 18 02 0e  |.8...7..........|
