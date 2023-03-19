@@ -580,7 +580,7 @@ loop_0049:
 039d: fd 6e 14		LD L, (IY+0x14)
 03a0: fd 66 15		LD H, (IY+0x15)
 03a3: cd bd f1		CALL 0xF1BD
-03a6: 11 11 00		LOAD DE, 0x0011
+03a6: 11 11 00		LD DE, 0x0011
 03a9: fd 6e 10		LD L, (IY+0x10)
 03ac: fd 66 11		LD H, (IY+0x00)
 03af: cd c0 f1		CALL 0xF1C0
@@ -996,18 +996,180 @@ label_05a5:
 05a6: b7		OR A, A
 05a7: c9		RET
 
+05a8: 79		LD A, C
+05a9: ae		XOR A, (HL)
+05aa: c0		RET NZ
+05ab: d5		PUSH DE
+05ac: c5		PUSH BC
+05ad: e5		PUSH HL
+05ae: 23		INC HL
+05af: 7e		LD A, (HL)
+
 000005b0  2f 3c 83 5f 8a 93 57 23  23 7e 93 4f 23 7e 9a 47  |/<._..W##~.O#~.G|
+
+05b0: 2f		CPL
+05b1: 3c		INC A
+05b2: 83		ADD A, E
+05b3: 5f		LD E, A
+05b4: 8a		ADC A, D
+05b5: 93		SUB A, E
+05b6: 57		LD D, A
+05b7: 23		INC HL
+05b8: 23		INC HL
+05b9: 7e		LD A, (HL)
+05ba: 93		SUB A, E
+05bb: 4f		LD C, A
+05bc: 23		INC HL
+05bd: 7e		LD A, (HL)
+05be: 9a		SBC A, D
+05bf: 47		LD B, A
+
 000005c0  e1 38 04 f1 f1 37 c9 c1  d1 b7 c9 0e ff 18 02 0e  |.8...7..........|
+
+05c0: e1		POP HL
+05c1: 38 04		JR C, label_05c7
+05c3: f1		POP AF
+05c4: f1		POP AF
+05c5: 37		SCF
+05c6: c9		RET
+label_05c7:
+05c7: c1		POP BC
+05c8: d1		POP DE
+05c9: b7		OR A, A
+05ca: c9		RET
+
+05cb: 0e ff		LD C, 0xFF
+05cd: 18 02		JR label_05d1
+05cf: 0e 00		LD C, 0x00
+
 000005d0  00 11 c2 f4 21 c7 f4 06  09 7e 3c 28 2a 79 fe ff  |....!....~<(*y..|
+
+label_05d1:
+05d1: 11 c2 f4		LD DE, 0xF4C2
+05d4: 21 c7 f4		LD HL, 0xF4C7
+05d7: 06 09		LD B, 0x09
+05d9: 7e		LD A, (HL)
+05da: 3c		INC A
+05db: 28 2a		JR Z, ...
+05dd: 79		LD A, C
+0fde: fe ff		CP 0xFF
+
 000005e0  28 03 be 20 1b e5 d5 23  23 23 7e 23 66 6f eb 23  |(.. ...###~#fo.#|
+
+05e0: 28 03		JR Z, label_05e5
+05e2: be		CP (HL)
+05e3: 20 1b		JR NZ, ...
+label_05e5:
+05e5: e5		PUSH HL
+05e6: d5		PUSH DE
+05e7: 23		INC HL
+05e8: 23		INC HL
+05e9: 23		INC HL
+05ea: 7e		LD A, (HL)
+05eb: 23		INC HL
+05ec: 66		LD H, (HL)
+05ed: 6f		LD L, A
+05ee: eb		EX DE, HL
+05ef: 23		INC HL
+
 000005f0  23 23 7e 23 66 6f eb b7  ed 52 d1 e1 38 02 54 5d  |##~#fo...R..8.T]|
+
+05f0: 23		INC HL
+05f1: 23		INC HL
+05f2: 7e		LD A, (HL)
+05f3: 23		INC HL
+05f4: 66		LD H, (HL)
+05f5: 6f		LD L, A
+05f6: eb		EX DE, HL
+05f7: b7		OR A, A
+05f8: ed 52		SBC HL, DE
+05fa: d1		POP DE
+05fb: e1		POP HL
+05fc: 38 02		JR C, label_0600
+05fe: 54		LD D, H
+05ff: 5d		LD E, L
+
 00000600  23 23 23 23 23 10 d2 eb  e5 46 23 5e 23 56 23 7e  |#####....F#^#V#~|
+
+label_0600:
+0600: 23		INC HL
+0601: 23		INC HL
+0602: 23		INC HL
+0603: 23		INC HL
+0604: 23		INC HL
+0605: 10 d2		DJNZ ...
+0607: eb		EX DE, HL
+0608: e5		PUSH HL
+0609: 46		LD B, (HL)
+060a: 23		INC HL
+060b: 5e		LD E, (HL)
+060c: 23		INC HL
+060d: 56		LD D, (HL)
+060e: 23		INC HL
+060f: 7e		LD A, (HL)
+
 00000610  23 66 6f e3 cd 70 f2 eb  d1 78 fe ff c9 11 00 02  |#fo..p...x......|
+
+0610: 23		INC HL
+0611: 66		LD H, (HL)
+0612: 6f		LD L, A
+0613: e3		EX (SP), HL
+0614: cd 70 f2		CALL 0xF270
+0617: eb		EX DE, XL
+0618: d1		POP DE
+0619: 78		LD A, B
+061a: fe ff		CP 0xFF
+061c: c9		RET
+
+061d: 11 00 02		LD DE, 0x0200
+
 00000620  cd 92 f2 30 0c 06 02 11  02 59 cd 35 f4 30 14 18  |...0.....Y.5.0..|
+
+0620: cd 92 f2		CALL 0xF292
+0623: 30 0c		JR NC, ...
+0625: 06 02		LD B, 0x02
+0627: 11 02 59		LD DE, 0x5902
+062a: cd 35 f4		CALL 0xF435
+062d: 30 14		JR NC, ...
+062f: 18 ec		JR ...
+
 00000630  ec 11 00 02 cd 8f f2 30  0a 06 00 11 00 59 cd 35  |.......0.....Y.5|
+
+0631: 11 00 02		LD DE, 0x0200
+0634: cd 8f f2		CALL 0xF28F
+0637: 30 0a		JR NC, ...
+0639: 06 00		LD B, 0x00
+063b: 11 00 59		LD DE, 0x5900
+063e: cd 35 f4		CALL 0xF435
+
 00000640  f4 38 ee 2a 02 59 cd 25  f4 48 2a 00 59 cd 25 f4  |.8.*.Y.%.H*.Y.%.|
+
+0641: 38 ee		JR C, ...
+0643: 2a 02 59		LD HL, (0x5902)
+0646: cd 25 f4		CALL 0xF425
+0649: 48		LD C, B
+064a: 2a 00 59		LD HL, (0x5900)
+064d: cd 25 f4		CALL 0xF425
+
 00000650  78 81 1f b7 1f fe 15 38  02 3e 14 b7 20 01 3c b8  |x......8.>.. .<.|
+
+0650: 78		LD A, B
+0651: 81		ADD A, C
+0652: 1f		RRA
+0653: b7		OR A, A
+0654: 1f		RRA
+0655: fe 15		CP 0x15
+0657: 38 02		JR C, label_065b
+0659: 3e 14		LD A, 0x14
+label_065b:
+065b: b7		OR A, A
+065c: 20 01		JR NZ, label_065f
+065e: 3c		INC A
+label_065f:
+065f: b8		CP B
+
 00000660  3f d8 47 2a 00 59 11 0d  00 19 7e 23 66 6f 10 f9  |?.G*.Y....~#fo..|
+
 00000670  af 19 4e 77 23 46 77 2a  02 59 19 7e 23 b6 28 06  |..Nw#Fw*.Y.~#.(.|
 00000680  7e 2b 6e 67 18 f4 70 2b  71 37 c9 06 00 7c b5 c8  |~+ng..p+q7...|..|
 00000690  04 11 0d 00 19 7e 23 66  6f 18 f2 dd e5 e5 d5 11  |.....~#fo.......|
@@ -1019,5 +1181,8 @@ label_05a5:
 000006f0  23 73 23 72 23 c1 10 e9  36 ff c9 7c b5 c8 11 0a  |#s#r#...6..|....|
 00000700  00 19 5e 23 56 23 7e 23  e5 eb 11 00 02 cd c2 f1  |..^#V#~#........|
 00000710  e1 7e 23 66 6f 18 e4 dd  e9 e9 ff ff ff ff ff ff  |.~#fo...........|
+
 00000720  ff ff ff ff ff ff ff                              |.......|
+
+0720: ff ff ff ff ff ff ff	DEFB 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 00000727
