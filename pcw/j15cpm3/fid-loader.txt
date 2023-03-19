@@ -321,7 +321,7 @@ loop_0049:
 01e8: ef 02 f5 00 03 83 00	DEFB 0xef, 0x02, 0xf5, 0x00, 0x03, 0x83, 0x00
 
 01ef: 21 80 00		LD HL, 0x0080
-01f2: cd b3 ef		CALL 0xEFB7
+01f2: cd b3 ef		CALL 0xEFB3
 01f5: 3e 11		LD A, 0x11
 01f7: 18 02		JR 0x02
 01f9: 3e 12		LD A, 0x12
