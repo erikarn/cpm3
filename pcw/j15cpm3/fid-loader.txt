@@ -363,9 +363,75 @@ loop_0049:
 0220: c9		RET
 
 0221: 3e 0f		LD A, 0x0F
+0223: 18 06		JR ...
+0225: 3e 10		LD A, 0x10
+0227: 18 02		JR ...
+0229: 3e 2d		LD A, 0x2D
+022b: e5		PUSH HL
+022c: d5		PUSH DE
+022d: c5		PUSH BC
+022e: 4f		LD C, A
+022f: cd 05 00		CALL 0x0005		; BDOS entry point
+0232: fe ff		CP 0xFF
+0234: c1		POP BC
+0235: d1		POP DE
+0236: e1		POP HL
+0237: c9		RET
+
+0238: d5		PUSH DE
+0239: c5		PUSH BC
+023a: cd 4f f0		CALL 0xF04F
+023d: 3e 02		LD A, 0x02
+023f: 38 2e		JR ...
+0241: 11 08 00		LD DE, 0x0008
+0244: cd eb f2		CALL 0xF2EB
+0247: 3e 01		LD A, 0x01
+0249: 01 30 24		LD BC, 0x2430
+024b: 2b		DEC HL
+024c: eb		EX DE, HL
+024d: e1		POP HL
+024e: d5		PUSH DE
+024f: c5		PUSH BC
+0250: 01 08 00		LD BC, 0x0008
+0253: ed b0		LDIR			; copy block!
+0255: af		XOR A, A
+0256: 12		LD (DE), A
+0257: c1		POP BC
+0258: e1		POP HL
+0259: e3		EX (SP), HL
+025a: eb		EX DE, HL
+025b: 21 e0 58		LD HL, 0x58E0
+025e: 09		ADD HL, BC
+025f: 09		ADD HL, BC
+0260: 73		LD (HL), E
+0261: 23		INC HL
+0262: 72		LD (HL), D
+0263: eb		EX DE, HL
+0264: d1		POP DE
+0265: 41		LD B, C
+0266: c5		PUSH BC
+0267: d5		PUSH DE
+0268: cd b3 f4		CALL 0xF4B3
+026b: d1		POP DE
+026c: c1		POP BC
+026d: 37		SCF
+026e: c9		RET
+
+026f: e1		POP HL
+0270: d1		POP DE
+0271: b7		OR A, A
+0272: c9		RET
+
+0273: 21 21 f0		LD HL, 0xF021
+0276: 18 c0		JR ...
+0278: 21 29 f0		LD HL, 0xF029
+027b: 18 bb		JR ...
+027d: 21 31 f0		LD HL, 0xF031
+0280: 18 b6		JR ...
+0282: 21 39 f0		LD HL, 0xF039
+0284: 18 b1		JR ...
 
 00000220  c9 3e 0f 18 06 3e 10 18  02 3e 2d e5 d5 c5 4f cd  |.>...>...>-...O.|
-
 00000230  05 00 fe ff c1 d1 e1 c9  d5 e5 cd 4f f0 3e 02 38  |...........O.>.8|
 00000240  2e 11 08 00 cd eb f2 3e  01 30 24 2b eb e1 d5 c5  |.......>.0$+....|
 00000250  01 08 00 ed b0 af 12 c1  e1 e3 eb 21 e0 58 09 09  |...........!.X..|
@@ -374,7 +440,33 @@ loop_0049:
 00000280  18 b6 21 39 f0 18 b1 43  52 54 20 20 20 03 00 4c  |..!9...CRT   ..L|
 00000290  50 54 20 20 20 02 00 53  49 4f 20 20 20 0f 0e 43  |PT   ..SIO   ..C|
 000002a0  45 4e 20 20 20 02 00 cd  4f f0 d0 21 e0 58 09 09  |EN   ...O..!.X..|
+
+0287: 43 52 54 20 20 20 03 00
+			DEFB 0x43, 0x52, 0x54, 0x20, 0x20, 0x20, 0x03, 0x00
+			; 'CRT   ', 0x3, 0x0
+028f: 4c 50 54 20 20 20 02 00
+			DEFB 0x4c, 0x50, 0x54, 0x20, 0x20, 0x20, 0x02, 0x00
+			; 'LPT   ', 0x2, 0x0
+0297: 53 49 4f 20 20 20 0f 0e
+			DEFB 0x53, 0x49, 0x4f, 0x20, 0x20, 0x20, 0x0f, 0x0e
+			; 'SIO   ', 0xf, 0xe
+029f: 43 45 4e 20 20 20 02 00
+			DEFB 0x43, 0x45, 0x4e, 0x20, 0x20, 0x20, 0x02, 0x00
+			; 'CEN   ', 0x2, 0x0
+
+02a7: cd 4f f0		CALL 0xF04F
+02aa: d0		RET NC
+02ab: 21 e0 58		LD HL, 0x58E0
+02ae: 09		ADD HL, BC
+02af: 09		ADD HL, BC
+02b0: 5e		LD E, (HL)
+02b1: 23		INC HL
+02b2: 56		LD D, (HL)
+02b3: 37		SCF
+02b4: c9		RET
+
 000002b0  5e 23 56 37 c9 11 50 ff  0e ff 0c 1a b7 47 c8 e5  |^#V7..P......G..|
+
 000002c0  d5 06 06 1a ae 13 23 20  02 10 f8 d1 21 08 00 19  |......# ....!...|
 000002d0  eb e1 20 e6 37 c9 dd e5  dd 21 02 00 dd 39 fd e5  |.. .7....!...9..|
 000002e0  e5 d5 cd 5e f1 e5 3e 02  d2 57 f1 11 1d 00 cd 8f  |...^..>..W......|
