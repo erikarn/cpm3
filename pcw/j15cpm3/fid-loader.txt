@@ -811,29 +811,191 @@ loop_0049:
 04e4: 19		ADD HL, DE
 04e4: ed b0		LDIR			; block transfer!
 04e7: 3e ff		LD A, 0xFF
-04e8: 12		LD (DE), A
-04e9: 21 c1 f4		LD HL, 0xF4C1
-04eb: 35		DEC (HL)
-04ec: c1		POP BC
-0fed: d1		POP DE
+04e9: 12		LD (DE), A
+04ea: 21 c1 f4		LD HL, 0xF4C1
+04ed: 35		DEC (HL)
+04ee: c1		POP BC
+04ef: d1		POP DE
+04f0: c9		RET
 
 000004f0  c9 3e 01 18 05 af 18 02  3e 02 d5 c5 4f 21 ef f4  |.>......>...O!..|
 
-04f0: c9		RET
-
 04f1: 3e 01		LD A, 0x01
+04f3: 18 05		JR ...
+04f5: af		XOR A, A
+04f6: 18 02		JR ...
+04f8: 3e 02		LD A, 0x02
+04fa: d5		PUSH DE
+04fb: c5		PUSH BC
+04fc: 4f		LD C, A
+04fd: 21 ef f4		LD HL, 0xF4ED
 
 00000500  06 0a cd 2a f3 38 09 2b  2b 2b 2b 2b 10 f4 18 13  |...*.8.+++++....|
+
+0500: 06 0a		LD B, 0x0A
+0502: cd 2a f3		CALL 0xF32A
+0505: 38 09		JR C, ...
+0507: 2b		DEC HL
+0508: 2b		DEC HL
+0509: 2b		DEC HL
+050a: 2b		DEC HL
+050b: 2b		DEC HL
+050c: 10 f4		DJNZ ...
+050e: 18 13		JR ...
+
 00000510  e5 23 5e 23 56 23 71 23  70 eb 09 e3 78 b1 cc 70  |.#^#V#q#p...x..p|
+
+0510: e5		PUSH HL
+0511: 23		INC HL
+0512: 5e		LD E, (HL)
+0513: 23		INC HL
+0514: 56		LD D, (HL)
+0515: 23		INC HL
+0516: 71		LD (HL), C
+0517: 23		INC HL
+0518: 70		LD (HL), B
+0519: eb		EX DE, HL
+051a: 09		ADD HL, BC
+051b: e3		EX (SP), HL
+051c: 78		LD A, B
+051d: b1		OR A, C
+051e: cc 70 f2		CALL Z, 0xF270
+
 00000520  f2 e1 37 c1 d1 c9 af 21  42 f3 cd f0 f2 d0 d5 e5  |..7....!B.......|
+
+0521: e1		POP HL
+0522: 37		SCF
+0523: c1		POP BC
+0524: d1		POP DE
+0525: c9		RET
+
+0526: af		XOR A
+0527: 21 42 f3		LD HL, 0xF342
+052a: cd f0 f2		CALL 0xF2F0
+052d: d0		RET NC
+052e: d5		PUSH DE
+052f: e5		PUSH HL
+
 00000530  af 95 5f 28 03 2e 00 24  16 00 e3 7a b3 c4 bd f1  |.._(...$...z....|
+
+0530: af		XOR A
+0531: 95		SUB A, L
+0532: 5f		LD E, A
+0533: 28 03		Z, ...
+0535: 2e 00		LD L, 0
+0537: 24		INC H
+0538: 16 00		LD D, 0x00
+053a: e3		EX (SP), HL
+053b: 7a		LD A, D
+05ec: b3		OR A, E
+05ed: c4 bd f1		CALL NZ, 0xF1B4
+
 00000540  e1 d1 e5 19 7c fe 40 e1  f5 d4 bd f1 f1 c9 af 18  |....|.@.........|
+
+0540: e1		POP HL
+0541: d1		POP DE
+0542: e5		PUSH HL
+0543: 19		ADD HL, DE
+0544: 7c		LD A, H
+0545: fe 40		CP 0x40
+0547: e1		POP HL
+0548: f5		PUSH AF
+0549: d4 bd f1		CALL NC, 0xF1BD
+054c: f1		POP AF
+054d: c9
+
+054e: af		XOR A				; blank A
+054f: 18 02		JR ...
+
 00000550  02 3e 01 21 2a f3 dd e5  d5 c5 e5 dd e1 4f 21 c2  |.>.!*........O!.|
+
+0551: 3e 01		LD X, 0x01
+0553: 21 2a f3		LD HL, 0xF32A
+0556: dd e5		PUSH IX
+0558: d5		PUSH DE
+0559: c5		PUSH BC
+055a: e5		PUSH HL
+055b: dd e1		POP IX
+055d: 4f		LD C, A
+055e: 21 c2 f4		LD HL, 0xF4C2
+
 00000560  f4 06 0a cd b1 f4 38 09  23 23 23 23 23 10 f4 18  |......8.#####...|
+
+0561: 06 0a		LD B, 0x0a
+0563: cd b1 f4		CALL 0xF4B1
+0566: 38 09		JR C, ...
+0568: 23		INC HL
+0569: 23		INC HL
+056a: 23		INC HL
+056b: 23		INC HL
+056c: 23		INC HL
+056d: 10 f4		DJNZ ...
+056f: 18 1a		JR ...
+
 00000570  1a e5 c5 23 4e 79 83 77  23 46 78 8a 77 d1 23 73  |...#Ny.w#Fx.w.#s|
+
+0571: e5		PUSH HL
+0572: c5		PUSH BC
+0573: 23		INC HL
+0574: 4e		LD C, (HL)
+0575: 79		LD A, C
+0576: 83		ADD A, E
+0577: 77		LD (HL), A
+0578: 23		INC HL
+0579: 46		LD B, (HL)
+057a: 78		LD A, B
+057b: 8a		ADC A, D
+057c: 77		LD (HL), A
+057d: d1		POP DE
+057e: 23		INC HL
+057f: 73		LD (HL), E
+
 00000580  23 72 e1 c5 7a b3 cc 70  f2 e1 37 c1 d1 dd e1 c9  |#r..z..p..7.....|
+
+0580: 23		INC HL
+0581: 72		LD (HL), D
+0582: e1		POP HL
+0583: c5		PUSH BC
+0584: 7a		LD A, D
+0585: b3		OR A, E
+0586: cc 70 f2		CALL 0xF270
+0589: e1		POP HL
+058a: 37		SCF
+058b: c1		POP BC
+058c: d1		POP DE
+058d: dd e1		POP IX
+058f: c9		RET
+
 00000590  79 ae c0 c5 e5 23 23 23  7e 93 4f 23 7e 9a 47 e1  |y....###~.O#~.G.|
+
+0590: 79		LD A, C
+0591: ae		XOR X, (HL)
+0592: c0		RET NZ
+0593: c5		PUSH BC
+0594: e5		PUSH HL
+0595: 23		INC HL
+0596: 23		INC HL
+0597: 23		INC HL
+0598: 7e		LD A, (HL)
+0599: 93		SUB A, E
+059a: 4f		LD C, A
+059b: 23		INC HL
+059c: 7e		LD A, (HL)
+059d: 9a		SBC A, D
+059e: 47		LD B, A
+059f: e1		POP HL
+
 000005a0  38 03 f1 37 c9 c1 b7 c9  79 ae c0 d5 c5 e5 23 7e  |8..7....y.....#~|
+
+05a0: 38 03		JR C, ...
+0582: f1		POP AF
+0583: 37		SCF
+0584: c9		RET
+
+0585: c1		POP BC
+0586: b7		OR A, A
+0587: c9		RET
+
 000005b0  2f 3c 83 5f 8a 93 57 23  23 7e 93 4f 23 7e 9a 47  |/<._..W##~.O#~.G|
 000005c0  e1 38 04 f1 f1 37 c9 c1  d1 b7 c9 0e ff 18 02 0e  |.8...7..........|
 000005d0  00 11 c2 f4 21 c7 f4 06  09 7e 3c 28 2a 79 fe ff  |....!....~<(*y..|
