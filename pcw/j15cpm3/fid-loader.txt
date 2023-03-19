@@ -302,14 +302,56 @@ loop_0049:
 01cb: 21 7d ef		LD HL, 0xEF7D
 01ce: be		OR A, E
 01cf: 23		INC HL
+01d0: 20 0b		JR NZ, ...
+01d2: 7e		LD A, (HL)
+01d3: dd 77 ff		LD (IX+0xFF), A
+01d6: 23		INC HL
+01d7: 7e		LD A, (HL)
+01d8: dd 77 00		LD (IX+0), A
+01db: 37		SCF
+01dc: c9
+
+01dd: 23		INC HL
+01de: 23		INC HL
+01df: 10 ed		DJNZ ...
+01e1: b7		OR A, A
+01e2: c9		RET
+
+01e3: 00 70 f0 01 d2	DEFB 0x00, 0x70, 0xf0, 0x01, 0xd2
+01e8: ef 02 f5 00 03 83 00	DEFB 0xef, 0x02, 0xf5, 0x00, 0x03, 0x83, 0x00
+
+01ef: 21 80 00		LD A, 0x0080
+01f2: cd b3 ef		CALL 0xEFB7
+01f5: 3e 11		LD A, 0x11
+01f7: 18 02		JR 0x02
+01f9: 3e 12		LD A, 0x12
+01fb: cd c5 ef		CALL 0xEFC5
+01fe: d0		RET NC
+01ff: 87		ADD A, A
+0200: 87		ADD A, A
+0201: 87		ADD A, A
+0202: 87		ADD A, A
+0203: 87		ADD A, A
+0204: c6		ADD A, 0x80
+0206: 6f		LD L, A
+0207: ce		ADC A, 0x00
+0209: 95		SUB A, L
+020a: 67		LD H, A
+020b: 37		SCF
+020c: c9		RET
+
+020d: cd b3 ef		CALL 0xEFB3
+
+0210: 3e 14
 
 
 000001d0  20 0b 7e dd 77 ff 23 7e  dd 77 00 37 c9 23 23 10  | .~.w.#~.w.7.##.|
-
 000001e0  ed b7 c9 00 70 f0 01 d2  ef 02 f5 00 03 83 00 21  |....p..........!|
 000001f0  80 00 cd b3 ef 3e 11 18  02 3e 12 cd c5 ef d0 87  |.....>...>......|
 00000200  87 87 87 87 c6 80 6f ce  00 95 67 37 c9 cd b3 ef  |......o...g7....|
+
 00000210  3e 14 cd c5 ef b7 c0 37  c9 eb 3e 1a cd c5 ef eb  |>......7..>.....|
+
 00000220  c9 3e 0f 18 06 3e 10 18  02 3e 2d e5 d5 c5 4f cd  |.>...>...>-...O.|
 00000230  05 00 fe ff c1 d1 e1 c9  d5 e5 cd 4f f0 3e 02 38  |...........O.>.8|
 00000240  2e 11 08 00 cd eb f2 3e  01 30 24 2b eb e1 d5 c5  |.......>.0$+....|
