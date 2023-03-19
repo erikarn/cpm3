@@ -969,7 +969,7 @@ loop_0049:
 00000590  79 ae c0 c5 e5 23 23 23  7e 93 4f 23 7e 9a 47 e1  |y....###~.O#~.G.|
 
 0590: 79		LD A, C
-0591: ae		XOR X, (HL)
+0591: ae		XOR A, (HL)
 0592: c0		RET NZ
 0593: c5		PUSH BC
 0594: e5		PUSH HL
@@ -987,11 +987,11 @@ loop_0049:
 
 000005a0  38 03 f1 37 c9 c1 b7 c9  79 ae c0 d5 c5 e5 23 7e  |8..7....y.....#~|
 
-05a0: 38 03		JR C, ...
+05a0: 38 03		JR C, label_0585
 0582: f1		POP AF
 0583: 37		SCF
 0584: c9		RET
-
+label_0585:
 0585: c1		POP BC
 0586: b7		OR A, A
 0587: c9		RET
