@@ -1,0 +1,1215 @@
+; This is the FID loader, which is loaded at &ED9A.
+; I'm not quite sure how/when it gets run.
+
+org 0xed9a
+
+start:
+		JP label_000c
+		JP label_000f
+		JP 0xF070
+		JP label_0238
+
+label_000c:
+		JP jump_03e6
+
+label_000f:
+		CALL 0xEDB7		; ?!
+		CALL 0xFC5A		; ?
+		DEFW 0xFDB7		; ?
+		CALL 0xFC5A		; ?
+		DEFW 0xC7F4		; .. ? Not instructions!
+		LD E, 0xFE
+		CALL call_01f9
+		LD B, 0x01
+label_0024:
+		PUSH BC
+		LD DE, data_005c
+		CALL 0xEF89
+		JR NC, label_005a
+		JR label_0034
+label_002f:
+		CALL call_01f9
+		JR NC, label_005a
+label_0034:
+		DJNZ label_002f
+		PUSH HL
+		LD HL, 0x005C
+		PUSH HL
+		LD (HL), 0x0
+		LD DE, 0x005D
+		LD BC, 0x0023
+		LDIR
+		POP DE
+		POP HL
+		LD B, 0x0B
+		PUSH DE
+label_004a:
+		INC HL
+		INC DE
+		LD A, (HL)
+		AND 0x7f
+		LD (DE), A
+		DJNZ label_004a
+		POP DE
+		CALL 0xEE05
+		POP BC
+		INC B
+		JR label_0024
+label_005a:
+		POP BC
+		RET
+
+data_005c:
+	DEFW 0x01, 0x3f, 0x3f, 0x3f
+
+		; not sure about 01;
+					; the rest is ???????? FI?
+					; so it's looking for FI?
+					; files to load.
+
+			DEFW 0x3f, 0x3f, 0x3f, 0x3f, 0x3f
+			DEFW 0x46, 0x49, 0x3f
+
+		DEFW 0x00, 0x00, 0x00
+
+		CALL 0xEFBB
+		RET NC
+		CALL 0xEEC3
+		JP NC, jmp_0225
+		LD A, (0x0067)
+		LD (0xEEBA), A
+		PUSH DE
+		LD DE, 0x0203
+		LD HL, data_0116	; local data somewhere
+		LD B, 0x0B		; 11 - 8 + 3 byte filename match
+		LD A, (DE)
+label_0085:
+		CP (HL)
+		JR NZ, label_00b3
+		INC DE
+		INC HL
+		DJNZ label_0085
+		CALL 0xEE5F
+		LD B, H
+		LD C, L
+		LD DE, 0x0100
+		LD HL, 0x0000
+label_0097:
+		LD A, (DE)
+		INC DE
+		ADD A, L
+		LD L, A
+		ADC A, H
+		SUB A, L
+		LD H, A
+		DEC BC
+		LD A, B
+		OR C
+		JR NZ, label_0097
+	LD DE, (0x0210)
+		LD C, E
+		SBC HL, BC
+		LD C, D
+		OR A
+		SBC HL, BC
+		OR A
+		SBC HL, DE
+		JR Z, label_00b7
+label_00b3:
+		POP DE
+		JP jmp_0225
+label_00b7:
+		POP HL
+		PUSH HL
+		INC HL
+		LD DE, 0x0203
+		LD BC, 0x000B
+		LDIR
+		POP DE
+		CALL 0xFC5A		; ?
+		DEFW 0xEEBB		; ?
+		LD (0x021E), HL
+		CALL jmp_0225
+		RET NC
+		LD HL, (0x0101)
+	LD DE, (0x0104)
+		ADD HL, DE
+		EX DE, HL
+		CALL 0xF2C0
+		RET NC
+		PUSH DE
+		PUSH HL
+		CALL 0xEF21
+		POP HL
+		JR NC, label_010c
+		LD BC, 0x0001
+		PUSH HL
+		CALL 0xFC57
+		POP HL
+	LD BC, (0x0101)
+		LD DE, 0x0200
+		PUSH HL
+		CALL 0xFC4B
+		POP HL
+		PUSH HL
+		LD (0xEE9C), HL
+		LD C, 0x03
+		LD DE, 0x0000		; inline modification?
+		CALL 0xFC5A
+		DEFW 0x0000		; inline modification?
+		PUSH AF
+		CALL 0xEF0F
+		POP AF
+		POP HL
+label_010c:
+		POP DE
+		JP NC, 0xF1BD
+
+		CALL 0xFC5A
+		DEFW 0xEEBF
+		RET
+
+data_0116:
+	DEFB 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a
+			DEFB 0x46, 0x49, 0x44		; 'FID'
+
+		LD HL, (0x5904)
+		RET
+
+		LD (0x5904), HL
+		RET
+
+		LD HL, 0x0100
+		CALL 0xEFA7
+		RET NC
+		CALL 0xEEF5
+		XOR 0x7D		; or arg to call?
+		ADD HL, HL
+		LD L, H
+		LD H, 0x00
+		AND 0x7F
+		JR Z, label_013c
+		INC HL
+label_013c:
+		DEC HL
+		LD B, H
+		LD C, L
+		LD HL, 0xFF80
+		ADD HL, BC
+		CCF
+		RET NC
+		LD HL, 0x0180
+		CALL 0xEFA7
+		RET NC
+		LD A, L
+		ADD A, 0x80
+
+		LD L, A
+		ADC A, H
+		SUB A, L
+		LD H, A
+		DEC BC
+		LD C, (HL)
+		OR C
+		ADD A, B
+		RET P
+		SCF
+		RET
+
+		PUSH DE
+		PUSH BC
+		LD HL, (0x0101)
+		LD D, H
+		LD E, L
+		LD B, 0x03
+label_0164:
+		SRL H
+		RR L
+		DJNZ label_0164
+		LD A, E
+		AND 0x07
+		JR Z, label_0170
+		INC HL
+
+label_0170:
+		ADD HL, DE
+		INC H
+		POP BC
+		POP DE
+		RET
+
+label_0175:
+		CALL 0xFC5A
+		DEFW 0xEF1F
+		INC HL
+		LD C, A
+		INC A
+		RET Z
+		PUSH HL
+		CALL 0xFC0C
+		POP HL
+		JR label_0175
+
+		LD A, (HL)
+		RET
+
+		DEC H
+	LD DE, (0x0101)
+	LD IX, 0x0200		; First time I've seen
+	LD IY, 0x0200		; IX/IY used in these code files!
+		ADD IY, DE
+		LD B, 0x08
+		LD C, (IY+0)
+label_019b:
+		SLA C
+		JR NC, label_01b4
+		LD A, (IX+0)
+		CP 0xFF
+		JR Z, label_01ac
+		ADD A, H
+		LD (IX+0), A
+		JR label_01b4
+label_01ac:
+		PUSH HL
+		PUSH BC
+		CALL 0xEF60
+		POP BC
+		POP HL
+		RET NC
+label_01b4:
+		DJNZ label_01bd
+		LD B, 0x08
+		INC IY
+		LD C, (IY+0)
+label_01bd:
+		INC IX
+		DEC DE
+		LD A, D
+		OR E
+		JR NZ, label_019b
+		SCF
+		RET
+
+		LD A, (IX+0xFF)
+		LD B, 0x04
+		LD HL, 0xEF7D
+label_01ce:
+		OR E
+		INC HL
+		JR NZ, label_01dd
+		LD A, (HL)
+		LD (IX+0xFF), A
+		INC HL
+		LD A, (HL)
+		LD (IX+0), A
+		SCF
+
+label_01dd:
+		INC HL
+		INC HL
+		DJNZ label_01ce
+		OR A
+		RET
+
+	DEFB 0x00, 0x70, 0xf0, 0x01, 0xd2
+	DEFB 0xef, 0x02, 0xf5, 0x00, 0x03, 0x83, 0x00
+
+		LD HL, 0x0080
+		CALL 0xEFB3
+		LD A, 0x11
+		JR label_01fb
+
+call_01f9:
+		LD A, 0x12
+label_01fb:
+		CALL 0xEFC5
+		RET NC
+		ADD A, A
+		ADD A, A
+		ADD A, A
+		ADD A, A
+		ADD A, A
+		ADD A, 0x80
+		LD L, A
+		ADC A, 0x00
+		SUB A, L
+		LD H, A
+		SCF
+		RET
+
+		CALL 0xEFB3
+
+		LD A, 0x14
+		CALL 0xEFC5
+		OR A
+		RET NZ
+		SCF
+		RET
+
+		EX DE, HL
+		LD A, 0x1A
+		CALL 0xEFC5
+		EX DE, HL
+		RET
+
+		LD A, 0x0F
+		JR label_022b
+jmp_0225:
+		LD A, 0x10
+		JR label_022b
+		LD A, 0x2D
+label_022b:
+		PUSH HL
+		PUSH DE
+		PUSH BC
+		LD C, A
+		CALL 0x0005		; BDOS entry point
+		CP 0xFF
+		POP BC
+		POP DE
+		POP HL
+		RET
+
+label_0238:
+		PUSH DE
+		PUSH BC
+		CALL 0xF04F
+		LD A, 0x02
+		JR label_026f
+		LD DE, 0x0008
+		CALL 0xF2EB
+		LD A, 0x01
+		LD BC, 0x2430
+		DEC HL
+		EX DE, HL
+		POP HL
+		PUSH DE
+		PUSH BC
+		LD BC, 0x0008
+		LDIR			; copy block!
+		XOR A
+		LD (DE), A
+		POP BC
+		POP HL
+		EX (SP), HL
+		EX DE, HL
+		LD HL, 0x58E0
+		ADD HL, BC
+		ADD HL, BC
+		LD (HL), E
+		INC HL
+		LD (HL), D
+		EX DE, HL
+		POP DE
+		LD B, C
+		PUSH BC
+		PUSH DE
+		CALL 0xF4B3
+		POP DE
+		POP BC
+		SCF
+		RET
+label_026f:
+		POP HL
+		POP DE
+		OR A
+		RET
+
+		LD HL, 0xF021
+		JR label_0238
+		LD HL, 0xF029
+		JR label_0238
+		LD HL, 0xF031
+		JR label_0238
+		LD HL, 0xF039
+		JR label_0238
+
+
+			DEFB 0x43, 0x52, 0x54, 0x20, 0x20, 0x20, 0x03, 0x00
+			; 'CRT   ', 0x3, 0x0
+
+			DEFB 0x4c, 0x50, 0x54, 0x20, 0x20, 0x20, 0x02, 0x00
+			; 'LPT   ', 0x2, 0x0
+
+			DEFB 0x53, 0x49, 0x4f, 0x20, 0x20, 0x20, 0x0f, 0x0e
+			; 'SIO   ', 0xf, 0xe
+
+			DEFB 0x43, 0x45, 0x4e, 0x20, 0x20, 0x20, 0x02, 0x00
+			; 'CEN   ', 0x2, 0x0
+
+		CALL 0xF04F
+		RET NC
+		LD HL, 0x58E0
+		ADD HL, BC
+		ADD HL, BC
+		LD E, (HL)
+		INC HL
+		LD D, (HL)
+		SCF
+		RET
+
+		LD DE, 0xFF50
+		LD C, 0xFF		; Loop really starts at 0
+label_02ba:
+		INC C			; cause inc happens first in loop
+		LD A, (DE)
+		OR A
+		LD B, A
+		RET Z
+		PUSH HL
+		PUSH DE
+		LD B, 0x06
+label_02c3:
+		LD A, (DE)
+		XOR (HL)
+		INC DE
+		INC HL
+		JR NZ, label_02cb
+		DJNZ label_02c3
+label_02cb:
+		POP DE
+		LD HL, 0x0008
+		ADD HL, DE
+		EX DE, HL
+		POP HL
+		JR NZ, label_02ba
+		CCF
+		RET
+
+		PUSH IX
+	LD IX, 0x0002
+		ADD IX, SP		; IX = IX + SP
+		PUSH IY
+		PUSH HL
+		PUSH DE
+		CALL 0xF15E
+		PUSH HL
+		LD A, 0x02
+		JP NC, 0xF157
+		LD DE, 0x001D
+		CALL 0xF28F
+		JP NC, 0xF155
+		PUSH HL
+		POP IY
+		LD D, H
+		LD E, L
+		INC DE
+		LD (HL), 0x00
+		PUSH BC
+		LD BC, 0x001C
+		LDIR			; block copy!
+		POP BC
+		LD (IY+0x02), B		; Double check this block!
+		LD (IX+0xF8), E
+		LD D, (IX+0xF9)
+		LD (IY+0x00), E
+		LD (IY+0x01), D
+		LD DE, 0x0011
+		CALL 0xF28B
+		JP NC, 0xF14C
+		LD (IY+0x10), L
+		LD (IY+0x11), H
+		LD E, (IX+0xFA)
+		LD D, (IX+0xFB)
+		CALL 0xF28F
+		JP NC, 0xF140
+		LD (IY+0x14), L
+		LD (IY+0x15), H
+		LD E, (IX+0xFE)
+		LD D, (IX+0xFF)
+		LD A, D
+		OR E
+		JR Z, label_0348
+		CALL 0xF28F
+		JR NC, label_0397
+		LD (IY+0x12), L
+		LD (IY+0x13), H
+label_0348:
+		LD E, (IX+0xFC)
+		LD D, (IX+0xFD)
+		LD A, D
+		OR E
+		JR Z, label_0364
+	LD (IY+0x1C), 0x02
+		CALL 0xF292
+		JR C, label_0367
+	LD (IY+0x1C), 0x00
+		CALL 0xF28F
+		JR C, label_0367
+label_0364:
+		LD HL, 0xFFFF
+label_0367:
+		LD (IY+0x1A), L
+		LD (IY+0x1B), H
+		PUSH IY
+		POP HL
+		LD DE, 0x0004
+		ADD HL, DE
+		EX DE, HL
+		LD L, (IX+0xF6)
+		LD H, (IX+0xF7)
+		LD (HL), E
+		INC HL
+		LD (HL), D
+	LD (IY+0x16), 0x00
+	LD (IY+0x17), 0x59
+	LD (IY+0x18), 0x02
+	LD (IY+0x19), 0x59
+		LD L, (IY+0x10)
+		LD H, (IY+0x11)
+		SCF
+		JR label_03be
+label_0397:
+		LD E, (IX+0xFA)
+		LD D, (IX+0xFB)
+		LD L, (IY+0x14)
+		LD H, (IY+0x15)
+		CALL 0xF1BD
+		LD DE, 0x0011
+		LD L, (IY+0x10)
+		LD H, (IY+0x00)
+		CALL 0xF1C0
+		LD DE, 0x001D
+		PUSH IY
+		POP HL
+		CALL 0xF1BD
+		LD A, 0x01
+		OR A
+label_03be:
+		LD SP, IX		; whoa why?
+		PUSH HL
+		POP IX
+		RET
+
+		CALL 0xFC42
+		LD A, B
+		CP 0xFF
+		JR NZ, label_03d9
+label_03cc:
+		INC B
+		LD A, (HL)
+		INC HL
+		OR (HL)
+		JR Z, label_03e3
+		INC HL
+		LD A, B
+		CP 0x0F
+		JR NZ, label_03cc
+		RET
+
+label_03d9:
+		ADD A, A		; .. what is this?
+		ADD A, L		; is this just binary data?
+		LD L, A			;
+		ADC A, H		; cause this looks kinda sus
+		SUB A, L		; to me.
+		LD H, A			;
+		LD A, (HL)		;
+
+		INC HL			; This starts to look better
+		OR (HL)
+		RET NZ
+label_03e3:
+		DEC HL
+		SCF
+		RET
+
+jump_03e6:
+		LD HL, 0xF4C2
+		LD DE, 0x0005
+		LD B, 0x0A
+label_03ee:
+		LD (HL), 0xFF
+		ADD HL, DE
+		DJNZ label_03ee
+		XOR A		; blank A
+		LD (0xF4C1), A
+		LD DE, 0x008F
+		LD HL, 0xFF51
+		CALL 0xF1C0
+
+		LD DE, 0x0004
+		LD HL, 0x7C00
+		LD A, 0x02
+		CALL 0xF1C2
+		LD DE, 0x0200
+		LD HL, 0x8A00
+		CALL 0xF1BD
+		LD DE, 0x00A0
+		LD HL, 0xBF50
+		CALL 0xF1BD
+		LD DE, 0x2B30
+		LD HL, 0x1132
+		XOR A		; blank A
+		JR label_0428
+		LD A, 0x01
+label_0428:
+		PUSH HL
+		PUSH DE
+		PUSH BC
+		CALL 0xF1CC
+		POP BC
+		POP DE
+		POP HL
+		RET
+
+		LD C, A
+		LD A, D
+		OR E
+		RET Z
+		LD A, (0xF4C1)
+		CP 0x0A
+		RET Z
+		PUSH DE
+		EX DE, HL
+		LD HL, 0xF4C2
+		LD B, 0x09
+label_0443:
+		LD A, C
+		ADC A, (HL)
+		JR C, label_045e
+		JR NZ, label_0455
+		PUSH HL
+		INC HL
+		LD A, (HL)
+		INC HL
+		LD H, (HL)
+		LD L, A
+		OR A
+		SBC HL, DE
+		POP HL
+		JR NC, label_045e
+label_0455:
+		INC HL
+		INC HL
+		INC HL
+		INC HL
+		INC HL
+		DJNZ label_0443
+		JR label_0473
+label_045e:
+		PUSH HL
+		PUSH DE
+		PUSH BC
+		LD A, B
+		ADD A, A
+		ADD A, A
+		ADD A, B
+		LD C, A
+		LD B, 0x0
+		LD HL, 0xF4EE
+		LD DE, 0xF4F3
+		LDDR			; copy, backwards!
+		POP BC
+		POP DE
+		POP HL
+label_0473:
+		LD (HL), C
+		INC HL
+		LD (HL), E
+		INC HL
+		LD (HL), D
+		INC HL
+		POP DE
+		LD (HL), E
+		INC HL
+		LD (HL), D
+		LD HL, 0xF4C1
+		INC (HL)
+		PUSH IX
+		PUSH IY
+	LD IX, 0xF4C2
+	LD IY, 0xF4C7
+		LD B, 0x09
+label_048f:
+		LD A, (IX+0x0)
+		CP (IY+0x0)
+		JR NZ, label_04c8
+		INC A
+		JR Z, label_04d1
+		LD E, (IX+0x03)
+		LD D, (IX+0x04)
+		LD L, (IX+0x01)
+		LD H, (IX+0x02)
+		ADD HL, DE
+		LD A, L
+		CP (IY+0x01)
+		JR NZ, label_04c8
+		LD A, H
+		CP (IY+0x02)
+		JR NZ, label_04c8
+		LD L, (IY+0x03)
+		LD H, (IY+0x04)
+		ADD HL, DE
+		LD (IX+0x03), L
+		LD (IX+0x04), H
+		PUSH IY
+		POP HL
+		CALL 0xF270
+		JR label_04cf
+label_04c8:
+		LD DE, 0x0005
+		ADD IX, DE		; IX = IX + DE
+		ADD IY, DE		; IY = IY + DE
+label_04cf:
+		DJNZ label_048f
+label_04d1:
+		POP IY
+		POP IX
+		RET
+
+		PUSH DE
+		PUSH BC
+		EX DE, HL
+		LD HL, 0xF4F4
+		OR A
+		SBC HL, DE
+		LD B, H
+		LD C, L
+		LD HL, 0x0005
+		ADD HL, DE
+		LDIR			; block transfer!
+		LD A, 0xFF
+		LD (DE), A
+		LD HL, 0xF4C1
+		DEC (HL)
+		POP BC
+		POP DE
+		RET
+
+		LD A, 0x01
+		JR label_04fa
+		XOR A
+		JR label_04fa
+		LD A, 0x02
+label_04fa:
+		PUSH DE
+		PUSH BC
+		LD C, A
+		LD HL, 0xF4ED
+		LD B, 0x0A
+label_0502:
+		CALL 0xF32A
+		JR C, label_0510
+		DEC HL
+		DEC HL
+		DEC HL
+		DEC HL
+		DEC HL
+		DJNZ label_0502
+		JR label_0523
+label_0510:
+		PUSH HL
+		INC HL
+		LD E, (HL)
+		INC HL
+		LD D, (HL)
+		INC HL
+		LD (HL), C
+		INC HL
+		LD (HL), B
+		EX DE, HL
+		ADD HL, BC
+		EX (SP), HL
+		LD A, B
+		OR C
+		CALL Z, 0xF270
+		POP HL
+		SCF
+label_0523:
+		POP BC
+		POP DE
+		RET
+
+		XOR A
+		LD HL, 0xF342
+		CALL 0xF2F0
+		RET NC
+		PUSH DE
+		PUSH HL
+		XOR A
+		SUB A, L
+		LD E, A
+		JR Z, label_0538
+		LD L, 0
+		INC H
+label_0538:
+		LD D, 0x00
+		EX (SP), HL
+		LD A, D
+		OR E
+		CALL NZ, 0xF1B4
+		POP HL
+		POP DE
+		PUSH HL
+		ADD HL, DE
+		LD A, H
+		CP 0x40
+		POP HL
+		PUSH AF
+		CALL NC, 0xF1BD
+		POP AF
+
+
+		XOR A				; blank A
+		JR label_0553
+		LD A, 0x01
+label_0553:
+		LD HL, 0xF32A
+		PUSH IX
+		PUSH DE
+		PUSH BC
+		PUSH HL
+		POP IX
+		LD C, A
+		LD HL, 0xF4C2
+		LD B, 0x0a
+label_0563:
+		CALL 0xF4B1
+		JR C, label_0571
+		INC HL
+		INC HL
+		INC HL
+		INC HL
+		INC HL
+		DJNZ label_0563
+		JR label_058b
+label_0571:
+		PUSH HL
+		PUSH BC
+		INC HL
+		LD C, (HL)
+		LD A, C
+		ADD A, E
+		LD (HL), A
+		INC HL
+		LD B, (HL)
+		LD A, B
+		ADC A, D
+		LD (HL), A
+		POP DE
+		INC HL
+		LD (HL), E
+		INC HL
+		LD (HL), D
+		POP HL
+		PUSH BC
+		LD A, D
+		OR E
+		CALL 0xF270
+		POP HL
+		SCF
+label_058b:
+		POP BC
+		POP DE
+		POP IX
+		RET
+
+		LD A, C
+		XOR (HL)
+		RET NZ
+		PUSH BC
+		PUSH HL
+		INC HL
+		INC HL
+		INC HL
+		LD A, (HL)
+		SUB A, E
+		LD C, A
+		INC HL
+		LD A, (HL)
+		SBC A, D
+		LD B, A
+		POP HL
+
+		JR C, label_05a5
+		POP AF
+		SCF
+		RET
+label_05a5:
+		POP BC
+		OR A
+		RET
+
+		LD A, C
+		XOR (HL)
+		RET NZ
+		PUSH DE
+		PUSH BC
+		PUSH HL
+		INC HL
+		LD A, (HL)
+		CPL
+		INC A
+		ADD A, E
+		LD E, A
+		ADC A, D
+		SUB A, E
+		LD D, A
+		INC HL
+		INC HL
+		LD A, (HL)
+		SUB A, E
+		LD C, A
+		INC HL
+		LD A, (HL)
+		SBC A, D
+		LD B, A
+		POP HL
+		JR C, label_05c7
+		POP AF
+		POP AF
+		SCF
+		RET
+label_05c7:
+		POP BC
+		POP DE
+		OR A
+		RET
+
+		LD C, 0xFF
+		JR label_05d1
+		LD C, 0x00
+label_05d1:
+		LD DE, 0xF4C2
+		LD HL, 0xF4C7
+		LD B, 0x09
+label_05d9:
+		LD A, (HL)
+		INC A
+		JR Z, label_0607
+		LD A, C
+		CP 0xFF
+		JR Z, label_05e5
+		CP (HL)
+		JR NZ, label_0600
+label_05e5:
+		PUSH HL
+		PUSH DE
+		INC HL
+		INC HL
+		INC HL
+		LD A, (HL)
+		INC HL
+		LD H, (HL)
+		LD L, A
+		EX DE, HL
+		INC HL
+		INC HL
+		INC HL
+		LD A, (HL)
+		INC HL
+		LD H, (HL)
+		LD L, A
+		EX DE, HL
+		OR A
+		SBC HL, DE
+		POP DE
+		POP HL
+		JR C, label_0600
+		LD D, H
+		LD E, L
+label_0600:
+		INC HL
+		INC HL
+		INC HL
+		INC HL
+		INC HL
+		DJNZ label_05d9
+label_0607:
+		EX DE, HL
+		PUSH HL
+		LD B, (HL)
+		INC HL
+		LD E, (HL)
+		INC HL
+		LD D, (HL)
+		INC HL
+		LD A, (HL)
+		INC HL
+		LD H, (HL)
+		LD L, A
+		EX (SP), HL
+		CALL 0xF270
+		EX DE, HL
+		POP DE
+		LD A, B
+		CP 0xFF
+		RET
+
+label_061d:
+		LD DE, 0x0200
+		CALL 0xF292
+		JR NC, label_0631
+		LD B, 0x02
+		LD DE, 0x5902
+		CALL 0xF435
+		JR NC, label_0643
+		JR label_061d
+label_0631:
+		LD DE, 0x0200
+		CALL 0xF28F
+		JR NC, label_0643
+		LD B, 0x00
+		LD DE, 0x5900
+		CALL 0xF435
+		JR C, label_0631
+label_0643:
+		LD HL, (0x5902)
+		CALL 0xF425
+		LD C, B
+		LD HL, (0x5900)
+		CALL 0xF425
+		LD A, B
+		ADD A, C
+		RRA
+		OR A
+		RRA
+		CP 0x15
+		JR C, label_065b
+		LD A, 0x14
+label_065b:
+		OR A
+		JR NZ, label_065f
+		INC A
+label_065f:
+		CP B
+		CCF
+		RET C
+		LD B, A
+		LD HL, (0x5900)
+		LD DE, 0x000D
+label_0669:
+		ADD HL, DE
+		LD A, (HL)
+		INC HL
+		LD H, (HL)
+		LD L, A
+		DJNZ label_0669
+		XOR A
+		ADD HL, DE
+		LD C, (HL)
+		LD (HL), A
+		INC HL
+		LD B, (HL)
+		LD (HL), A
+		LD HL, (0x5902)
+label_067a:
+		ADD HL, DE
+		LD A, (HL)
+		INC HL
+		OR (HL)
+		JR Z, label_0686
+		LD A, (HL)
+		DEC HL
+		LD L, (HL)
+		LD H, A
+		JR label_067a
+label_0686:
+		LD (HL), B
+		DEC HL
+		LD (HL), C
+		SCF
+		RET
+
+		LD B, 0x00
+label_068d:
+		LD A, H
+		OR L
+		RET Z
+
+		INC B
+		LD DE, 0x000D
+		ADD HL, DE
+		LD A, (HL)
+		INC HL
+		LD H, (HL)
+		LD L, A
+		JR label_068d
+		PUSH IX
+		PUSH HL
+		PUSH DE
+		LD DE, 0x000F
+		CALL 0xF2E8
+		CALL NC, 0xF2EB
+		PUSH HL			; HL->IX
+		POP IX			; Note, different order
+		POP DE			; to what was PUSHed
+		POP HL			; above?
+		JR NC, label_06cd
+	LD (IX+0x00), 0xFF
+		LD (IX+0x0A), L
+		LD (IX+0x0B), H
+		LD (IX+0x0C), B
+		EX DE, HL
+		LD A, (HL)
+		LD (IX+0x0D), A
+		INC HL
+		LD A, (HL)
+		LD (IX+0x0E), A
+		PUSH IX			; IX -> DE
+		POP DE
+		LD (HL), D
+		DEC HL
+		LD (HL), E
+		SCF
+label_06cd:
+		POP IX
+		RET
+
+		LD HL, (0x5900)
+		CALL 0xF495
+		LD HL, (0x5902)
+		CALL 0xF495
+		LD B, 0x03
+		LD HL, 0xFFE8
+label_06e1:
+		PUSH BC
+		PUSH HL
+		CALL 0xF365
+		LD B, H
+		LD C, L
+		POP HL
+		JR NC, label_06f5
+		LD (HL), A
+		INC HL
+		LD (HL), C
+		INC HL
+		LD (HL), B
+		INC HL
+		LD (HL), E
+		INC HL
+		LD (HL), D
+		INC HL
+label_06f5:
+		POP BC
+		DJNZ label_06e1
+		LD (HL), 0xff
+		RET
+
+label_06fb:
+		LD A, H
+		OR L
+		RET Z
+		LD DE, 0x000A
+		ADD HL, DE
+		LD E, (HL)
+		INC HL
+		LD D, (HL)
+		INC HL
+		LD A, (HL)
+		INC HL
+		PUSH HL
+		EX DE, HL
+		LD DE, 0x0200
+		CALL 0xF1C2
+		POP HL
+		LD A, (HL)
+		INC HL
+		LD H, (HL)
+		LD L, A
+		JR label_06fb
+		JP (IX)
+		JP (HL)
+		DEFB 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+		DEFB 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff

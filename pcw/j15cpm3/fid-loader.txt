@@ -103,15 +103,15 @@ label_0097:
 009d: 67		LD H, A
 009e: 0b		DEC BC
 009f: 78		LD A, B
-00a0: b1		OR A, C
+00a0: b1		OR C
 00a1: 20 f4		JR NZ, label_0097
 00a3: ed 5b 10 02	LD DE, (0x0210)
 00a7: 4b		LD C, E
 00a8: ed 42		SBC HL, BC
 00aa: 4a		LD C, D
-00ab: b7		OR A, A
+00ab: b7		OR A
 00ac: ed 42		SBC HL, BC
-00ae: b7		OR A, A
+00ae: b7		OR A
 00af: ed 52		SBC HL, DE
 00b1: 28 04		JR Z, label_00b7
 label_00b7:
@@ -209,7 +209,7 @@ label_013c:
 0153: 67		LD H, A
 0154: 0b		DEC BC
 0155: 78		LD C, (HL)
-0156: b1		OR A, C
+0156: b1		OR C
 0157: 80		ADD A, B
 0158: f0		RET P
 0159: 37		SCF
@@ -284,7 +284,7 @@ label_01bd:
 01bd: dd 23		INC IX
 01bf: 1b		DEC DE
 01c0: 7a		LD A, D
-01c1: b3		OR A, E
+01c1: b3		OR E
 01c2: 20 d7		JR NZ, label_019b
 01c4: 37		SCF
 01c5: c9		RET
@@ -293,9 +293,9 @@ label_01bd:
 01c9: 06 04		LD B, 0x04
 01cb: 21 7d ef		LD HL, 0xEF7D
 label_01ce:
-01ce: be		OR A, E
+01ce: be		OR E
 01cf: 23		INC HL
-01d0: 20 0b		JR NZ, ...
+01d0: 20 0b		JR NZ, label_01dd
 01d2: 7e		LD A, (HL)
 01d3: dd 77 ff		LD (IX+0xFF), A
 01d6: 23		INC HL
@@ -304,10 +304,11 @@ label_01ce:
 01db: 37		SCF
 01dc: c9
 
+label_01dd:
 01dd: 23		INC HL
 01de: 23		INC HL
 01df: 10 ed		DJNZ label_01ce
-01e1: b7		OR A, A
+01e1: b7		OR A
 01e2: c9		RET
 
 01e3: 00 70 f0 01 d2	DEFB 0x00, 0x70, 0xf0, 0x01, 0xd2
@@ -374,7 +375,7 @@ label_0238:
 0239: c5		PUSH BC
 023a: cd 4f f0		CALL 0xF04F
 023d: 3e 02		LD A, 0x02
-023f: 38 2e		JR ...
+023f: 38 2e		JR label_026f
 0241: 11 08 00		LD DE, 0x0008
 0244: cd eb f2		CALL 0xF2EB
 0247: 3e 01		LD A, 0x01
@@ -386,7 +387,7 @@ label_0238:
 024f: c5		PUSH BC
 0250: 01 08 00		LD BC, 0x0008
 0253: ed b0		LDIR			; copy block!
-0255: af		XOR A, A
+0255: af		XOR A
 0256: 12		LD (DE), A
 0257: c1		POP BC
 0258: e1		POP HL
@@ -408,10 +409,10 @@ label_0238:
 026c: c1		POP BC
 026d: 37		SCF
 026e: c9		RET
-
+label_026f:
 026f: e1		POP HL
 0270: d1		POP DE
-0271: b7		OR A, A
+0271: b7		OR A
 0272: c9		RET
 
 0273: 21 21 f0		LD HL, 0xF021
@@ -452,7 +453,7 @@ label_0238:
 label_02ba:
 02ba: 0c		INC C			; cause inc happens first in loop
 02bb: 1a		LD A, (DE)
-02bc: b7		OR A, A
+02bc: b7		OR A
 02bd: 47		LD B, A
 02be: c8		RET Z
 02bf: e5		PUSH HL
@@ -460,7 +461,7 @@ label_02ba:
 02c1: 06 06		LD B, 0x06
 label_02c3:
 02c3: 1a		LD A, (DE)
-02c4: ae		XOR A, (HL)
+02c4: ae		XOR (HL)
 02c5: 13		INC DE
 02c6: 23		INC HL
 02c7: 20 02		JR NZ, label_02cb
@@ -517,7 +518,7 @@ label_02cb:
 0333: dd 5e fe		LD E, (IX+0xFE)
 0336: dd 56 ff		LD D, (IX+0xFF)
 0339: 7a		LD A, D
-033a: b3		OR A, E
+033a: b3		OR E
 033b: 28 0b		JR Z, label_0348
 033d: cd 8f f2		CALL 0xF28F
 0340: 30 55		JR NC, label_0397
@@ -527,7 +528,7 @@ label_0348:
 0348: dd 5e fc		LD E, (IX+0xFC)
 034b: dd 56 fd		LD D, (IX+0xFD)
 034e: 7a		LD A, D
-034f: b3		OR A, E
+034f: b3		OR E
 0350: 28 12		JR Z, label_0364
 0352: fd 36 1c 02	LD (IY+0x1C), 0x02
 0356: cd 92 f2		CALL 0xF292
@@ -573,7 +574,7 @@ label_0397:
 03b7: e1		POP HL
 03b8: cd bd f1		CALL 0xF1BD
 03bb: 3e 01		LD A, 0x01
-03bd: b7		OR A, A
+03bd: b7		OR A
 label_03be:
 03be: dd f9		LD SP, IX		; whoa why?
 03c0: e5		PUSH HL
@@ -588,7 +589,7 @@ label_03cc:
 03cc: 04		INC B
 03cd: 7e		LD A, (HL)
 03ce: 23		INC HL
-03cf: b6		OR A, (HL)
+03cf: b6		OR (HL)
 03d0: 28 11		JR Z, label_03e3
 03d2: 23		INC HL
 03d3: 78		LD A, B
@@ -606,7 +607,7 @@ label_03d9:
 03df: 7e		LD A, (HL)		;
 
 03e0: 23		INC HL			; This starts to look better
-03e1: b6		OR A, (HL)
+03e1: b6		OR (HL)
 03e2: c0		RET NZ
 label_03e3:
 03e3: 2b		DEC HL
@@ -621,7 +622,7 @@ label_03ee:
 03ee: 36 ff		LD (HL), 0xFF
 03f0: 19		ADD HL, DE
 03f1: 10 fb		DJNZ label_03ee
-03f3: af		XOR A, A		; blank A
+03f3: af		XOR A		; blank A
 03f4: 32 c1 f4		LD (0xF4C1), A
 03f7: 11 8f 00		LD DE, 0x008F
 03fa: 21 51 ff		LD HL, 0xFF51
@@ -639,7 +640,7 @@ label_03ee:
 041a: cd bd f1		CALL 0xF1BD
 041d: 11 30 2b		LD DE, 0x2B30
 0420: 21 32 11		LD HL, 0x1132
-0423: af		XOR A, A		; blank A
+0423: af		XOR A		; blank A
 0424: 18 02		JR label_0428
 0426: 3e 01		LD A, 0x01
 label_0428:
@@ -654,7 +655,7 @@ label_0428:
 
 0432: 4f		LD C, A
 0433: 7a		LD A, D
-0434: b3		OR A, E
+0434: b3		OR E
 0435: c8		RET Z
 0436: 3a c1 f4		LD A, (0xF4C1)
 0439: fe 0a		CP 0x0A
@@ -663,7 +664,7 @@ label_0428:
 043d: eb		EX DE, HL
 043e: 21 c2 f4		LD HL, 0xF4C2
 0441: 06 09		LD B, 0x09
-label_0043:
+label_0443:
 0443: 79		LD A, C
 0444: be		ADC A, (HL)
 0445: 38 17		JR C, label_045e
@@ -674,7 +675,7 @@ label_0043:
 044c: 23		INC HL
 044d: 66		LD H, (HL)
 044e: 6f		LD L, A
-044f: b7		OR A, A
+044f: b7		OR A
 0450: ed 52		SBC HL, DE
 0452: e1		POP HL
 0453: 30 09		JR NC, label_045e
@@ -761,7 +762,7 @@ label_04d1:
 04d7: c5		PUSH BC
 04d8: eb		EX DE, HL
 04d9: 21 f4 f4		LD HL, 0xF4F4
-04dc: b7		OR A, A
+04dc: b7		OR A
 04dd: ed 52		SBC HL, DE
 04df: 44		LD B, H
 04e0: 4d		LD C, L
@@ -778,7 +779,7 @@ label_04d1:
 
 04f1: 3e 01		LD A, 0x01
 04f3: 18 05		JR label_04fa
-04f5: af		XOR A, A
+04f5: af		XOR A
 04f6: 18 02		JR label_04fa
 04f8: 3e 02		LD A, 0x02
 label_04fa:
@@ -811,7 +812,7 @@ label_0510:
 051a: 09		ADD HL, BC
 051b: e3		EX (SP), HL
 051c: 78		LD A, B
-051d: b1		OR A, C
+051d: b1		OR C
 051e: cc 70 f2		CALL Z, 0xF270
 0521: e1		POP HL
 0522: 37		SCF
@@ -836,7 +837,7 @@ label_0538:
 0538: 16 00		LD D, 0x00
 053a: e3		EX (SP), HL
 053b: 7a		LD A, D
-05ec: b3		OR A, E
+05ec: b3		OR E
 05ed: c4 bd f1		CALL NZ, 0xF1B4
 0540: e1		POP HL
 0541: d1		POP DE
@@ -894,7 +895,7 @@ label_0571:
 0582: e1		POP HL
 0583: c5		PUSH BC
 0584: 7a		LD A, D
-0585: b3		OR A, E
+0585: b3		OR E
 0586: cc 70 f2		CALL 0xF270
 0589: e1		POP HL
 058a: 37		SCF
@@ -905,7 +906,7 @@ label_058b:
 058f: c9		RET
 
 0590: 79		LD A, C
-0591: ae		XOR A, (HL)
+0591: ae		XOR (HL)
 0592: c0		RET NZ
 0593: c5		PUSH BC
 0594: e5		PUSH HL
@@ -927,11 +928,11 @@ label_058b:
 05a4: c9		RET
 label_05a5:
 05a5: c1		POP BC
-05a6: b7		OR A, A
+05a6: b7		OR A
 05a7: c9		RET
 
 05a8: 79		LD A, C
-05a9: ae		XOR A, (HL)
+05a9: ae		XOR (HL)
 05aa: c0		RET NZ
 05ab: d5		PUSH DE
 05ac: c5		PUSH BC
@@ -963,7 +964,7 @@ label_05a5:
 label_05c7:
 05c7: c1		POP BC
 05c8: d1		POP DE
-05c9: b7		OR A, A
+05c9: b7		OR A
 05ca: c9		RET
 
 05cb: 0e ff		LD C, 0xFF
@@ -1001,7 +1002,7 @@ label_05e5:
 05f4: 66		LD H, (HL)
 05f5: 6f		LD L, A
 05f6: eb		EX DE, HL
-05f7: b7		OR A, A
+05f7: b7		OR A
 05f8: ed 52		SBC HL, DE
 05fa: d1		POP DE
 05fb: e1		POP HL
@@ -1062,13 +1063,13 @@ label_0643:
 0650: 78		LD A, B
 0651: 81		ADD A, C
 0652: 1f		RRA
-0653: b7		OR A, A
+0653: b7		OR A
 0654: 1f		RRA
 0655: fe 15		CP 0x15
 0657: 38 02		JR C, label_065b
 0659: 3e 14		LD A, 0x14
 label_065b:
-065b: b7		OR A, A
+065b: b7		OR A
 065c: 20 01		JR NZ, label_065f
 065e: 3c		INC A
 label_065f:
@@ -1097,7 +1098,7 @@ label_067a:
 067a: 19		ADD HL, DE
 067b: 7e		LD A, (HL)
 067c: 23		INC HL
-067d: b6		OR A, (HL)
+067d: b6		OR (HL)
 067e: 28 06		JR Z, label_0686
 0680: 7e		LD A, (HL)
 0681: 2b		DEC HL
@@ -1114,7 +1115,7 @@ label_0686:
 068b: 06 00		LD B, 0x00
 label_068d:
 068d: 7c		LD A, H
-068e: b5		OR A, L
+068e: b5		OR L
 068f: c8		RET Z
 
 0690: 04		INC B
@@ -1159,7 +1160,7 @@ label_06cd:
 06d0: 2a 00 59		LD HL, (0x5900)
 06d3: cd 95 f4		CALL 0xF495
 06d6: 2a 02 59		LD HL, (0x5902)
-06d9: cd 95 f4		LD 0xF495
+06d9: cd 95 f4		CALL 0xF495
 06dc: 06 03		LD B, 0x03
 06de: 21 e8 ff		LD HL, 0xFFE8
 label_06e1:
@@ -1188,7 +1189,7 @@ label_06f5:
 
 label_06fb:
 06fb: 7c		LD A, H
-06fc: b5		OR A, L
+06fc: b5		OR L
 06fd: c8		RET Z
 06fe: 11 0a 00		LD DE, 0x000A
 0701: 19		ADD HL, DE
@@ -1208,7 +1209,7 @@ label_06fb:
 0713: 66		LD H, (HL)
 0714: 6f		LD L, A
 0715: 18 e4		JR label_06fb
-0717: dd e9		JP IX
-0719: e9		JP HL
+0717: dd e9		JP (IX)
+0719: e9		JP (HL)
 071a: ff ff ff ff ff ff		DEFB 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 0720: ff ff ff ff ff ff ff	DEFB 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
