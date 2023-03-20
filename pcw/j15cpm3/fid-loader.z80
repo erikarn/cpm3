@@ -14,12 +14,15 @@ label_000c:
 
 label_000f:
 		CALL 0xEDB7		; ?!
+		CALL 0xFC5A		; Maybe I do need to revisit these
+					; and what I thought was data, something is
+					; up here.
+		DEFW 0xF3B7		; DI, OR A
 		CALL 0xFC5A		; ?
-		DEFW 0xFDB7		; ?
-		CALL 0xFC5A		; ?
-		DEFW 0xC7F4		; .. ? Not instructions!
+		DEFW 0xF46A		; 
+		RST 0			; Would be CALL P, 0x006A ?
 		LD E, 0xFE
-		CALL call_01f9
+		CALL 0xEFC3
 		LD B, 0x01
 label_0024:
 		PUSH BC
@@ -60,17 +63,17 @@ label_005a:
 		RET
 
 data_005c:
-	DEFW 0x01, 0x3f, 0x3f, 0x3f
+	DEFB 0x01, 0x3f, 0x3f, 0x3f
 
 		; not sure about 01;
 					; the rest is ???????? FI?
 					; so it's looking for FI?
 					; files to load.
 
-			DEFW 0x3f, 0x3f, 0x3f, 0x3f, 0x3f
-			DEFW 0x46, 0x49, 0x3f
+			DEFB 0x3f, 0x3f, 0x3f, 0x3f, 0x3f
+			DEFB 0x46, 0x49, 0x3f
 
-		DEFW 0x00, 0x00, 0x00
+		DEFB 0x00, 0x00, 0x00
 
 		CALL 0xEFBB
 		RET NC
@@ -82,14 +85,14 @@ data_005c:
 		LD DE, 0x0203
 		LD HL, data_0116	; local data somewhere
 		LD B, 0x0B		; 11 - 8 + 3 byte filename match
+label_0084:
 		LD A, (DE)
-label_0085:
 		CP (HL)
 		JR NZ, label_00b3
 		INC DE
 		INC HL
-		DJNZ label_0085
-		CALL 0xEE5F
+		DJNZ label_0084
+		CALL 0xEEF5
 		LD B, H
 		LD C, L
 		LD DE, 0x0100
@@ -152,7 +155,7 @@ label_00b7:
 		CALL 0xFC4B
 		POP HL
 		PUSH HL
-		LD (0xEE9C), HL
+		LD (0xEE9E), HL
 		LD C, 0x03
 		LD DE, 0x0000		; inline modification?
 		CALL 0xFC5A
@@ -183,7 +186,7 @@ data_0116:
 		CALL 0xEFA7
 		RET NC
 		CALL 0xEEF5
-		XOR 0x7D		; or arg to call?
+		LD A, L
 		ADD HL, HL
 		LD L, H
 		LD H, 0x00
@@ -199,6 +202,7 @@ label_013c:
 		CCF
 		RET NC
 		LD HL, 0x0180
+label_0148:
 		CALL 0xEFA7
 		RET NC
 		LD A, L
@@ -209,10 +213,9 @@ label_013c:
 		SUB A, L
 		LD H, A
 		DEC BC
-		LD C, (HL)
+		LD A, B
 		OR C
-		ADD A, B
-		RET P
+		JR NZ, label_0148
 		SCF
 		RET
 
@@ -294,7 +297,7 @@ label_01bd:
 		LD B, 0x04
 		LD HL, 0xEF7D
 label_01ce:
-		OR E
+		CP (HL)
 		INC HL
 		JR NZ, label_01dd
 		LD A, (HL)
@@ -303,6 +306,7 @@ label_01ce:
 		LD A, (HL)
 		LD (IX+0), A
 		SCF
+		RET
 
 label_01dd:
 		INC HL
@@ -372,14 +376,14 @@ label_022b:
 
 label_0238:
 		PUSH DE
-		PUSH BC
+		PUSH HL
 		CALL 0xF04F
 		LD A, 0x02
-		JR label_026f
+		JR C, label_026f
 		LD DE, 0x0008
 		CALL 0xF2EB
 		LD A, 0x01
-		LD BC, 0x2430
+		JR NC, label_026f
 		DEC HL
 		EX DE, HL
 		POP HL
@@ -473,7 +477,7 @@ label_02cb:
 		EX DE, HL
 		POP HL
 		JR NZ, label_02ba
-		CCF
+		SCF
 		RET
 
 		PUSH IX
@@ -500,7 +504,7 @@ label_02cb:
 		LDIR			; block copy!
 		POP BC
 		LD (IY+0x02), B		; Double check this block!
-		LD (IX+0xF8), E
+		LD E, (IX+0xF8)
 		LD D, (IX+0xF9)
 		LD (IY+0x00), E
 		LD (IY+0x01), D
@@ -567,7 +571,7 @@ label_0397:
 		CALL 0xF1BD
 		LD DE, 0x0011
 		LD L, (IY+0x10)
-		LD H, (IY+0x00)
+		LD H, (IY+0x11)
 		CALL 0xF1C0
 		LD DE, 0x001D
 		PUSH IY
@@ -628,7 +632,7 @@ label_03ee:
 		LD HL, 0xFF51
 		CALL 0xF1C0
 
-		LD DE, 0x0004
+		LD DE, 0x0400
 		LD HL, 0x7C00
 		LD A, 0x02
 		CALL 0xF1C2
@@ -666,7 +670,7 @@ label_0428:
 		LD B, 0x09
 label_0443:
 		LD A, C
-		ADC A, (HL)
+		CP (HL)
 		JR C, label_045e
 		JR NZ, label_0455
 		PUSH HL
@@ -786,7 +790,7 @@ label_04fa:
 		PUSH DE
 		PUSH BC
 		LD C, A
-		LD HL, 0xF4ED
+		LD HL, 0xF4EF
 		LD B, 0x0A
 label_0502:
 		CALL 0xF32A
@@ -838,7 +842,7 @@ label_0538:
 		EX (SP), HL
 		LD A, D
 		OR E
-		CALL NZ, 0xF1B4
+		CALL NZ, 0xF1BD
 		POP HL
 		POP DE
 		PUSH HL
@@ -849,8 +853,7 @@ label_0538:
 		PUSH AF
 		CALL NC, 0xF1BD
 		POP AF
-
-
+		RET
 		XOR A				; blank A
 		JR label_0553
 		LD A, 0x01
@@ -896,7 +899,7 @@ label_0571:
 		PUSH BC
 		LD A, D
 		OR E
-		CALL 0xF270
+		CALL Z, 0xF270
 		POP HL
 		SCF
 label_058b:
