@@ -6,6 +6,10 @@
 ;
 ; Don't treat them as addresses, treat them as labels!
 
+; Note there's some local variables that reference memory
+; between 0xf4c1 -> 0xf4c8, so be careful if you go tinkering
+; with the layout here.
+
 org 0xed9a
 
 start:
@@ -1261,3 +1265,5 @@ call_f4b3:
 ; This is used by various locations to store variables
 ; .. but it's not /in/ the binary file that is generated.
 label_f4c1:
+
+; There's at least seven bytes used at 0xf4c1 - 0xf4c8.
