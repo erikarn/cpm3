@@ -1170,19 +1170,170 @@ label_065f:
 
 00000660  3f d8 47 2a 00 59 11 0d  00 19 7e 23 66 6f 10 f9  |?.G*.Y....~#fo..|
 
+0660: 3f		CCF
+0661: d8		RET C
+0662: 47		LD B, A
+0663: 2a 00 59		LD HL, (0x5900)
+0666: 11 0d 00		LD DE, 0x000D
+0669: 19		ADD HL, DE
+066a: 7e		LD A, (HL)
+066b: 23		INC HL
+066c: 66		LD H, (HL)
+066d: 6f		LD L, A
+066e: 10 f9		DJNZ ...
+
 00000670  af 19 4e 77 23 46 77 2a  02 59 19 7e 23 b6 28 06  |..Nw#Fw*.Y.~#.(.|
+
+0670: af		XOR A
+0671: 19		ADD HL, DE
+0672: 4e		LD C, (HL)
+0673: 77		LD (HL), A
+0674: 23		INC HL
+0675: 46		LD B, (HL)
+0676: 77		LD (HL), A
+0677: 2a 02 59		LD HL, (0x5902)
+067a: 19		ADD HL, DE
+067b: 7e		LD A, (HL)
+067c: 23		INC HL
+067d: b6		OR A, (HL)
+067e: 28 06		JR Z, ...
+
 00000680  7e 2b 6e 67 18 f4 70 2b  71 37 c9 06 00 7c b5 c8  |~+ng..p+q7...|..|
+
+0680: 7e		LD A, (HL)
+0681: 2b		DEC HL
+0682: 6e		LD L, (HL)
+0683: 67		LD H, A
+0684: 18 f4		JR ...
+0686: 70		LD (HL), B
+0687: 2b		DEC HL
+0688: 71		LD (HL), C
+0689: 37		SCF
+068a: c9		RET
+
+068b: 06 00		LD B, 0x00
+068d: 7c		LD A, H
+068e: b5		OR A, L
+068f: c8		RET Z
+
 00000690  04 11 0d 00 19 7e 23 66  6f 18 f2 dd e5 e5 d5 11  |.....~#fo.......|
+
+0690: 04		INC B
+0691: 11 0d 00		LD DE, 0x000D
+0694: 19		ADD HL, DE
+0695: 7e		LD A, (HL)
+0696: 23		INC HL
+0697: 66		LD H, (HL)
+0698: 6f		LD L, A
+0699: 18 f2		JR ...
+069b: dd e5		PUSH IX
+069d: e5		PUSH HL
+069e: d5		PUSH DE
+069f: 11 0f 00		LD DE, 0x000F
+
 000006a0  0f 00 cd e8 f2 d4 eb f2  e5 dd e1 d1 e1 30 1e dd  |.............0..|
+
+06a2: cd e8 f2		CALL 0xF2E8
+06a5: d4 eb f2		CALL NC, 0xF2EB
+06a8: e5		PUSH HL			; HL->IX
+06a9: dd e1		POP IX			; Note, different order
+06ab: d1		POP DE			; to what was PUSHed
+06ac: e1		POP HL			; above?
+06ad: 30 1e		JR NC, ...
+06af: dd 36 00 ff	LD (IX+0x00), 0xFF
+
 000006b0  36 00 ff dd 75 0a dd 74  0b dd 70 0c eb 7e dd 77  |6...u..t..p..~.w|
+
+06b3: dd 75 0a		LD (IX+0x0A), L
+06b6: dd 74 0b		LD (IX+0x0B), H
+06b9: dd 70 0c		LD (IX+0x0C), B
+06bc: eb		EX DE, HL
+06bd: 7e		LD A, (HL)
+06be: dd 77 0d		LD (IX+0x0D), A
+
 000006c0  0d 23 7e dd 77 0e dd e5  d1 72 2b 73 37 dd e1 c9  |.#~.w....r+s7...|
+
+06c1: 23		INC HL
+06c2: 7e		LD A, (HL)
+06c3: dd 77 0e		LD (IX+0x0E), A
+06c6: dd e5		PUSH IX			; IX -> DE
+06c8: d1		POP DE
+06c9: 72		LD (HL), D
+06ca: 2b		DEC HL
+06cb: 73		LD (HL), E
+06cc: 37		SCF
+06cd: dd e1		POP IX
+06cf: c9		RET
+
 000006d0  2a 00 59 cd 95 f4 2a 02  59 cd 95 f4 06 03 21 e8  |*.Y...*.Y.....!.|
+
+06d0: 2a 00 59		LD HL, (0x5900)
+06d3: cd 95 f4		CALL 0xF495
+06d6: 2a 02 59		LD HL, (0x5902)
+06d9: cd 95 f4		LD 0xF495
+06dc: 06 03		LD B, 0x03
+06de: 21 e8 ff		LD HL, 0xFFE8
+
 000006e0  ff c5 e5 cd 65 f3 44 4d  e1 30 0a 77 23 71 23 70  |....e.DM.0.w#q#p|
+
+06e1: c5		PUSH BC
+06e2: e5		PUSH HL
+06e3: cd 65 f3		CALL 0xF365
+06e6: 44		LD B, H
+06e7: 4d		LD C, L
+06e8: e1		POP HL
+06e9: 30 0a		JR NC, ...
+06eb: 77		LD (HL), A
+06ec: 23		INC HL
+06ed: 71		LD (HL), C
+06ee: 23		INC HL
+06ef: 70		LD (HL), B
+
 000006f0  23 73 23 72 23 c1 10 e9  36 ff c9 7c b5 c8 11 0a  |#s#r#...6..|....|
+
+06f0: 23		INC HL
+06f1: 73		LD (HL), E
+06f2: 23		INC HL
+06f3: 72		LD (HL), D
+06f4: 23		INC HL
+06f5: c1		POP BC
+06f6: 10 e9		DJNZ ...
+06f8: 36 ff		LD (HL), 0xff
+06fa: c9		HL
+
+06fb: 7c		LD A, H
+06fc: b5		OR A, L
+06fd: c8		RET Z
+06fe: 11 0a 00		LD DE, 0x000A
+
 00000700  00 19 5e 23 56 23 7e 23  e5 eb 11 00 02 cd c2 f1  |..^#V#~#........|
+
+0701: 19		ADD HL, DE
+0702: 5e		LD E, (HL)
+0703: 23		INC HL
+0704: 56		LD D, (HL)
+0705: 23		INC HL
+0706: 7e		LD A, (HL)
+0707: 23		INC HL
+0708: e5		PUSH HL
+0709: eb		EX DE, HL
+070a: 11 00 02		LD DE, 0x0200
+070d: cd c2 f1		CALL 0xF1C2
+
 00000710  e1 7e 23 66 6f 18 e4 dd  e9 e9 ff ff ff ff ff ff  |.~#fo...........|
+
+0710: e1		POP HL
+0711: 7e		LD A, (HL)
+0712: 23		INC HL
+0713: 66		LD H, (HL)
+0714: 6f		LD L, A
+0715: 18 e4		JR ...
+0717: dd e9		JP IX
+0719: e9		JP HL
+071a: ff ff ff ff ff ff		DEFB 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
 
 00000720  ff ff ff ff ff ff ff                              |.......|
 
 0720: ff ff ff ff ff ff ff	DEFB 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff
+
 00000727
