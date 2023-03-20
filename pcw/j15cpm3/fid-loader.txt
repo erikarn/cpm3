@@ -3,28 +3,31 @@
 
 org 0xed9a
 
-0000: c3 a6 ed		JP 0xEDA6
-0003: c3 a9 ed		JP 0xEDA9
+0000: c3 a6 ed		JP label_000c
+0003: c3 a9 ed		JP label_000f
 0006: c3 70 f0		JP 0xF070
-0009: c3 d2 ef		JP 0xEFD2
-000c: c3 80 f1		JP 0xF180
+0009: c3 d2 ef		JP label_0238
 
-000f: cd b7 ed		CALL 0xEDB7
+label_000c:
+000c: c3 80 f1		JP jump_03e6
+
+label_000f:
+000f: cd b7 ed		CALL 0xEDB7		; ?!
 0012: cd 5a fc		CALL 0xFC5A		; ?
 0015: b7 fd		DEFW 0xFDB7		; ?
 0017: cd 5a fc		CALL 0xFC5A		; ?
 001a: f4 c7		DEFW 0xC7F4		; .. ? Not instructions!
 001c: 1e fe		LD E, 0xFE
-001f: cd 93 ef		CALL &EF93
+001f: cd 93 ef		CALL call_01f9
 0022: 06 01		LD B, 0x01
 label_0024:
 0024: c5		PUSH BC
-0025: 11 f6 ed		LD DE, 0xEDF6
+0025: 11 f6 ed		LD DE, data_005c
 0028: cd 89 ef		CALL &EF89
 002b: 30 2d		JR NC, label_005a
 002d: 18 05		JR label_0034
 label_002f:
-002f: cd 93 ef		CALL &EF93
+002f: cd 93 ef		CALL call_01f9
 0032: 30 26		JR NC, label_005a
 label_0034:
 0034: 10 f9		DJNZ label_002f
@@ -55,6 +58,7 @@ label_005a:
 005a: c1		POP BC
 005b: c9		RET
 
+data_005c:
 005c: 01 3f 3f 3f	DEFW 0x01, 0x3f, 0x3f, 0x3f
 
 0060: 3f 3f 3f 3f 3f 46 49 3f		; not sure about 01;
@@ -70,12 +74,12 @@ label_005a:
 006b: cd bb ef		CALL 0xEFBB
 006e: d0		RET NC
 006f: cd c3 ee		CALL 0xEEC3
-0072: d2 bf ef		JP NC, 0xEFBF
+0072: d2 bf ef		JP NC, jump_0225
 0075: 3a 67 00		LD A, (0x0067)
 0078: 32 ba ee		LD (0xEEBA), A
 007b: d5		PUSH DE
 007c: 11 03 02		LD DE, 0x0203
-007f: 21 b0 ee		LD HL, 0xEEB0		; local data somewhere
+007f: 21 b0 ee		LD HL, data_0116	; local data somewhere
 0082: 06 0b		LD B, 0x0B		; 11 - 8 + 3 byte filename match
 0084: 1a		LD A, (DE)
 label_0085:
@@ -112,7 +116,7 @@ label_0097:
 00b1: 28 04		JR Z, label_00b7
 label_00b7:
 00b3: d1		POP DE
-00b4: c3 bf ef		JP 0xEFBF
+00b4: c3 bf ef		JP jump_0225
 label_00b7:
 00b7: e1		POP HL
 00b8: e5		PUSH HL
@@ -124,7 +128,7 @@ label_00b7:
 00c3: cd 5a fc		CALL 0xFC5A		; ?
 00c6: bb ee		DEFW 0xEEBB		; ?
 00c8: 22 1e 02		LD (0x021E), HL
-00cb: cd bf ef		CALL 0xEFBF
+00cb: cd bf ef		CALL jump_0225
 00ce: d0		RET NC
 00cf: 2a 01 01		LD HL, (0x0101)
 00d2: ed 5b 04 01	LD DE, (0x0104)
@@ -164,6 +168,7 @@ label_010c:
 0113: bf ee		DEFW 0xEEBF
 0115: c9		RET
 
+data_0116:
 0116: 1a 1a 1a 1a 1a 1a 1a 1a	DEFB 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a, 0x1a
 011e: 46 49 44			DEFB 0x46, 0x49, 0x44		; 'FID'
 
@@ -312,6 +317,8 @@ label_01ce:
 01f2: cd b3 ef		CALL 0xEFB3
 01f5: 3e 11		LD A, 0x11
 01f7: 18 02		JR label_01fb
+
+call_01f9:
 01f9: 3e 12		LD A, 0x12
 label_01fb:
 01fb: cd c5 ef		CALL 0xEFC5
@@ -346,6 +353,7 @@ label_01fb:
 
 0221: 3e 0f		LD A, 0x0F
 0223: 18 06		JR label_022b
+jmp_0225:
 0225: 3e 10		LD A, 0x10
 0227: 18 02		JR label_022b
 0229: 3e 2d		LD A, 0x2D
@@ -605,6 +613,7 @@ label_03e3:
 03e4: 37		SCF
 03e5: c9		RET
 
+jump_03e6:
 03e6: 21 c2 f4		LD HL, 0xF4C2
 03e9: 11 05 00		LD DE, 0x0005
 03ec: 06 0a		LD B, 0x0A
