@@ -1,0 +1,56 @@
+
+org $c000
+
+defb 0x2		; extension
+defb 1,1,1
+
+; ROM jumptable
+
+; floating point math pack
+
+jp REAL_PI_to_DE
+jp REAL_ONE_to_DE
+jp REAL_copy_atDE_to_atHL
+jp REAL_INT_to_real
+jp REAL_BIN_to_real
+jp REAL_5byte_to_real
+jp REAL_to_int
+jp REAL_to_bin
+jp REAL_fix
+jp REAL_int
+jp REAL_prepare_for_decimal
+jp REAL_exp_A
+jp REAL_init_random_number_generator
+jp REAL_RANDOMIZE_seed
+jp REAL_rnd
+jp REAL_rnd0
+jp REAL_log10
+jp REAL_log
+jp REAL_exp
+jp REAL_sqr
+jp REAL_power
+jp REAL_set_degrees_or_radians
+jp REAL_cosine
+jp REAL_sin
+jp REAL_tan
+jp REAL_arctan
+jp REAL_reverse_subtract
+jp REAL_addition
+jp REAL_multiplication
+jp REAL_division
+jp REAL_compare
+jp REAL_SGN
+jp REAL_Negate
+jp Process_REAL_at_HL
+jp REAL_at_IX_to_max_pos
+jp REAL_at_IX_to_max_pos_or_max_neg
+
+; integer math pack
+; (tbd - want to lift this from the 464 just because)
+
+; cassette pack
+
+; printer pack
+
+include "fp-maths.z80"
+

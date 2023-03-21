@@ -1,0 +1,7 @@
+
+C6_last_random_number: EQU $b100
+last_random_number:   EQU $b102
+internal_REAL_store_1: EQU $b104
+internal_REAL_store_2: EQU $b109
+internal_REAL_store_3: EQU $b10e
+DEG__RAD_flag_:       EQU $b113

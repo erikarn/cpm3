@@ -1,0 +1,1628 @@
+
+; These are routines from the CPC6128 firmware.
+; The goal here is to bring some of them out of firmware
+; and into a higher ROM so I can muck around with
+; extending the lower firmware ROM a little.
+
+; Note that this doesn't use RAM LAM to copy memory that may be
+; underneath the 0000-3fff lower firmware ROM.
+;
+; BASIC gets around it by always operating on floating point
+; values in its operator stack, NOT in arbitrary RAM.
+
+include "firmware-memory.z80"
+
+;;=============================================================================
+;; REAL: PI to DE
+REAL_PI_to_DE:
+        ld de, PI_const
+        jr REAL_copy_atDE_to_atHL
+
+;;PI const
+PI_const:
+        defb $a2,$da,$0f,$49,$82
+
+;;===========================================================================================
+;; REAL: ONE to DE
+
+REAL_ONE_to_DE:
+        ld de, ONE_const
+        jr REAL_copy_atDE_to_atHL
+
+;;ONE const
+ONE_const:
+        defb $00,$00,$00,$00,$81
+
+;;===========================================================================================
+;;REAL copy atHL to b10e swapped
+REAL_copy_atHL_to_b10e_swapped:
+        ex      de,hl
+
+;;= REAL move DE to b10e
+REAL_move_DE_to_b10e:
+        ld      hl,internal_REAL_store_3
+        jr      REAL_copy_atDE_to_atHL
+
+;;---------------------------------------
+;;REAL copy atHL to b104
+_real_move_de_to_b10e_2:
+        ld      de,internal_REAL_store_1
+
+;;= REAL copy atHL to atDE swapped
+REAL_copy_atHL_to_atDE_swapped:
+        ex      de,hl
+
+;;=---------------------------------------
+;; REAL copy atDE to atHL
+;; HL = points to address to write floating point number to
+;; DE = points to address of a floating point number
+
+REAL_copy_atDE_to_atHL:
+        push    hl
+        push    de
+        push    bc
+        ex      de,hl
+        ld      bc,$0005
+        ldir
+        pop     bc
+        pop     de
+        pop     hl
+        scf
+        ret
+
+;;============================================================================================
+;; REAL: INT to real
+REAL_INT_to_real:
+        push    de
+        push    bc
+        or      $7f
+        ld      b,a
+        xor     a
+        ld      (de),a
+        inc     de
+        ld      (de),a
+        inc     de
+        ld      c,$90
+        or      h
+        jr      nz,_real_int_to_real_21
+        ld      c,a
+        or      l
+        jr      z,_real_int_to_real_23
+        ld      l,h
+        ld      c,$88
+        jr      _real_int_to_real_21
+_real_int_to_real_18:
+        dec     c
+        sla     l
+        adc     a,a
+_real_int_to_real_21:
+        jp      p,_real_int_to_real_18
+        and     b
+_real_int_to_real_23:
+        ex      de,hl
+        ld      (hl),e
+        inc     hl
+        ld      (hl),a
+        inc     hl
+        ld      (hl),c
+        pop     bc
+        pop     hl
+        ret
+
+;;============================================================================================
+;; REAL: BIN to real
+REAL_BIN_to_real:
+        push    bc
+        ld      bc,$a000
+        call    _real_5byte_to_real_1
+        pop     bc
+        ret
+
+;;============================================================================================
+;; REAL 5-byte to real
+REAL_5byte_to_real:
+        ld      b,$a8
+_real_5byte_to_real_1:
+        push    de
+        call    Process_REAL_at_HL
+        pop     de
+        ret
+
+;;============================================================================================
+;; REAL to int
+REAL_to_int:
+        push    hl
+        pop     ix
+        xor     a
+        sub     (ix+$04)
+        jr      z,_real_to_int_22
+        add     a,$90
+        ret     nc
+
+        push    de
+        push    bc
+        add     a,$10
+        call    x373d_code
+        sla     c
+        adc     hl,de
+        jr      z,_real_to_int_20
+        ld      a,(ix+$03)
+        or      a
+_real_to_int_16:
+        ccf
+        pop     bc
+        pop     de
+        ret
+
+_real_to_int_20:
+        sbc     a,a
+        jr      _real_to_int_16
+_real_to_int_22:
+        ld      l,a
+        ld      h,a
+        scf
+        ret
+
+;;============================================================================================
+;; REAL to bin
+REAL_to_bin:
+        call    REAL_fix
+        ret     nc
+
+        ret     p
+
+_real_to_bin_3:
+        push    hl
+        ld      a,c
+_real_to_bin_5:
+        inc     (hl)
+        jr      nz,_real_to_bin_12
+        inc     hl
+        dec     a
+        jr      nz,_real_to_bin_5
+        inc     (hl)
+        inc     c
+_real_to_bin_12:
+        pop     hl
+        scf
+        ret
+
+;;============================================================================================
+;; REAL fix
+
+REAL_fix:
+        push    hl
+        push    de
+        push    hl
+        pop     ix
+        xor     a
+        sub     (ix+$04)
+        jr      nz,_real_fix_13
+        ld      b,$04
+_real_fix_8:
+        ld      (hl),a
+        inc     hl
+        djnz    _real_fix_8
+        ld      c,$01
+        jr      _real_fix_45
+
+_real_fix_13:
+        add     a,$a0
+        jr      nc,_real_fix_46
+        push    hl
+        call    x373d_code
+        xor     a
+        cp      b
+        adc     a,a
+        or      c
+        ld      c,l
+        ld      b,h
+        pop     hl
+        ld      (hl),c
+        inc     hl
+        ld      (hl),b
+        inc     hl
+        ld      (hl),e
+        inc     hl
+        ld      e,a
+        ld      a,(hl)
+        ld      (hl),d
+        and     $80
+        ld      b,a
+        ld      c,$04
+        xor     a
+_real_fix_37:
+        or      (hl)
+        jr      nz,_real_fix_43
+        dec     hl
+        dec     c
+        jr      nz,_real_fix_37
+        inc     c
+_real_fix_43:
+        ld      a,e
+        or      a
+_real_fix_45:
+        scf
+_real_fix_46:
+        pop     de
+        pop     hl
+        ret
+
+;;============================================================================================
+;; REAL int
+
+REAL_int:
+        call    REAL_fix
+        ret     nc
+
+        ret     z
+
+        bit     7,b
+        ret     z
+
+        jr      _real_to_bin_3
+
+;;================================================================
+;; REAL prepare for decimal
+
+REAL_prepare_for_decimal:
+        call    REAL_SGN
+        ld      b,a
+        jr      z,_real_prepare_for_decimal_55
+        call    m,_real_negate_2
+        push    hl
+        ld      a,(ix+$04)
+        sub     $80
+        ld      e,a
+        sbc     a,a
+        ld      d,a
+        ld      l,e
+        ld      h,d
+        add     hl,hl
+        add     hl,hl
+        add     hl,hl
+        add     hl,de
+        add     hl,hl
+        add     hl,de
+        add     hl,hl
+        add     hl,hl
+        add     hl,de
+        ld      a,h
+        sub     $09
+        ld      c,a
+        pop     hl
+        push    bc
+        call    nz,_real_exp_a_2
+_real_prepare_for_decimal_27:
+        ld      de,Jumpblock_BD76_constant_a
+        call    _real_compare_2
+        jr      nc,_real_prepare_for_decimal_36
+        ld      de,powers_of_10_constants
+        call    REAL_multiplication
+        pop     de
+        dec     e
+        push    de
+        jr      _real_prepare_for_decimal_27
+_real_prepare_for_decimal_36:
+        ld      de,Jumpblock_BD76_constant_b
+        call    _real_compare_2
+        jr      c,_real_prepare_for_decimal_45
+        ld      de,powers_of_10_constants
+        call    REAL_division
+        pop     de
+        inc     e
+        push    de
+        jr      _real_prepare_for_decimal_36
+_real_prepare_for_decimal_45:
+        call    REAL_to_bin
+        ld      a,c
+        pop     de
+        ld      b,d
+        dec     a
+        add     a,l
+        ld      l,a
+        ret     nc
+
+        inc     h
+        ret
+
+_real_prepare_for_decimal_55:
+        ld      e,a
+        ld      (hl),a
+        ld      c,$01
+        ret
+
+;;=Jumpblock BD76 constant a
+Jumpblock_BD76_constant_a:
+        defb $f0,$1f,$bc,$3e,$96  ; 3124999.98
+;;=Jumpblock BD76 constant b
+Jumpblock_BD76_constant_b:        ; {{Addr=$30c1 Data Calls/jump count: 0 Data use count: 1}}
+        defb $fe,$27,$6b,$6e,$9e  ; Manual fix (corrected to data from a ROM dump) 1e+09
+
+;;============================================================================================
+;; REAL exp A
+REAL_exp_A:
+        cpl
+        inc     a
+_real_exp_a_2:
+        or      a
+        scf
+        ret     z
+
+        ld      c,a
+        jp      p,_real_exp_a_9
+        cpl
+        inc     a
+_real_exp_a_9:
+        ld      de,_powers_of_10_constants_12
+        sub     $0d
+        jr      z,_real_exp_a_28
+        jr      c,_real_exp_a_19
+        push    bc
+        push    af
+        call    _real_exp_a_28
+        pop     af
+        pop     bc
+        jr      _real_exp_a_9
+_real_exp_a_19:
+        ld      b,a
+        add     a,a
+        add     a,a
+        add     a,b
+        add     a,e
+        ld      e,a
+        ld      a,$ff
+        adc     a,d
+        ld      d,a
+_real_exp_a_28:
+        ld      a,c
+        or      a
+        jp      p,REAL_division
+        jp      REAL_multiplication
+
+;;===========================================================================================
+;; power's of 10 constants
+;; in internal floating point representation
+;;
+powers_of_10_constants:
+        defb $00,$00,$00,$20,$84  ; 10 (10^1)  (Data corrected to match that from a ROM dump) 10
+        defb $00,$00,$00,$48,$87  ; 100 (10^2) 100
+        defb $00,$00,$00,$7A,$8A  ; 1000 (10^3) 1000
+        defb $00,$00,$40,$1c,$8e  ; 10000 (10^4) (1E+4) 10000
+        defb $00,$00,$50,$43,$91  ; 100000 (10^5) (1E+5) 100000
+        defb $00,$00,$24,$74,$94  ; 1000000 (10^6) (1E+6) 1000000
+        defb $00,$80,$96,$18,$98  ; 10000000 (10^7) (1E+7) 10000000
+        defb $00,$20,$bc,$3e,$9b  ; 100000000 (10^8) (1E+8) 100000000
+        defb $00,$28,$6b,$6e,$9e  ; 1000000000 (10^9) (1E+9) 1e+09
+        defb $00,$f9,$02,$15,$a2  ; 10000000000 (10^10) (1E+10) 1e+10
+        defb $40,$b7,$43,$3a,$a5  ; 100000000000 (10^11) (1E+11) 1e+11
+        defb $10,$a5,$d4,$68,$a8  ; 1000000000000 (10^12) (1E+12) 1e+12
+_powers_of_10_constants_12:
+        defb $2a,$e7,$84,$11,$ac  ; 10000000000000 (10^13) (1E+13) 1e+13
+
+;;===========================================================================================
+;; REAL init random number generator
+;;Called (only) at start of BASIC ROM and at start of RANDOMIZE seed (below). 
+;;The data locations appear to store the last random number generated.
+;;Possibly initialise/reset of random number generator?
+REAL_init_random_number_generator:
+        ld      hl,$8965
+        ld      (last_random_number),hl
+        ld      hl,$6c07
+        ld      (C6_last_random_number),hl
+        ret
+
+;;============================================================================================
+;; REAL: RANDOMIZE seed
+REAL_RANDOMIZE_seed:
+        ex      de,hl
+        call    REAL_init_random_number_generator
+        ex      de,hl
+        call    REAL_SGN
+        ret     z
+
+        ld      de,C6_last_random_number
+        ld      b,$04
+_real_randomize_seed_7:
+        ld      a,(de)
+        xor     (hl)
+        ld      (de),a
+        inc     de
+        inc     hl
+        djnz    _real_randomize_seed_7
+        ret
+
+;;============================================================================================
+;; REAL rnd
+REAL_rnd:
+        push    hl
+        ld      hl,(last_random_number)
+        ld      bc,$6c07
+        call    _real_rnd0_7
+        push    hl
+        ld      hl,(C6_last_random_number)
+        ld      bc,$8965
+        call    _real_rnd0_7
+        push    de
+        push    hl
+        ld      hl,(last_random_number)
+        call    _real_rnd0_7
+        ex      (sp),hl
+        add     hl,bc
+        ld      (C6_last_random_number),hl
+        pop     hl
+        ld      bc,$6c07
+        adc     hl,bc
+        pop     bc
+        add     hl,bc
+        pop     bc
+        add     hl,bc
+        ld      (last_random_number),hl
+        pop     hl
+
+;;============================================================================================
+;; REAL rnd0
+REAL_rnd0:
+        push    hl
+        pop     ix
+        ld      hl,(C6_last_random_number)
+        ld      de,(last_random_number)
+        ld      bc,$0000
+        ld      (ix+$04),$80
+        jp      _process_real_at_hl_13
+
+_real_rnd0_7:
+        ex      de,hl
+        ld      hl,$0000
+        ld      a,$11
+_real_rnd0_10:
+        dec     a
+        ret     z
+
+        add     hl,hl
+        rl      e
+        rl      d
+        jr      nc,_real_rnd0_10
+        add     hl,bc
+        jr      nc,_real_rnd0_10
+        inc     de
+        jr      _real_rnd0_10
+
+;;============================================================================================
+;; REAL log10
+REAL_log10:
+        ld      de,const_0301029996
+        jr      _real_log_1
+
+;;============================================================================================
+;; REAL log
+REAL_log:
+        ld      de,const_0693147181
+_real_log_1:
+        call    REAL_SGN
+        dec     a
+        cp      $01
+        ret     nc
+
+        push    de
+        call    _real_division_121
+        push    af
+        ld      (ix+$04),$80
+        ld      de,const_0707106781
+        call    REAL_compare
+        jr      nc,_real_log_16
+        inc     (ix+$04)
+        pop     af
+        dec     a
+        push    af
+_real_log_16:
+        call    REAL_copy_atHL_to_b10e_swapped
+        push    de
+        ld      de,ONE_const
+        push    de
+        call    REAL_addition
+        pop     de
+        ex      (sp),hl
+        call    x349a_code
+        pop     de
+        call    REAL_division
+        call    process_inline_parameters
+
+;Inline parameter block
+        defb $04                  ; Parameter count
+        defb $4c,$4b,$57,$5e,$7f  ; 0.434259751
+        defb $0d,$08,$9b,$13,$80  ; 0.576584342
+        defb $23,$93,$38,$76,$80  ; 0.961800762
+        defb $20,$3b,$aa,$38,$82  ; 2.88539007
+
+;Return address
+        push    de
+        call    REAL_multiplication
+        pop     de
+        ex      (sp),hl
+        ld      a,h
+        or      a
+        jp      p,_real_log_41
+        cpl
+        inc     a
+_real_log_41:
+        ld      l,a
+        ld      a,h
+        ld      h,$00
+        call    REAL_INT_to_real
+        ex      de,hl
+        pop     hl
+        call    REAL_addition
+        pop     de
+        jp      REAL_multiplication
+
+;;= const 0_707106781
+const_0707106781:
+        defb $34,$f3,$04,$35,$80
+;;= const 0_693147181
+const_0693147181:
+        defb $f8,$17,$72,$31,$80
+;;= const 0_301029996
+const_0301029996:
+        defb $85,$9a,$20,$1a,$7f
+
+;;============================================================================================
+;; REAL exp
+REAL_exp:
+        ld      b,$e1
+        call    x3492_code
+        jp      nc,REAL_ONE_to_DE
+        ld      de,exp_constant_c
+        call    REAL_compare
+        jp      p,REAL_at_IX_to_max_pos
+        ld      de,exp_constant_d
+        call    REAL_compare
+        jp      m,_process_real_at_hl_42
+        ld      de,exp_constant_b
+        call    x3469_code
+        ld      a,e
+        jp      p,_real_exp_14
+        neg
+_real_exp_14:
+        push    af
+        call    _real_addition_119
+        call    _real_move_de_to_b10e_2
+        push    de
+        call    _process_inline_parameters_1
+
+;Inline parameter block
+        defb $03
+        defb $f4,$32,$eb,$0f,$73
+        defb $08,$b8,$d5,$52,$7b
+;;= exp constant a
+exp_constant_a:
+        defb $00,$00,$00,$00,$80
+
+;Return address
+        ex      (sp),hl
+        call    _process_inline_parameters_1
+
+;Inline parameter block
+        defb $02
+        defb $09,$60,$de,$01,$78
+        defb $f8,$17,$72,$31,$7e
+
+;Return address
+        call    REAL_multiplication
+        pop     de
+        push    hl
+        ex      de,hl
+        call    x349a_code
+        ex      de,hl
+        pop     hl
+        call    REAL_division
+        ld      de,exp_constant_a
+        call    REAL_addition
+        pop     af
+        scf
+        adc     a,(ix+$04)
+        ld      (ix+$04),a
+        scf
+        ret
+
+;;= exp constant b
+exp_constant_b:
+        defb $29,$3b,$aa,$38,$81
+;;= exp constant c
+exp_constant_c:
+        defb $c7,$33,$0f,$30,$87
+;;= exp constant d
+exp_constant_d:
+        defb $f8,$17,$72,$b1,$87
+
+;;============================================================================================
+;; REAL sqr
+REAL_sqr:
+        ld      de,exp_constant_a
+
+;;============================================================================================
+;; REAL power
+REAL_power:
+        ex      de,hl
+        call    REAL_SGN
+        ex      de,hl
+        jp      z,REAL_ONE_to_DE
+        push    af
+        call    REAL_SGN
+        jr      z,_real_power_29
+        ld      b,a
+        call    m,_real_negate_2
+        push    hl
+        call    _real_power_72
+        pop     hl
+        jr      c,_real_power_38
+        ex      (sp),hl
+        pop     hl
+        jp      m,_real_power_35
+        push    bc
+        push    de
+        call    REAL_log
+        pop     de
+        call    c,REAL_multiplication
+        call    c,REAL_exp
+_real_power_22:
+        pop     bc
+        ret     nc
+
+        ld      a,b
+        or      a
+        call    m,REAL_Negate
+        scf
+        ret
+
+_real_power_29:
+        pop     af
+        scf
+        ret     p
+
+        call    REAL_at_IX_to_max_pos
+        xor     a
+        ret
+
+_real_power_35:
+        xor     a
+        inc     a
+        ret
+
+_real_power_38:
+        ld      c,a
+        pop     af
+        push    bc
+        push    af
+        ld      a,c
+        scf
+_real_power_44:
+        adc     a,a
+        jr      nc,_real_power_44
+        ld      b,a
+        call    _real_move_de_to_b10e_2
+        ex      de,hl
+        ld      a,b
+_real_power_50:
+        add     a,a
+        jr      z,_real_power_63
+        push    af
+        call    _real_addition_119
+        jr      nc,_real_power_67
+        pop     af
+        jr      nc,_real_power_50
+        push    af
+        ld      de,internal_REAL_store_1
+        call    REAL_multiplication
+        jr      nc,_real_power_67
+        pop     af
+        jr      _real_power_50
+
+_real_power_63:
+        pop     af
+        scf
+        call    m,_real_multiplication_72
+        jr      _real_power_22
+
+_real_power_67:
+        pop     af
+        pop     af
+        pop     bc
+        jp      m,_process_real_at_hl_42
+        jp      REAL_at_IX_to_max_pos_or_max_neg
+
+_real_power_72:
+        push    bc
+        call    REAL_move_DE_to_b10e
+        call    REAL_fix
+        ld      a,c
+        pop     bc
+        jr      nc,_real_power_79
+        jr      z,_real_power_82
+_real_power_79:
+        ld      a,b
+        or      a
+        ret
+
+_real_power_82:
+        ld      c,a
+        ld      a,(hl)
+        rra
+        sbc     a,a
+        and     b
+        ld      b,a
+        ld      a,c
+        cp      $02
+        sbc     a,a
+        ret     nc
+
+        ld      a,(hl)
+        cp      $27
+        ret     c
+
+        xor     a
+        ret
+
+;;============================================================================================
+;; REAL set degrees or radians
+REAL_set_degrees_or_radians:
+        ld      (DEG__RAD_flag_),a
+        ret
+
+;;============================================================================================
+;; REAL cosine
+REAL_cosine:
+        call    REAL_SGN
+        call    m,_real_negate_2
+        or      $01
+        jr      _real_sin_1
+
+;;============================================================================================
+;; REAL sin
+REAL_sin:
+        xor     a
+_real_sin_1:
+        push    af
+        ld      de,sin_constant_b
+        ld      b,$f0
+        ld      a,(DEG__RAD_flag_)
+        or      a
+        jr      z,_real_sin_9
+        ld      de,sin_constant_c
+        ld      b,$f6
+_real_sin_9:
+        call    x3492_code
+        jr      nc,_sin_code_block_2_1
+        pop     af
+        call    x346a_code
+        ret     nc
+
+        ld      a,e
+        rra
+        call    c,_real_negate_2
+        ld      b,$e8
+        call    x3492_code
+        jp      nc,_process_real_at_hl_42
+        inc     (ix+$04)
+        call    process_inline_parameters
+
+;Inline parameter block
+        defb $06
+        defb $1b,$2d,$1a,$e6,$6e
+        defb $f8,$fb,$07,$28,$74
+        defb $01,$89,$68,$99,$79
+        defb $e1,$df,$35,$23,$7d
+        defb $28,$e7,$5d,$a5,$80
+;;=sin constant a
+sin_constant_a:
+        defb $a2,$da,$0f,$49,$81
+
+;;=Sin code block 2
+;Code returns here
+        jp      REAL_multiplication
+
+_sin_code_block_2_1:
+        pop     af
+        jp      nz,REAL_ONE_to_DE
+        ld      a,(DEG__RAD_flag_)
+        cp      $01
+        ret     c
+
+        ld      de,sin_constant_d
+        jp      REAL_multiplication
+
+;;=sin constant b
+sin_constant_b:
+        defb $6e,$83,$f9,$22,$7f
+;;=sin constant c
+sin_constant_c:
+        defb $b6,$60,$0b,$36,$79
+;;=sin constant d
+sin_constant_d:
+        defb $13,$35,$fa,$0e,$7b
+;;=sin constant e
+sin_constant_e:
+        defb $d3,$e0,$2e,$65,$86
+
+;;============================================================================================
+;; REAL tan
+REAL_tan:
+        call    _real_move_de_to_b10e_2
+        push    de
+        call    REAL_cosine
+        ex      (sp),hl
+        call    c,REAL_sin
+        pop     de
+        jp      c,REAL_division
+        ret
+
+;;============================================================================================
+;; REAL arctan
+REAL_arctan:
+        call    REAL_SGN
+        push    af
+        call    m,_real_negate_2
+        ld      b,$f0
+        call    x3492_code
+        jr      nc,_real_arctan_26
+        dec     a
+        push    af
+        call    p,_real_multiplication_72
+        call    process_inline_parameters
+
+;Inline paremeter blcok, address retrieved from the call stack
+        defb $0b
+        defb $ff,$c1,$03,$0f,$77
+        defb $83,$fc,$e8,$eb,$79
+        defb $6f,$ca,$78,$36,$7b
+        defb $d5,$3e,$b0,$b5,$7c
+        defb $b0,$c1,$8b,$09,$7d
+        defb $af,$e8,$32,$b4,$7d
+        defb $74,$6c,$65,$62,$7d
+        defb $d1,$f5,$37,$92,$7e
+        defb $7a,$c3,$cb,$4c,$7e
+        defb $83,$a7,$aa,$aa,$7f
+        defb $fe,$ff,$ff,$7f,$80
+
+        call    REAL_multiplication
+        pop     af
+        ld      de,sin_constant_a
+        call    p,REAL_reverse_subtract
+_real_arctan_26:
+        ld      a,(DEG__RAD_flag_)
+        or      a
+        ld      de,sin_constant_e
+        call    nz,REAL_multiplication
+        pop     af
+        call    m,_real_negate_2
+        scf
+        ret
+
+
+;;=====================================================
+;; process inline parameters
+;This code takes a list of parameters starting at the next byte after the call.
+;It pops the return value off the stack, reads in the values, and eventually returns 
+;to the address after the data block.
+;The first byte of the data block is the count of the number of parameters. Each 
+;parameter is five bytes long (a real).
+
+process_inline_parameters:
+        call    _real_addition_119
+_process_inline_parameters_1:
+        call    REAL_copy_atHL_to_b10e_swapped
+        pop     hl
+        ld      b,(hl)
+        inc     hl
+        call    REAL_copy_atHL_to_atDE_swapped
+_process_inline_parameters_6:
+        inc     de
+        inc     de
+        inc     de
+        inc     de
+        inc     de
+        push    de
+        ld      de,internal_REAL_store_2
+        dec     b
+        ret     z
+
+        push    bc
+        ld      de,internal_REAL_store_3
+        call    REAL_multiplication
+        pop     bc
+        pop     de
+        push    de
+        push    bc
+        call    REAL_addition
+        pop     bc
+        pop     de
+        jr      _process_inline_parameters_6
+
+;;=======================================================
+
+x3469_code:
+        xor     a
+x346a_code:
+        push    af
+        call    REAL_multiplication
+        pop     af
+        ld      de,exp_constant_a
+        call    nz,REAL_addition
+        push    hl
+        call    REAL_to_int
+        jr      nc,x348e_code
+        pop     de
+        push    hl
+        push    af
+        push    de
+        ld      de,internal_REAL_store_2
+        call    REAL_INT_to_real
+        ex      de,hl
+        pop     hl
+        call    x349a_code
+        pop     af
+        pop     de
+        scf
+        ret
+
+x348e_code:
+        pop     hl
+        xor     a
+        inc     a
+        ret
+
+x3492_code:
+        call    _real_division_121
+        ret     p
+
+        cp      b
+        ret     z
+
+        ccf
+        ret
+
+x349a_code:
+        ld      a,$01
+        jr      _real_addition_1
+
+;;============================================================================================
+;; REAL reverse subtract
+REAL_reverse_subtract:
+        ld      a,$80
+        jr      _real_addition_1
+
+;;============================================================================================
+;; REAL addition
+REAL_addition:
+        xor     a
+
+; A = function, &00, &01 or &80
+_real_addition_1:
+        push    hl
+        pop     ix
+        push    de
+        pop     iy
+        ld      b,(ix+$03)
+        ld      c,(iy+$03)
+        or      a
+        jr      z,_real_addition_16
+        jp      m,_real_addition_14
+        rrca
+        xor     c
+        ld      c,a
+        jr      _real_addition_16
+
+_real_addition_14:
+        xor     b
+        ld      b,a
+_real_addition_16:
+        ld      a,(ix+$04)
+        cp      (iy+$04)
+        jr      nc,_real_addition_31
+        ld      d,b
+        ld      b,c
+        ld      c,d
+        or      a
+        ld      d,a
+        ld      a,(iy+$04)
+        ld      (ix+$04),a
+        jr      z,_real_addition_74
+        sub     d
+        cp      $21
+        jr      nc,_real_addition_74
+        jr      _real_addition_40
+
+_real_addition_31:
+        xor     a
+        sub     (iy+$04)
+        jr      z,_real_addition_80
+        add     a,(ix+$04)
+        cp      $21
+        jr      nc,_real_addition_80
+        push    hl
+        pop     iy
+        ex      de,hl
+_real_addition_40:
+        ld      e,a
+        ld      a,b
+        xor     c
+        push    af
+        push    bc
+        ld      a,e
+        call    x3743_code
+        ld      a,c
+        pop     bc
+        ld      c,a
+        pop     af
+        jp      m,_real_addition_83
+        ld      a,(iy+$00)
+        add     a,l
+        ld      l,a
+        ld      a,(iy+$01)
+        adc     a,h
+        ld      h,a
+        ld      a,(iy+$02)
+        adc     a,e
+        ld      e,a
+        ld      a,(iy+$03)
+        set     7,a
+        adc     a,d
+        ld      d,a
+        jp      nc,_process_real_at_hl_18
+        rr      d
+        rr      e
+        rr      h
+        rr      l
+        rr      c
+        inc     (ix+$04)
+        jp      nz,_process_real_at_hl_18
+        jp      REAL_at_IX_to_max_pos_or_max_neg
+
+_real_addition_74:
+        ld      a,(iy+$02)
+        ld      (ix+$02),a
+        ld      a,(iy+$01)
+        ld      (ix+$01),a
+        ld      a,(iy+$00)
+        ld      (ix+$00),a
+_real_addition_80:
+        ld      (ix+$03),b
+        scf
+        ret
+
+_real_addition_83:
+        xor     a
+        sub     c
+        ld      c,a
+        ld      a,(iy+$00)
+        sbc     a,l
+        ld      l,a
+        ld      a,(iy+$01)
+        sbc     a,h
+        ld      h,a
+        ld      a,(iy+$02)
+        sbc     a,e
+        ld      e,a
+        ld      a,(iy+$03)
+        set     7,a
+        sbc     a,d
+        ld      d,a
+        jr      nc,_real_addition_118
+        ld      a,b
+        cpl
+        ld      b,a
+        xor     a
+        sub     c
+        ld      c,a
+        ld      a,$00
+        sbc     a,l
+        ld      l,a
+        ld      a,$00
+        sbc     a,h
+        ld      h,a
+        ld      a,$00
+        sbc     a,e
+        ld      e,a
+        ld      a,$00
+        sbc     a,d
+        ld      d,a
+_real_addition_118:
+        jp      _process_real_at_hl_13
+
+_real_addition_119:
+        ld      de,internal_REAL_store_2
+        call    REAL_copy_atHL_to_atDE_swapped
+        ex      de,hl
+
+;;============================================================================================
+;; REAL multiplication
+REAL_multiplication:
+        push    de
+        pop     iy
+        push    hl
+        pop     ix
+        ld      a,(iy+$04)
+        or      a
+        jr      z,_real_multiplication_30
+        dec     a
+        call    _real_division_98
+        jr      z,_real_multiplication_30
+        jr      nc,_real_multiplication_29
+        push    af
+        push    bc
+        call    _real_multiplication_31
+        ld      a,c
+        pop     bc
+        ld      c,a
+        pop     af
+        bit     7,d
+        jr      nz,_real_multiplication_26
+        dec     a
+        jr      z,_real_multiplication_30
+        sla     c
+        adc     hl,hl
+        rl      e
+        rl      d
+_real_multiplication_26:
+        ld      (ix+$04),a
+        or      a
+        jp      nz,_process_real_at_hl_18
+_real_multiplication_29:
+        jp      REAL_at_IX_to_max_pos_or_max_neg
+
+_real_multiplication_30:
+        jp      _process_real_at_hl_42
+
+_real_multiplication_31:
+        ld      hl,$0000
+        ld      e,l
+        ld      d,h
+        ld      a,(iy+$00)
+        call    _real_multiplication_65
+        ld      a,(iy+$01)
+        call    _real_multiplication_65
+        ld      a,(iy+$02)
+        call    _real_multiplication_65
+        ld      a,(iy+$03)
+        or      $80
+_real_multiplication_42:
+        ld      b,$08
+        rra
+        ld      c,a
+_real_multiplication_45:
+        jr      nc,_real_multiplication_58
+        ld      a,l
+        add     a,(ix+$00)
+        ld      l,a
+        ld      a,h
+        adc     a,(ix+$01)
+        ld      h,a
+        ld      a,e
+        adc     a,(ix+$02)
+        ld      e,a
+        ld      a,d
+        adc     a,(ix+$03)
+        ld      d,a
+_real_multiplication_58:
+        rr      d
+        rr      e
+        rr      h
+        rr      l
+        rr      c
+        djnz    _real_multiplication_45
+        ret
+
+_real_multiplication_65:
+        or      a
+        jr      nz,_real_multiplication_42
+        ld      l,h
+        ld      h,e
+        ld      e,d
+        ld      d,a
+        ret
+
+_real_multiplication_72:
+        call    REAL_copy_atHL_to_b10e_swapped
+        ex      de,hl
+        push    de
+        call    REAL_ONE_to_DE
+        pop     de
+
+;;============================================================================================
+;; REAL division
+REAL_division:
+        push    de
+        pop     iy
+        push    hl
+        pop     ix
+        xor     a
+        sub     (iy+$04)
+        jr      z,_real_division_54
+        call    _real_division_98
+        jp      z,_process_real_at_hl_42
+        jr      nc,_real_division_53
+        push    bc
+        ld      c,a
+        ld      e,(hl)
+        inc     hl
+        ld      d,(hl)
+        inc     hl
+        ld      a,(hl)
+        inc     hl
+        ld      h,(hl)
+        ld      l,a
+        ex      de,hl
+        ld      b,(iy+$03)
+        set     7,b
+        call    _real_division_86
+        jr      c,_real_division_29
+        ld      a,c
+        or      a
+        jr      nz,_real_division_33
+        jr      _real_division_52
+
+_real_division_29:
+        dec     c
+        add     hl,hl
+        rl      e
+        rl      d
+_real_division_33:
+        ld      (ix+$04),c
+        call    _real_division_58
+        ld      (ix+$03),c
+        call    _real_division_58
+        ld      (ix+$02),c
+        call    _real_division_58
+        ld      (ix+$01),c
+        call    _real_division_58
+        ccf
+        call    c,_real_division_86
+        ccf
+        sbc     a,a
+        ld      l,c
+        ld      h,(ix+$01)
+        ld      e,(ix+$02)
+        ld      d,(ix+$03)
+        pop     bc
+        ld      c,a
+        jp      _process_real_at_hl_18
+
+_real_division_52:
+        pop     bc
+_real_division_53:
+        jp      REAL_at_IX_to_max_pos_or_max_neg
+
+_real_division_54:
+        ld      b,(ix+$03)
+        call    REAL_at_IX_to_max_pos_or_max_neg
+        xor     a
+        ret
+
+_real_division_58:
+        ld      c,$01
+_real_division_59:
+        jr      c,_real_division_65
+        ld      a,d
+        cp      b
+        call    z,_real_division_89
+        ccf
+        jr      nc,_real_division_78
+_real_division_65:
+        ld      a,l
+        sub     (iy+$00)
+        ld      l,a
+        ld      a,h
+        sbc     a,(iy+$01)
+        ld      h,a
+        ld      a,e
+        sbc     a,(iy+$02)
+        ld      e,a
+        ld      a,d
+        sbc     a,b
+        ld      d,a
+        scf
+_real_division_78:
+        rl      c
+        sbc     a,a
+        add     hl,hl
+        rl      e
+        rl      d
+        inc     a
+        jr      nz,_real_division_59
+        ret
+
+_real_division_86:
+        ld      a,d
+        cp      b
+        ret     nz
+
+_real_division_89:
+        ld      a,e
+        cp      (iy+$02)
+        ret     nz
+
+        ld      a,h
+        cp      (iy+$01)
+        ret     nz
+
+        ld      a,l
+        cp      (iy+$00)
+        ret
+
+_real_division_98:
+        ld      c,a
+        ld      a,(ix+$03)
+        xor     (iy+$03)
+        ld      b,a
+        ld      a,(ix+$04)
+        or      a
+        ret     z
+
+        add     a,c
+        ld      c,a
+        rra
+        xor     c
+        ld      a,c
+        jp      p,_real_division_117
+        set     7,(ix+$03)
+        sub     $7f
+        scf
+        ret     nz
+
+        cp      $01
+        ret
+
+_real_division_117:
+        or      a
+        ret     m
+
+        xor     a
+        ret
+
+_real_division_121:
+        push    hl
+        pop     ix
+        ld      a,(ix+$04)
+        or      a
+        ret     z
+
+        sub     $80
+        scf
+        ret
+
+;;============================================================================================
+;; REAL compare
+
+REAL_compare:
+        push    hl
+        pop     ix
+_real_compare_2:
+        push    de
+        pop     iy
+        ld      a,(ix+$04)
+        cp      (iy+$04)
+        jr      c,_real_compare_25
+        jr      nz,_real_compare_32
+        or      a
+        ret     z
+
+        ld      a,(ix+$03)
+        xor     (iy+$03)
+        jp      m,_real_compare_32
+        ld      a,(ix+$03)
+        sub     (iy+$03)
+        jr      nz,_real_compare_25
+        ld      a,(ix+$02)
+        sub     (iy+$02)
+        jr      nz,_real_compare_25
+        ld      a,(ix+$01)
+        sub     (iy+$01)
+        jr      nz,_real_compare_25
+        ld      a,(ix+$00)
+        sub     (iy+$00)
+        ret     z
+
+_real_compare_25:
+        sbc     a,a
+        xor     (iy+$03)
+_real_compare_27:
+        add     a,a
+        sbc     a,a
+        ret     c
+
+        inc     a
+        ret
+
+_real_compare_32:
+        ld      a,(ix+$03)
+        jr      _real_compare_27
+
+;;============================================================================================
+;; REAL SGN
+
+REAL_SGN:
+        push    hl
+        pop     ix
+        ld      a,(ix+$04)
+        or      a
+        ret     z
+
+        jr      _real_compare_32
+
+;;============================================================================================
+;; REAL Negate
+
+REAL_Negate:
+        push    hl
+        pop     ix
+_real_negate_2:
+        ld      a,(ix+$03)
+        xor     $80
+        ld      (ix+$03),a
+        ret
+
+;;============================================================================================
+x373d_code:
+        cp      $21
+        jr      c,x3743_code
+        ld      a,$21
+x3743_code:
+        ld      e,(hl)
+        inc     hl
+        ld      d,(hl)
+        inc     hl
+        ld      c,(hl)
+        inc     hl
+        ld      h,(hl)
+        ld      l,c
+        ex      de,hl
+        set     7,d
+        ld      bc,$0000
+        jr      x375e_code
+
+x3753_code:
+        ld      c,a
+        ld      a,b
+        or      l
+        ld      b,a
+        ld      a,c
+        ld      c,l
+        ld      l,h
+        ld      h,e
+        ld      e,d
+        ld      d,$00
+x375e_code:
+        sub     $08
+        jr      nc,x3753_code
+        add     a,$08
+        ret     z
+
+x3765_code:
+        srl     d
+        rr      e
+        rr      h
+        rr      l
+        rr      c
+        dec     a
+        jr      nz,x3765_code
+        ret
+
+;;============================================================================================
+x3773_code:
+        jr      nz,x378c_code
+        ld      d,a
+        ld      a,e
+        or      h
+        or      l
+        or      c
+        ret     z
+
+        ld      a,d
+x377c_code:
+        sub     $08
+        jr      c,x379a_code
+        ret     z
+
+        ld      d,e
+        ld      e,h
+        ld      h,l
+        ld      l,c
+        ld      c,$00
+        inc     d
+        dec     d
+        jr      z,x377c_code
+        ret     m
+
+x378c_code:
+        dec     a
+        ret     z
+
+        sla     c
+        adc     hl,hl
+        rl      e
+        rl      d
+        jp      p,x378c_code
+        ret
+
+x379a_code:
+        xor     a
+        ret
+
+;;============================================
+;;Process REAL at (HL)
+Process_REAL_at_HL:
+        push    hl
+        pop     ix
+        ld      (ix+$04),b
+        ld      b,a
+        ld      e,(hl)
+        inc     hl
+        ld      d,(hl)
+        inc     hl
+        ld      a,(hl)
+        inc     hl
+        ld      h,(hl)
+        ld      l,a
+        ex      de,hl
+_process_real_at_hl_13:
+        ld      a,(ix+$04)
+        dec     d
+        inc     d
+        call    p,x3773_code
+        ld      (ix+$04),a
+_process_real_at_hl_18:
+        sla     c
+        jr      nc,_process_real_at_hl_31
+        inc     l
+        jr      nz,_process_real_at_hl_31
+        inc     h
+        jr      nz,_process_real_at_hl_31
+        inc     de
+        ld      a,d
+        or      e
+        jr      nz,_process_real_at_hl_31
+        inc     (ix+$04)
+        jr      z,REAL_at_IX_to_max_pos_or_max_neg
+        ld      d,$80
+_process_real_at_hl_31:
+        ld      a,b
+        or      $7f
+        and     d
+        ld      (ix+$03),a
+        ld      (ix+$02),e
+        ld      (ix+$01),h
+        ld      (ix+$00),l
+_process_real_at_hl_38:
+        push    ix
+        pop     hl
+        scf
+        ret
+
+_process_real_at_hl_42:
+        xor     a
+        ld      (ix+$04),a
+        jr      _process_real_at_hl_38
+
+;;============================================
+;; REAL at IX to max pos
+REAL_at_IX_to_max_pos:
+        ld      b,$00
+
+;;=REAL at IX to max pos or max neg
+;;If B >= 0 store max positive real at (IX), otherwise max negative
+
+REAL_at_IX_to_max_pos_or_max_neg:
+        push    ix
+        pop     hl
+        ld      a,b
+        or      $7f
+        ld      (ix+$03),a
+        or      $ff
+        ld      (ix+$04),a
+        ld      (hl),a
+        ld      (ix+$01),a
+        ld      (ix+$02),a
+        ret
+
+
+
