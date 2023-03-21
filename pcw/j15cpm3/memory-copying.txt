@@ -83,3 +83,24 @@ Then finally, a reverse copy, &29d7 -> &5703, &1aa2 bytes, BACKWARDS
 After that it's a bunch of blanked regions of RAM, some hardware probing, then
 finally a JMP &FC00, the CP/M resident BIOS entry point.
 
+
+=== 21 Mar 2023
+
+after inspecting a RAM dump, the XBIOS-4 block /does/ start at 0x36c0, not
+&36c1.
+
+.. somehow I'm missing the first byte from the dump? which is 'cd', so it's
+starting with a CALL 0xF540.
+
+Ok, so what's being loaded into RAM between the XBIOS jumpblock (which I think
+is in the right place) and XBIOS itself?
+
+Now, at 0x0F34, it's 0xff, not 0xcd, but the rest of the file matches
+what's loaded into RAM on joyce (look at JOYCE.RAM.TXT for a post-boot dump,
+@ 0x3c60.)
+
+So something's up with both my interpretation of what's going on with the
+memory copying, and something's overwriting that first byte with a CD
+instruction?
+
+
