@@ -1,0 +1,37 @@
+
+org $c000
+
+header:
+	defb 0x1		; background ROM
+	defb 1			; mark
+	defb 0			; version major
+	defb 1			; minor
+
+jump_table:
+	defw rsx_table		; RSX table pointer - no RSXes here
+
+; jump table starts here
+	jp initialise_rom
+
+rsx_table:
+	defb "INIT RO", "M" + $80
+	defb 0
+
+initialise_rom:
+	push hl
+	ld hl, hello_str
+	call print_string
+	pop hl
+	scf
+	ret
+
+print_string:
+	LD A, (HL)
+	OR A
+	RET Z
+	CALL $BB5A
+	INC HL
+	JR print_string
+
+hello_str:
+	DEFB "Hi Adrian!", 13, 10, 0
