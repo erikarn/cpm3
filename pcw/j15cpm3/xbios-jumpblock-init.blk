@@ -1,0 +1,16 @@
+
+XBIOS_drive_not_ready_str: start 0x0242 end 0x0250 type bytedata
+XBIOS_write_protected_str: start 0x0251 end 0x0265 type bytedata
+XBIOS_seek_fail_str: start 0x0266 end 0x0272 type bytedata
+XBIOS_unknown_1_str: start 0x0273 end 0x0277 type bytedata
+XBIOS_no_str: start 0x0278 end 0x027e type bytedata
+XBIOS_missing_add_mark_str: start 0x027f end 0x0290 type bytedata
+XBIOS_bad_format_str: start 0x0291 end 0x029c type bytedata
+XBIOS_unknown_str: start 0x029d end 0x02a7 type bytedata
+XBIOS_media_changed_str: start 0x2a8 end 0x2b7 type bytedata
+XBIOS_disk_unsuitable_str: start 0x02b8 end 0x02c6 type bytedata
+XBIOS_amstrad_signon_str: start 0x02c7 end 0x02ee type bytedata
+XBIOS_one_disk_detected_str: start 0x02ef end 0x02f5 type bytedata
+XBIOS_two_disk_detected_str: start 0x02f6 end 0x02fd type bytedata
+XBIOS_sio_centronics_addon_str: start 0x02fe end 0x0314 type bytedata
+
