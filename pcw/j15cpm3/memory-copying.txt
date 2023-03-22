@@ -87,20 +87,21 @@ finally a JMP &FC00, the CP/M resident BIOS entry point.
 === 21 Mar 2023
 
 after inspecting a RAM dump, the XBIOS-4 block /does/ start at 0x36c0, not
-&36c1.
+&36c1.  Her'es how it looks in joyce.ram.txt:
 
-.. somehow I'm missing the first byte from the dump? which is 'cd', so it's
-starting with a CALL 0xF540.
+00003c60  cd 40 f5 21 e0 58 06 10  36 07 23 36 3d 23 10 f8  |.@.!.X..6.#6=#..|
+00003c70  11 9e 3c cd 0d f0 11 b3  3c cd 12 f0 f1 1f 38 08  |..<.....<.....8.|
 
-Ok, so what's being loaded into RAM between the XBIOS jumpblock (which I think
-is in the right place) and XBIOS itself?
+And the dump from J15CPM3.TXT, where this code copying from &0F35 -> &3c61:
 
-Now, at 0x0F34, it's 0xff, not 0xcd, but the rest of the file matches
-what's loaded into RAM on joyce (look at JOYCE.RAM.TXT for a post-boot dump,
-@ 0x3c60.)
+00000f30  7a ee 80 c9 ff f5 21 e0  58 06 10 36 07 23 36 3d  |z.....!.X..6.#6=|
+00000f40  23 10 f8 11 9e 3c cd 0d  f0 11 b3 3c cd 12 f0 f1  |#....<.....<....|
+00000f50  1f 38 08 3a 40 00 e6 20  20 11 c9 11 c8 3c cd 17  |.8.:@..  ....<..|
 
-So something's up with both my interpretation of what's going on with the
-memory copying, and something's overwriting that first byte with a CD
-instruction?
+So, &0F35 with "PUSH AF", "LD HL, &58E0" ?
+But &3c60 has 'cd 40 f5', so it's adding 'cd 40'. Where'd that
+come from?
 
+Anyway, it means I need to start the disassmble at &3c62 and put a note
+there as I don't know if it's PUSH AF, or it's part of a CALL.
 
