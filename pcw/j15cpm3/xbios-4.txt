@@ -1,4507 +1,4542 @@
 ; z80dasm 1.2.0
-; command line: /home/adrian/local/bin/z80dasm -g 0x3c62 -v -a -l -S xbios-jumpblock-init.sym -o xbios-4.txt xbios-4.bin
+; command line: /home/adrian/local/bin/z80dasm -g 0x3c62 -t -v -a -l -S xbios-jumpblock-init.sym -b xbios-4.blk -o xbios-4.txt xbios-4.bin
 
 	org 03c62h
+JB_jump_bank2_env:	equ 0x0000
+JB_jump_bc_addr:	equ 0x0003
+JB_jump_de_addr:	equ 0x0005
+JB_jump_hl_addr:	equ 0x0007
+JB_jump_screen_env:	equ 0x0008
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
+XBIOS_te_viewport_width:	equ 0x5821
+XBIOS_te_viewport_height:	equ 0x5822
+XBIOS_te_viewport_left:	equ 0x5825
+XBIOS_te_viewport_top:	equ 0x5826
+XBIOS_te_viewport_cursor_col:	equ 0x5828
+; unknown
+XBIOS_internal_ca_sa_reg_bc:	equ 0x5870
+; unknown
+XBIOS_internal_ca_sa_reg_a:	equ 0x5872
+XBIOS_internal_ca_sa_parity:	equ 0x5874
+XBIOS_internal_ca_sa_tx_data_bits:	equ 0x5876
 
-	push af			;3c62
-	ld hl,058e0h		;3c63
-	ld b,010h		;3c66
+	push af			;3c62	f5		.
+	ld hl,058e0h		;3c63	21 e0 58	! . X
+	ld b,010h		;3c66	06 10		. .
 l3c68h:
-	ld (hl),007h		;3c68
-	inc hl			;3c6a
-	ld (hl),03dh		;3c6b
-	inc hl			;3c6d
-	djnz l3c68h		;3c6e
-	ld de,l3c9eh		;3c70
-	call 0f00dh		;3c73
-	ld de,l3cb3h		;3c76
-	call 0f012h		;3c79
-	pop af			;3c7c
-	rra			;3c7d
-	jr c,l3c88h		;3c7e
-	ld a,(00040h)		;3c80
-	and 020h		;3c83
-	jr nz,l3c98h		;3c85
-	ret			;3c87
+	ld (hl),007h		;3c68	36 07		6 .
+	inc hl			;3c6a	23		#
+	ld (hl),03dh		;3c6b	36 3d		6 =
+	inc hl			;3c6d	23		#
+	djnz l3c68h		;3c6e	10 f8		. .
+	ld de,l3c9eh		;3c70	11 9e 3c	. . <
+	call 0f00dh		;3c73	cd 0d f0	. . .
+	ld de,l3cb3h		;3c76	11 b3 3c	. . <
+	call 0f012h		;3c79	cd 12 f0	. . .
+	pop af			;3c7c	f1		.
+	rra			;3c7d	1f		.
+	jr c,l3c88h		;3c7e	38 08		8 .
+	ld a,(00040h)		;3c80	3a 40 00	: @ .
+	and 020h		;3c83	e6 20		.  
+	jr nz,l3c98h		;3c85	20 11		  .
+	ret			;3c87	c9		.
 l3c88h:
-	ld de,l3cc8h		;3c88
-	call 0f017h		;3c8b
-	ld de,l3cddh		;3c8e
-	ld a,(00040h)		;3c91
-	and 020h		;3c94
-	jr z,l3c9bh		;3c96
+	ld de,l3cc8h		;3c88	11 c8 3c	. . <
+	call 0f017h		;3c8b	cd 17 f0	. . .
+	ld de,l3cddh		;3c8e	11 dd 3c	. . <
+	ld a,(00040h)		;3c91	3a 40 00	: @ .
+	and 020h		;3c94	e6 20		.  
+	jr z,l3c9bh		;3c96	28 03		( .
 l3c98h:
-	ld de,l3cf2h		;3c98
+	ld de,l3cf2h		;3c98	11 f2 3c	. . <
 l3c9bh:
-	jp 0f01ch		;3c9b
+	jp 0f01ch		;3c9b	c3 1c f0	. . .
 l3c9eh:
-	jp l3d1ch		;3c9e
-	jp l4127h		;3ca1
-	jp l4117h		;3ca4
-	jp l3d19h		;3ca7
-	jp l4933h		;3caa
-	jp l3d19h		;3cad
-	jp l4933h		;3cb0
+	jp l3d1ch		;3c9e	c3 1c 3d	. . =
+	jp l4127h		;3ca1	c3 27 41	. ' A
+	jp l4117h		;3ca4	c3 17 41	. . A
+	jp l3d19h		;3ca7	c3 19 3d	. . =
+	jp l4933h		;3caa	c3 33 49	. 3 I
+	jp l3d19h		;3cad	c3 19 3d	. . =
+	jp l4933h		;3cb0	c3 33 49	. 3 I
 l3cb3h:
-	jp l3d1ch		;3cb3
-	jp l3d1bh		;3cb6
-	jp l3d1bh		;3cb9
-	jp l3cc2h		;3cbc
-	jp 03cc5h		;3cbf
+	jp l3d1ch		;3cb3	c3 1c 3d	. . =
+	jp l3d1bh		;3cb6	c3 1b 3d	. . =
+	jp l3d1bh		;3cb9	c3 1b 3d	. . =
+	jp l3cc2h		;3cbc	c3 c2 3c	. . <
+	jp 03cc5h		;3cbf	c3 c5 3c	. . <
 l3cc2h:
-	rst 0			;3cc2
-	jp po,0c74dh		;3cc3
-	push hl			;3cc6
-	ld c,l			;3cc7
+	rst 0			;3cc2	c7		.
+	jp po,0c74dh		;3cc3	e2 4d c7	. M .
+	push hl			;3cc6	e5		.
+	ld c,l			;3cc7	4d		M
 l3cc8h:
-	jp l3e78h		;3cc8
-	jp l3fc2h		;3ccb
-	jp l3f72h		;3cce
-	jp l3fe3h		;3cd1
-	jp l3fd9h		;3cd4
-	jp l3fe3h		;3cd7
-	jp l3fd9h		;3cda
+	jp l3e78h		;3cc8	c3 78 3e	. x >
+	jp l3fc2h		;3ccb	c3 c2 3f	. . ?
+	jp l3f72h		;3cce	c3 72 3f	. r ?
+	jp l3fe3h		;3cd1	c3 e3 3f	. . ?
+	jp l3fd9h		;3cd4	c3 d9 3f	. . ?
+	jp l3fe3h		;3cd7	c3 e3 3f	. . ?
+	jp l3fd9h		;3cda	c3 d9 3f	. . ?
 l3cddh:
-	jp l3d1ch		;3cdd
-	jp l3d1bh		;3ce0
-	jp l3d1bh		;3ce3
-	jp l3da3h		;3ce6
-	jp l3d8ch		;3ce9
-	jp l3da3h		;3cec
-	jp l3d8ch		;3cef
+	jp l3d1ch		;3cdd	c3 1c 3d	. . =
+	jp l3d1bh		;3ce0	c3 1b 3d	. . =
+	jp l3d1bh		;3ce3	c3 1b 3d	. . =
+	jp l3da3h		;3ce6	c3 a3 3d	. . =
+	jp l3d8ch		;3ce9	c3 8c 3d	. . =
+	jp l3da3h		;3cec	c3 a3 3d	. . =
+	jp l3d8ch		;3cef	c3 8c 3d	. . =
 l3cf2h:
-	jp l3d1ch		;3cf2
-	jp l3d1bh		;3cf5
-	jp l3d1bh		;3cf8
-	jp l3dc4h		;3cfb
-	jp l3db5h		;3cfe
-	jp l3dc4h		;3d01
-	jp l3db5h		;3d04
-	jp l3d1ch		;3d07
-	jp l3d1bh		;3d0a
-	jp l3d1bh		;3d0d
-	jp l3d1bh		;3d10
-	jp l3d1ch		;3d13
-	jp l3d1bh		;3d16
+	jp l3d1ch		;3cf2	c3 1c 3d	. . =
+	jp l3d1bh		;3cf5	c3 1b 3d	. . =
+	jp l3d1bh		;3cf8	c3 1b 3d	. . =
+	jp l3dc4h		;3cfb	c3 c4 3d	. . =
+	jp l3db5h		;3cfe	c3 b5 3d	. . =
+	jp l3dc4h		;3d01	c3 c4 3d	. . =
+	jp l3db5h		;3d04	c3 b5 3d	. . =
+	jp l3d1ch		;3d07	c3 1c 3d	. . =
+	jp l3d1bh		;3d0a	c3 1b 3d	. . =
+	jp l3d1bh		;3d0d	c3 1b 3d	. . =
+	jp l3d1bh		;3d10	c3 1b 3d	. . =
+	jp l3d1ch		;3d13	c3 1c 3d	. . =
+	jp l3d1bh		;3d16	c3 1b 3d	. . =
 l3d19h:
-	scf			;3d19
-	ret			;3d1a
+	scf			;3d19	37		7
+	ret			;3d1a	c9		.
 l3d1bh:
-	xor a			;3d1b
+	xor a			;3d1b	af		.
 l3d1ch:
-	ret			;3d1c
+	ret			;3d1c	c9		.
 XBIOS_msg_retrymsg:
-	call sub_3d54h		;3d1d
+	call sub_3d54h		;3d1d	cd 54 3d	. T =
 l3d20h:
-	call 0ba03h		;3d20
-	call sub_3d64h		;3d23
-	ld hl,0051ah		;3d26
-	cp (hl)			;3d29
-	jr z,l3d3eh		;3d2a
-	inc hl			;3d2c
-	cp (hl)			;3d2d
-	scf			;3d2e
-	jr z,l3d3eh		;3d2f
-	inc hl			;3d31
-	cp (hl)			;3d32
-	jr z,l3d3dh		;3d33
-	call sub_4f8bh		;3d35
-	call sub_3d5ah		;3d38
-	jr l3d20h		;3d3b
+	call 0ba03h		;3d20	cd 03 ba	. . .
+	call sub_3d64h		;3d23	cd 64 3d	. d =
+	ld hl,0051ah		;3d26	21 1a 05	! . .
+	cp (hl)			;3d29	be		.
+	jr z,l3d3eh		;3d2a	28 12		( .
+	inc hl			;3d2c	23		#
+	cp (hl)			;3d2d	be		.
+	scf			;3d2e	37		7
+	jr z,l3d3eh		;3d2f	28 0d		( .
+	inc hl			;3d31	23		#
+	cp (hl)			;3d32	be		.
+	jr z,l3d3dh		;3d33	28 08		( .
+	call sub_4f8bh		;3d35	cd 8b 4f	. . O
+	call sub_3d5ah		;3d38	cd 5a 3d	. Z =
+	jr l3d20h		;3d3b	18 e3		. .
 l3d3dh:
-	or a			;3d3d
+	or a			;3d3d	b7		.
 l3d3eh:
-	push af			;3d3e
-	call sub_3d4fh		;3d3f
-	pop af			;3d42
-	ret			;3d43
+	push af			;3d3e	f5		.
+	call sub_3d4fh		;3d3f	cd 4f 3d	. O =
+	pop af			;3d42	f1		.
+	ret			;3d43	c9		.
 XBIOS_msg_insert:
-	call sub_4fc5h		;3d44
-	ld b,011h		;3d47
-	call sub_3d54h		;3d49
-	call 0ba03h		;3d4c
+	call sub_4fc5h		;3d44	cd c5 4f	. . O
+	ld b,011h		;3d47	06 11		. .
+	call sub_3d54h		;3d49	cd 54 3d	. T =
+	call 0ba03h		;3d4c	cd 03 ba	. . .
 sub_3d4fh:
-	call sub_4f97h		;3d4f
-	jr sub_3d5ah		;3d52
+	call sub_4f97h		;3d4f	cd 97 4f	. . O
+	jr sub_3d5ah		;3d52	18 06		. .
 sub_3d54h:
-	call sub_4f77h		;3d54
-	call XBIOS_dd_l_off_motor	;3d57
+	call sub_4f77h		;3d54	cd 77 4f	. w O
+	call XBIOS_dd_l_off_motor	;3d57	cd ea 56	. . V
 sub_3d5ah:
-	call 0ba00h		;3d5a
-	inc a			;3d5d
-	ret nz			;3d5e
-	call 0ba03h		;3d5f
-	jr sub_3d5ah		;3d62
+	call 0ba00h		;3d5a	cd 00 ba	. . .
+	inc a			;3d5d	3c		<
+	ret nz			;3d5e	c0		.
+	call 0ba03h		;3d5f	cd 03 ba	. . .
+	jr sub_3d5ah		;3d62	18 f6		. .
 sub_3d64h:
-	cp 061h			;3d64
-	ret c			;3d66
-	cp 07bh			;3d67
-	ret nc			;3d69
-	add a,0e0h		;3d6a
-	ret			;3d6c
+	cp 061h			;3d64	fe 61		. a
+	ret c			;3d66	d8		.
+	cp 07bh			;3d67	fe 7b		. {
+	ret nc			;3d69	d0		.
+	add a,0e0h		;3d6a	c6 e0		. .
+	ret			;3d6c	c9		.
 XBIOS_km_set_key:
-	jp l447eh		;3d6d
+	jp XBIOS_internal_km_set_key	;3d6d	c3 7e 44	. ~ D
 XBIOS_km_set_expand:
-	jp l41aeh		;3d70
+	jp XBIOS_internal_km_set_expand	;3d70	c3 ae 41	. . A
 XBIOS_km_set_speed:
-	jp l447ah		;3d73
+	jp XBIOS_internal_km_set_speed	;3d73	c3 7a 44	. z D
 XBIOS_km_kt_get:
-	jp l42e5h		;3d76
+	jp XBIOS_internal_km_kt_get	;3d76	c3 e5 42	. . B
 XBIOS_km_kt_put:
-	jp l430dh		;3d79
-	ld hl,l3d85h		;3d7c
-	ld bc,007e3h		;3d7f
-	otir			;3d82
-	ret			;3d84
+	jp l430dh		;3d79	c3 0d 43	. . C
+	ld hl,l3d85h		;3d7c	21 85 3d	! . =
+	ld bc,007e3h		;3d7f	01 e3 07	. . .
+	otir			;3d82	ed b3		. .
+	ret			;3d84	c9		.
 l3d85h:
-	jr l3d8bh		;3d85
-	ld b,h			;3d87
-	dec b			;3d88
-	ld l,b			;3d89
-	inc bc			;3d8a
+	jr l3d8bh		;3d85	18 04		. .
+	ld b,h			;3d87	44		D
+	dec b			;3d88	05		.
+	ld l,b			;3d89	68		h
+	inc bc			;3d8a	03		.
 l3d8bh:
-	pop bc			;3d8b
+	pop bc			;3d8b	c1		.
 l3d8ch:
-	call l3da3h		;3d8c
-	jr nc,l3d8ch		;3d8f
-	ld a,c			;3d91
-	out (0e8h),a		;3d92
-	ld hl,l3d9fh		;3d94
-	ld bc,004e3h		;3d97
-	di			;3d9a
-	otir			;3d9b
-	ei			;3d9d
-	ret			;3d9e
+	call l3da3h		;3d8c	cd a3 3d	. . =
+	jr nc,l3d8ch		;3d8f	30 fb		0 .
+	ld a,c			;3d91	79		y
+	out (0e8h),a		;3d92	d3 e8		. .
+	ld hl,l3d9fh		;3d94	21 9f 3d	! . =
+	ld bc,004e3h		;3d97	01 e3 04	. . .
+	di			;3d9a	f3		.
+	otir			;3d9b	ed b3		. .
+	ei			;3d9d	fb		.
+	ret			;3d9e	c9		.
 l3d9fh:
-	dec b			;3d9f
-	ret pe			;3da0
-	dec b			;3da1
-	ld l,b			;3da2
+	dec b			;3d9f	05		.
+	ret pe			;3da0	e8		.
+	dec b			;3da1	05		.
+	ld l,b			;3da2	68		h
 l3da3h:
-	ld a,010h		;3da3
-	out (0e3h),a		;3da5
-	in a,(0e3h)		;3da7
-	and 020h		;3da9
-	ret z			;3dab
-	scf			;3dac
-	ret			;3dad
-	out (087h),a		;3dae
-	out (084h),a		;3db0
-	out (087h),a		;3db2
-	ret			;3db4
+	ld a,010h		;3da3	3e 10		> .
+	out (0e3h),a		;3da5	d3 e3		. .
+	in a,(0e3h)		;3da7	db e3		. .
+	and 020h		;3da9	e6 20		.  
+	ret z			;3dab	c8		.
+	scf			;3dac	37		7
+	ret			;3dad	c9		.
+	out (087h),a		;3dae	d3 87		. .
+	out (084h),a		;3db0	d3 84		. .
+	out (087h),a		;3db2	d3 87		. .
+	ret			;3db4	c9		.
 l3db5h:
-	call l3dc4h		;3db5
-	jr nc,l3db5h		;3db8
-	ld a,c			;3dba
-	out (087h),a		;3dbb
-	di			;3dbd
-	out (085h),a		;3dbe
-	out (087h),a		;3dc0
-	ei			;3dc2
-	ret			;3dc3
+	call l3dc4h		;3db5	cd c4 3d	. . =
+	jr nc,l3db5h		;3db8	30 fb		0 .
+	ld a,c			;3dba	79		y
+	out (087h),a		;3dbb	d3 87		. .
+	di			;3dbd	f3		.
+	out (085h),a		;3dbe	d3 85		. .
+	out (087h),a		;3dc0	d3 87		. .
+	ei			;3dc2	fb		.
+	ret			;3dc3	c9		.
 l3dc4h:
-	in a,(084h)		;3dc4
-	and 001h		;3dc6
-	sub 001h		;3dc8
-	ret			;3dca
+	in a,(084h)		;3dc4	db 84		. .
+	and 001h		;3dc6	e6 01		. .
+	sub 001h		;3dc8	d6 01		. .
+	ret			;3dca	c9		.
 XBIOS_find_fid:
-	ld hl,(05904h)		;3dcb
+	ld hl,(05904h)		;3dcb	2a 04 59	* . Y
 l3dceh:
-	ld a,h			;3dce
-	or l			;3dcf
-	ret z			;3dd0
-	push hl			;3dd1
-	push de			;3dd2
-	inc hl			;3dd3
-	inc hl			;3dd4
-	inc hl			;3dd5
-	ld b,008h		;3dd6
+	ld a,h			;3dce	7c		|
+	or l			;3dcf	b5		.
+	ret z			;3dd0	c8		.
+	push hl			;3dd1	e5		.
+	push de			;3dd2	d5		.
+	inc hl			;3dd3	23		#
+	inc hl			;3dd4	23		#
+	inc hl			;3dd5	23		#
+	ld b,008h		;3dd6	06 08		. .
 l3dd8h:
-	ld a,(de)		;3dd8
-	xor (hl)		;3dd9
-	and 07fh		;3dda
-	jr nz,l3de2h		;3ddc
-	inc de			;3dde
-	inc hl			;3ddf
-	djnz l3dd8h		;3de0
+	ld a,(de)		;3dd8	1a		.
+	xor (hl)		;3dd9	ae		.
+	and 07fh		;3dda	e6 7f		. .
+	jr nz,l3de2h		;3ddc	20 04		  .
+	inc de			;3dde	13		.
+	inc hl			;3ddf	23		#
+	djnz l3dd8h		;3de0	10 f6		. .
 l3de2h:
-	pop de			;3de2
-	pop hl			;3de3
-	scf			;3de4
-	ret z			;3de5
-	ld bc,0001eh		;3de6
-	add hl,bc		;3de9
-	ld a,(hl)		;3dea
-	inc hl			;3deb
-	ld h,(hl)		;3dec
-	ld l,a			;3ded
-	jr l3dceh		;3dee
+	pop de			;3de2	d1		.
+	pop hl			;3de3	e1		.
+	scf			;3de4	37		7
+	ret z			;3de5	c8		.
+	ld bc,0001eh		;3de6	01 1e 00	. . .
+	add hl,bc		;3de9	09		.
+	ld a,(hl)		;3dea	7e		~
+	inc hl			;3deb	23		#
+	ld h,(hl)		;3dec	66		f
+	ld l,a			;3ded	6f		o
+	jr l3dceh		;3dee	18 de		. .
 XBIOS_svc_d_changed:
-	push af			;3df0
-	ld a,081h		;3df1
-	call 00c68h		;3df3
-	push af			;3df6
-	ld a,083h		;3df7
-	call 00c74h		;3df9
-	push af			;3dfc
-	call 0ba0ch		;3dfd
-	pop af			;3e00
-	call 00c74h		;3e01
-	pop af			;3e04
-	call 00c68h		;3e05
-	pop af			;3e08
-	ret			;3e09
+	push af			;3df0	f5		.
+	ld a,081h		;3df1	3e 81		> .
+	call 00c68h		;3df3	cd 68 0c	. h .
+	push af			;3df6	f5		.
+	ld a,083h		;3df7	3e 83		> .
+	call 00c74h		;3df9	cd 74 0c	. t .
+	push af			;3dfc	f5		.
+	call 0ba0ch		;3dfd	cd 0c ba	. . .
+	pop af			;3e00	f1		.
+	call 00c74h		;3e01	cd 74 0c	. t .
+	pop af			;3e04	f1		.
+	call 00c68h		;3e05	cd 68 0c	. h .
+	pop af			;3e08	f1		.
+	ret			;3e09	c9		.
 XBIOS_dd_calldriver:
-	push iy			;3e0a
-	ld iy,00002h		;3e0c
-	add iy,sp		;3e10
-	push af			;3e12
-	push iy			;3e13
-	push hl			;3e15
-	ld hl,l3e41h		;3e16
-	ex (sp),hl		;3e19
-	push hl			;3e1a
-	ld l,(iy+002h)		;3e1b
-	ld h,(iy+003h)		;3e1e
-	ex (sp),hl		;3e21
-	push de			;3e22
-	ld e,(iy-002h)		;3e23
-	ld d,(iy-001h)		;3e26
-	push bc			;3e29
-	call 0069bh		;3e2a
-	ld a,c			;3e2d
-	call 00c68h		;3e2e
-	ld (iy-004h),a		;3e31
-	ld a,b			;3e34
-	call 00c74h		;3e35
-	ld (iy-003h),a		;3e38
-	pop bc			;3e3b
-	push de			;3e3c
-	pop iy			;3e3d
-	pop de			;3e3f
-	ret			;3e40
+	push iy			;3e0a	fd e5		. .
+	ld iy,00002h		;3e0c	fd 21 02 00	. ! . .
+	add iy,sp		;3e10	fd 39		. 9
+	push af			;3e12	f5		.
+	push iy			;3e13	fd e5		. .
+	push hl			;3e15	e5		.
+	ld hl,l3e41h		;3e16	21 41 3e	! A >
+	ex (sp),hl		;3e19	e3		.
+	push hl			;3e1a	e5		.
+	ld l,(iy+002h)		;3e1b	fd 6e 02	. n .
+	ld h,(iy+003h)		;3e1e	fd 66 03	. f .
+	ex (sp),hl		;3e21	e3		.
+	push de			;3e22	d5		.
+	ld e,(iy-002h)		;3e23	fd 5e fe	. ^ .
+	ld d,(iy-001h)		;3e26	fd 56 ff	. V .
+	push bc			;3e29	c5		.
+	call 0069bh		;3e2a	cd 9b 06	. . .
+	ld a,c			;3e2d	79		y
+	call 00c68h		;3e2e	cd 68 0c	. h .
+	ld (iy-004h),a		;3e31	fd 77 fc	. w .
+	ld a,b			;3e34	78		x
+	call 00c74h		;3e35	cd 74 0c	. t .
+	ld (iy-003h),a		;3e38	fd 77 fd	. w .
+	pop bc			;3e3b	c1		.
+	push de			;3e3c	d5		.
+	pop iy			;3e3d	fd e1		. .
+	pop de			;3e3f	d1		.
+	ret			;3e40	c9		.
 l3e41h:
-	pop iy			;3e41
-	push af			;3e43
-	ld a,(iy-003h)		;3e44
-	call 00c74h		;3e47
-	ld a,(iy-004h)		;3e4a
-	call 00c68h		;3e4d
-	pop af			;3e50
-	ld sp,iy		;3e51
-	pop hl			;3e53
-	ex (sp),hl		;3e54
-	ret			;3e55
-	rst 38h			;3e56
-	rst 38h			;3e57
-	rst 38h			;3e58
-	rst 38h			;3e59
-	rst 38h			;3e5a
-	rst 38h			;3e5b
-	rst 38h			;3e5c
-	rst 38h			;3e5d
-	rst 38h			;3e5e
-	rst 38h			;3e5f
-	rst 38h			;3e60
-	rst 38h			;3e61
-	rst 38h			;3e62
-	rst 38h			;3e63
-	rst 38h			;3e64
-	rst 38h			;3e65
-	rst 38h			;3e66
-	rst 38h			;3e67
-	rst 38h			;3e68
-	rst 38h			;3e69
-	rst 38h			;3e6a
-	rst 38h			;3e6b
-	rst 38h			;3e6c
-	rst 38h			;3e6d
-	rst 38h			;3e6e
-	rst 38h			;3e6f
-	rst 38h			;3e70
-	rst 38h			;3e71
-	rst 38h			;3e72
-	rst 38h			;3e73
-	rst 38h			;3e74
-	rst 38h			;3e75
-	rst 38h			;3e76
-	rst 38h			;3e77
+	pop iy			;3e41	fd e1		. .
+	push af			;3e43	f5		.
+	ld a,(iy-003h)		;3e44	fd 7e fd	. ~ .
+	call 00c74h		;3e47	cd 74 0c	. t .
+	ld a,(iy-004h)		;3e4a	fd 7e fc	. ~ .
+	call 00c68h		;3e4d	cd 68 0c	. h .
+	pop af			;3e50	f1		.
+	ld sp,iy		;3e51	fd f9		. .
+	pop hl			;3e53	e1		.
+	ex (sp),hl		;3e54	e3		.
+	ret			;3e55	c9		.
+	rst 38h			;3e56	ff		.
+	rst 38h			;3e57	ff		.
+	rst 38h			;3e58	ff		.
+	rst 38h			;3e59	ff		.
+	rst 38h			;3e5a	ff		.
+	rst 38h			;3e5b	ff		.
+	rst 38h			;3e5c	ff		.
+	rst 38h			;3e5d	ff		.
+	rst 38h			;3e5e	ff		.
+	rst 38h			;3e5f	ff		.
+	rst 38h			;3e60	ff		.
+	rst 38h			;3e61	ff		.
+	rst 38h			;3e62	ff		.
+	rst 38h			;3e63	ff		.
+	rst 38h			;3e64	ff		.
+	rst 38h			;3e65	ff		.
+	rst 38h			;3e66	ff		.
+	rst 38h			;3e67	ff		.
+	rst 38h			;3e68	ff		.
+	rst 38h			;3e69	ff		.
+	rst 38h			;3e6a	ff		.
+	rst 38h			;3e6b	ff		.
+	rst 38h			;3e6c	ff		.
+	rst 38h			;3e6d	ff		.
+	rst 38h			;3e6e	ff		.
+	rst 38h			;3e6f	ff		.
+	rst 38h			;3e70	ff		.
+	rst 38h			;3e71	ff		.
+	rst 38h			;3e72	ff		.
+	rst 38h			;3e73	ff		.
+	rst 38h			;3e74	ff		.
+	rst 38h			;3e75	ff		.
+	rst 38h			;3e76	ff		.
+	rst 38h			;3e77	ff		.
 l3e78h:
-	ld hl,00007h		;3e78
-	add hl,de		;3e7b
-	ld l,(hl)		;3e7c
-	ld h,l			;3e7d
+	ld hl,JB_jump_hl_addr	;3e78	21 07 00	! . .
+	add hl,de		;3e7b	19		.
+	ld l,(hl)		;3e7c	6e		n
+	ld h,l			;3e7d	65		e
 XBIOS_ca_sa_baud:
-	ld (05870h),hl		;3e7e
-	push hl			;3e81
-	ld a,l			;3e82
-	ld bc,036e4h		;3e83
-	call sub_3e8dh		;3e86
-	pop af			;3e89
-	ld bc,076e5h		;3e8a
+	ld (XBIOS_internal_ca_sa_reg_bc),hl	;3e7e	22 70 58	" p X
+	push hl			;3e81	e5		.
+	ld a,l			;3e82	7d		}
+	ld bc,036e4h		;3e83	01 e4 36	. . 6
+	call sub_3e8dh		;3e86	cd 8d 3e	. . >
+	pop af			;3e89	f1		.
+	ld bc,076e5h		;3e8a	01 e5 76	. . v
 sub_3e8dh:
-	add a,a			;3e8d
-	add a,09dh		;3e8e
-	ld l,a			;3e90
-	adc a,03eh		;3e91
-	sub l			;3e93
-	ld h,a			;3e94
-	ld a,b			;3e95
-	out (0e7h),a		;3e96
-	outi			;3e98
-	outi			;3e9a
-	ret			;3e9c
-	rst 38h			;3e9d
-	rst 38h			;3e9e
-	call nz,08309h		;3e9f
-	ld b,070h		;3ea2
-	inc b			;3ea4
-	and c			;3ea5
-	inc bc			;3ea6
-	ld b,c			;3ea7
-	inc bc			;3ea8
-	and c			;3ea9
-	ld bc,000d0h		;3eaa
-	ld l,b			;3ead
-	nop			;3eae
-	ld b,l			;3eaf
-	nop			;3eb0
-	inc (hl)		;3eb1
-	nop			;3eb2
-	inc hl			;3eb3
-	nop			;3eb4
-	ld a,(de)		;3eb5
-	nop			;3eb6
-	ld de,00d00h		;3eb7
-	nop			;3eba
-	rlca			;3ebb
-	nop			;3ebc
+	add a,a			;3e8d	87		.
+	add a,09dh		;3e8e	c6 9d		. .
+	ld l,a			;3e90	6f		o
+	adc a,03eh		;3e91	ce 3e		. >
+	sub l			;3e93	95		.
+	ld h,a			;3e94	67		g
+	ld a,b			;3e95	78		x
+	out (0e7h),a		;3e96	d3 e7		. .
+	outi			;3e98	ed a3		. .
+	outi			;3e9a	ed a3		. .
+	ret			;3e9c	c9		.
+	rst 38h			;3e9d	ff		.
+	rst 38h			;3e9e	ff		.
+	call nz,08309h		;3e9f	c4 09 83	. . .
+	ld b,070h		;3ea2	06 70		. p
+	inc b			;3ea4	04		.
+	and c			;3ea5	a1		.
+	inc bc			;3ea6	03		.
+	ld b,c			;3ea7	41		A
+	inc bc			;3ea8	03		.
+	and c			;3ea9	a1		.
+	ld bc,000d0h		;3eaa	01 d0 00	. . .
+	ld l,b			;3ead	68		h
+	nop			;3eae	00		.
+	ld b,l			;3eaf	45		E
+	nop			;3eb0	00		.
+	inc (hl)		;3eb1	34		4
+	nop			;3eb2	00		.
+	inc hl			;3eb3	23		#
+	nop			;3eb4	00		.
+	ld a,(de)		;3eb5	1a		.
+	nop			;3eb6	00		.
+	ld de,00d00h		;3eb7	11 00 0d	. . .
+	nop			;3eba	00		.
+	rlca			;3ebb	07		.
+	nop			;3ebc	00		.
 XBIOS_ca_sa_init:
-	ld c,0e1h		;3ebd
-	cpl			;3ebf
-	inc a			;3ec0
-	jp m,l3f5fh		;3ec1
-	ld (05872h),a		;3ec4
-	ld (05876h),hl		;3ec7
-	ld (05874h),de		;3eca
-	ld a,018h		;3ece
-	out (c),a		;3ed0
-	out (c),a		;3ed2
-	ld a,004h		;3ed4
-	out (c),a		;3ed6
-	ld a,e			;3ed8
-	cp 002h			;3ed9
-	jr c,l3edeh		;3edb
-	inc e			;3edd
+	ld c,0e1h		;3ebd	0e e1		. .
+	cpl			;3ebf	2f		/
+	inc a			;3ec0	3c		<
+	jp m,l3f5fh		;3ec1	fa 5f 3f	. _ ?
+	ld (XBIOS_internal_ca_sa_reg_a),a	;3ec4	32 72 58	2 r X
+	ld (XBIOS_internal_ca_sa_tx_data_bits),hl	;3ec7	22 76 58	" v X
+	ld (XBIOS_internal_ca_sa_parity),de	;3eca	ed 53 74 58	. S t X
+	ld a,018h		;3ece	3e 18		> .
+	out (c),a		;3ed0	ed 79		. y
+	out (c),a		;3ed2	ed 79		. y
+	ld a,004h		;3ed4	3e 04		> .
+	out (c),a		;3ed6	ed 79		. y
+	ld a,e			;3ed8	7b		{
+	cp 002h			;3ed9	fe 02		. .
+	jr c,l3edeh		;3edb	38 01		8 .
+	inc e			;3edd	1c		.
 l3edeh:
-	ld a,d			;3ede
-	inc a			;3edf
-	add a,a			;3ee0
-	add a,a			;3ee1
-	or e			;3ee2
-	or 040h			;3ee3
-	out (c),a		;3ee5
-	ld a,l			;3ee7
-	ld d,005h		;3ee8
-	call sub_3f38h		;3eea
-	rrc d			;3eed
-	ld a,(05872h)		;3eef
-	sub 001h		;3ef2
-	jr z,l3ef8h		;3ef4
-	ld a,080h		;3ef6
+	ld a,d			;3ede	7a		z
+	inc a			;3edf	3c		<
+	add a,a			;3ee0	87		.
+	add a,a			;3ee1	87		.
+	or e			;3ee2	b3		.
+	or 040h			;3ee3	f6 40		. @
+	out (c),a		;3ee5	ed 79		. y
+	ld a,l			;3ee7	7d		}
+	ld d,005h		;3ee8	16 05		. .
+	call sub_3f38h		;3eea	cd 38 3f	. 8 ?
+	rrc d			;3eed	cb 0a		. .
+	ld a,(XBIOS_internal_ca_sa_reg_a)	;3eef	3a 72 58	: r X
+	sub 001h		;3ef2	d6 01		. .
+	jr z,l3ef8h		;3ef4	28 02		( .
+	ld a,080h		;3ef6	3e 80		> .
 l3ef8h:
-	or 00ah			;3ef8
-	or d			;3efa
-	ld (05873h),a		;3efb
-	out (c),a		;3efe
-	ld a,h			;3f00
-	ld d,003h		;3f01
-	call sub_3f38h		;3f03
-	ld a,d			;3f06
-	or 001h			;3f07
-	out (c),a		;3f09
-	ld a,e			;3f0b
-	ld (05878h),a		;3f0c
-	inc c			;3f0f
-	inc c			;3f10
-	ld hl,002a5h		;3f11
-	call sub_3f2ch		;3f14
-	ld l,05ah		;3f17
-	call z,sub_3f2ch	;3f19
-	ret nz			;3f1c
-	ld a,(05872h)		;3f1d
-	and 002h		;3f20
-	push af			;3f22
-	call z,sub_4036h	;3f23
-	pop af			;3f26
-	call nz,sub_401ch	;3f27
-	scf			;3f2a
-	ret			;3f2b
+	or 00ah			;3ef8	f6 0a		. .
+	or d			;3efa	b2		.
+	ld (05873h),a		;3efb	32 73 58	2 s X
+	out (c),a		;3efe	ed 79		. y
+	ld a,h			;3f00	7c		|
+	ld d,003h		;3f01	16 03		. .
+	call sub_3f38h		;3f03	cd 38 3f	. 8 ?
+	ld a,d			;3f06	7a		z
+	or 001h			;3f07	f6 01		. .
+	out (c),a		;3f09	ed 79		. y
+	ld a,e			;3f0b	7b		{
+	ld (05878h),a		;3f0c	32 78 58	2 x X
+	inc c			;3f0f	0c		.
+	inc c			;3f10	0c		.
+	ld hl,002a5h		;3f11	21 a5 02	! . .
+	call sub_3f2ch		;3f14	cd 2c 3f	. , ?
+	ld l,05ah		;3f17	2e 5a		. Z
+	call z,sub_3f2ch	;3f19	cc 2c 3f	. , ?
+	ret nz			;3f1c	c0		.
+	ld a,(XBIOS_internal_ca_sa_reg_a)	;3f1d	3a 72 58	: r X
+	and 002h		;3f20	e6 02		. .
+	push af			;3f22	f5		.
+	call z,sub_4036h	;3f23	cc 36 40	. 6 @
+	pop af			;3f26	f1		.
+	call nz,sub_401ch	;3f27	c4 1c 40	. . @
+	scf			;3f2a	37		7
+	ret			;3f2b	c9		.
 sub_3f2ch:
-	out (c),h		;3f2c
-	out (c),l		;3f2e
-	out (c),h		;3f30
-	in a,(c)		;3f32
-	xor l			;3f34
-	and 0f8h		;3f35
-	ret			;3f37
+	out (c),h		;3f2c	ed 61		. a
+	out (c),l		;3f2e	ed 69		. i
+	out (c),h		;3f30	ed 61		. a
+	in a,(c)		;3f32	ed 78		. x
+	xor l			;3f34	ad		.
+	and 0f8h		;3f35	e6 f8		. .
+	ret			;3f37	c9		.
 sub_3f38h:
-	out (c),d		;3f38
-	ld de,0001fh		;3f3a
-	sub 005h		;3f3d
-	ret z			;3f3f
-	ld de,0803fh		;3f40
-	dec a			;3f43
-	ret z			;3f44
-	ld de,0407fh		;3f45
-	dec a			;3f48
-	ret z			;3f49
-	ld de,0c0ffh		;3f4a
-	ret			;3f4d
+	out (c),d		;3f38	ed 51		. Q
+	ld de,0001fh		;3f3a	11 1f 00	. . .
+	sub 005h		;3f3d	d6 05		. .
+	ret z			;3f3f	c8		.
+	ld de,0803fh		;3f40	11 3f 80	. ? .
+	dec a			;3f43	3d		=
+	ret z			;3f44	c8		.
+	ld de,0407fh		;3f45	11 7f 40	. . @
+	dec a			;3f48	3d		=
+	ret z			;3f49	c8		.
+	ld de,0c0ffh		;3f4a	11 ff c0	. . .
+	ret			;3f4d	c9		.
 XBIOS_ca_sa_params:
-	ld bc,(05870h)		;3f4e
-	ld de,(05874h)		;3f52
-	ld hl,(05876h)		;3f56
-	ld a,(05872h)		;3f59
-	cpl			;3f5c
-	inc a			;3f5d
-	ret			;3f5e
+	ld bc,(XBIOS_internal_ca_sa_reg_bc)	;3f4e	ed 4b 70 58	. K p X
+	ld de,(XBIOS_internal_ca_sa_parity)	;3f52	ed 5b 74 58	. [ t X
+	ld hl,(XBIOS_internal_ca_sa_tx_data_bits)	;3f56	2a 76 58	* v X
+	ld a,(XBIOS_internal_ca_sa_reg_a)	;3f59	3a 72 58	: r X
+	cpl			;3f5c	2f		/
+	inc a			;3f5d	3c		<
+	ret			;3f5e	c9		.
 l3f5fh:
-	and 07fh		;3f5f
-	jr z,l3f87h		;3f61
-	dec a			;3f63
-	jr z,l3f8ch		;3f64
-	dec a			;3f66
-	ld de,0fd00h		;3f67
-	jr z,l3f8fh		;3f6a
-	dec a			;3f6c
-	ld e,002h		;3f6d
-	jr z,l3f8fh		;3f6f
-	ret			;3f71
+	and 07fh		;3f5f	e6 7f		. .
+	jr z,l3f87h		;3f61	28 24		( $
+	dec a			;3f63	3d		=
+	jr z,l3f8ch		;3f64	28 26		( &
+	dec a			;3f66	3d		=
+	ld de,0fd00h		;3f67	11 00 fd	. . .
+	jr z,l3f8fh		;3f6a	28 23		( #
+	dec a			;3f6c	3d		=
+	ld e,002h		;3f6d	1e 02		. .
+	jr z,l3f8fh		;3f6f	28 1e		( .
+	ret			;3f71	c9		.
 l3f72h:
-	ld c,0e1h		;3f72
-	ld a,(05872h)		;3f74
-	or a			;3f77
-	jr z,l3fa6h		;3f78
-	dec a			;3f7a
-	jp nz,l4050h		;3f7b
-	in a,(c)		;3f7e
-	rra			;3f80
-	call nc,l3f8ch		;3f81
-	call l3fa6h		;3f84
+	ld c,0e1h		;3f72	0e e1		. .
+	ld a,(XBIOS_internal_ca_sa_reg_a)	;3f74	3a 72 58	: r X
+	or a			;3f77	b7		.
+	jr z,l3fa6h		;3f78	28 2c		( ,
+	dec a			;3f7a	3d		=
+	jp nz,l4050h		;3f7b	c2 50 40	. P @
+	in a,(c)		;3f7e	ed 78		. x
+	rra			;3f80	1f		.
+	call nc,l3f8ch		;3f81	d4 8c 3f	. . ?
+	call l3fa6h		;3f84	cd a6 3f	. . ?
 l3f87h:
-	ld de,07f00h		;3f87
-	jr l3f8fh		;3f8a
+	ld de,07f00h		;3f87	11 00 7f	. . .
+	jr l3f8fh		;3f8a	18 03		. .
 l3f8ch:
-	ld de,07f80h		;3f8c
+	ld de,07f80h		;3f8c	11 80 7f	. . .
 l3f8fh:
-	di			;3f8f
-	call sub_3f95h		;3f90
-	ei			;3f93
-	ret			;3f94
+	di			;3f8f	f3		.
+	call sub_3f95h		;3f90	cd 95 3f	. . ?
+	ei			;3f93	fb		.
+	ret			;3f94	c9		.
 sub_3f95h:
-	push af			;3f95
-	ld a,005h		;3f96
-	out (c),a		;3f98
-	ld a,(05873h)		;3f9a
-	and d			;3f9d
-	or e			;3f9e
-	ld (05873h),a		;3f9f
-	out (c),a		;3fa2
-	pop af			;3fa4
-	ret			;3fa5
+	push af			;3f95	f5		.
+	ld a,005h		;3f96	3e 05		> .
+	out (c),a		;3f98	ed 79		. y
+	ld a,(05873h)		;3f9a	3a 73 58	: s X
+	and d			;3f9d	a2		.
+	or e			;3f9e	b3		.
+	ld (05873h),a		;3f9f	32 73 58	2 s X
+	out (c),a		;3fa2	ed 79		. y
+	pop af			;3fa4	f1		.
+	ret			;3fa5	c9		.
 l3fa6h:
-	in a,(c)		;3fa6
-	rra			;3fa8
-	jr nc,l3fa6h		;3fa9
+	in a,(c)		;3fa6	ed 78		. x
+	rra			;3fa8	1f		.
+	jr nc,l3fa6h		;3fa9	30 fb		0 .
 sub_3fabh:
-	ld a,001h		;3fab
-	out (c),a		;3fad
-	in a,(c)		;3faf
-	and 070h		;3fb1
-	inc a			;3fb3
-	ld hl,0587fh		;3fb4
-	or (hl)			;3fb7
-	ld (hl),a		;3fb8
-	dec c			;3fb9
-	in a,(c)		;3fba
-	inc c			;3fbc
-	ld hl,05878h		;3fbd
-	and (hl)		;3fc0
-	ret			;3fc1
+	ld a,001h		;3fab	3e 01		> .
+	out (c),a		;3fad	ed 79		. y
+	in a,(c)		;3faf	ed 78		. x
+	and 070h		;3fb1	e6 70		. p
+	inc a			;3fb3	3c		<
+	ld hl,0587fh		;3fb4	21 7f 58	! . X
+	or (hl)			;3fb7	b6		.
+	ld (hl),a		;3fb8	77		w
+	dec c			;3fb9	0d		.
+	in a,(c)		;3fba	ed 78		. x
+	inc c			;3fbc	0c		.
+	ld hl,05878h		;3fbd	21 78 58	! x X
+	and (hl)		;3fc0	a6		.
+	ret			;3fc1	c9		.
 l3fc2h:
-	ld c,0e1h		;3fc2
-	ld a,(05872h)		;3fc4
-	or a			;3fc7
-	jr z,l3fd5h		;3fc8
-	dec a			;3fca
-	jp nz,l404ah		;3fcb
-	in a,(c)		;3fce
-	rra			;3fd0
-	ret c			;3fd1
-	call l3f8ch		;3fd2
+	ld c,0e1h		;3fc2	0e e1		. .
+	ld a,(XBIOS_internal_ca_sa_reg_a)	;3fc4	3a 72 58	: r X
+	or a			;3fc7	b7		.
+	jr z,l3fd5h		;3fc8	28 0b		( .
+	dec a			;3fca	3d		=
+	jp nz,l404ah		;3fcb	c2 4a 40	. J @
+	in a,(c)		;3fce	ed 78		. x
+	rra			;3fd0	1f		.
+	ret c			;3fd1	d8		.
+	call l3f8ch		;3fd2	cd 8c 3f	. . ?
 l3fd5h:
-	in a,(c)		;3fd5
-	rra			;3fd7
-	ret			;3fd8
+	in a,(c)		;3fd5	ed 78		. x
+	rra			;3fd7	1f		.
+	ret			;3fd8	c9		.
 l3fd9h:
-	ld e,c			;3fd9
+	ld e,c			;3fd9	59		Y
 l3fdah:
-	call l3fe3h		;3fda
-	jr nc,l3fdah		;3fdd
-	dec c			;3fdf
-	out (c),e		;3fe0
-	ret			;3fe2
+	call l3fe3h		;3fda	cd e3 3f	. . ?
+	jr nc,l3fdah		;3fdd	30 fb		0 .
+	dec c			;3fdf	0d		.
+	out (c),e		;3fe0	ed 59		. Y
+	ret			;3fe2	c9		.
 l3fe3h:
-	ld c,0e1h		;3fe3
-	ld a,010h		;3fe5
-	out (c),a		;3fe7
-	ld a,(05872h)		;3fe9
-	rra			;3fec
-	jr c,l3ff6h		;3fed
-	in a,(c)		;3fef
-	and 004h		;3ff1
-	ret z			;3ff3
-	scf			;3ff4
-	ret			;3ff5
+	ld c,0e1h		;3fe3	0e e1		. .
+	ld a,010h		;3fe5	3e 10		> .
+	out (c),a		;3fe7	ed 79		. y
+	ld a,(XBIOS_internal_ca_sa_reg_a)	;3fe9	3a 72 58	: r X
+	rra			;3fec	1f		.
+	jr c,l3ff6h		;3fed	38 07		8 .
+	in a,(c)		;3fef	ed 78		. x
+	and 004h		;3ff1	e6 04		. .
+	ret z			;3ff3	c8		.
+	scf			;3ff4	37		7
+	ret			;3ff5	c9		.
 l3ff6h:
-	in a,(c)		;3ff6
-	and 020h		;3ff8
-	ret z			;3ffa
-	ld a,001h		;3ffb
-	di			;3ffd
-	out (c),a		;3ffe
-	in a,(c)		;4000
-	ei			;4002
-	rra			;4003
-	ret			;4004
-	ld hl,0000ah		;4005
-	call 00baah		;4008
-	ld (0587dh),hl		;400b
-	inc hl			;400e
-	inc hl			;400f
-	ld de,l406ch		;4010
-	call 00c39h		;4013
-	ld de,l4040h		;4016
-	jp 00c39h		;4019
+	in a,(c)		;3ff6	ed 78		. x
+	and 020h		;3ff8	e6 20		.  
+	ret z			;3ffa	c8		.
+	ld a,001h		;3ffb	3e 01		> .
+	di			;3ffd	f3		.
+	out (c),a		;3ffe	ed 79		. y
+	in a,(c)		;4000	ed 78		. x
+	ei			;4002	fb		.
+	rra			;4003	1f		.
+	ret			;4004	c9		.
+	ld hl,0000ah		;4005	21 0a 00	! . .
+	call 00baah		;4008	cd aa 0b	. . .
+	ld (0587dh),hl		;400b	22 7d 58	" } X
+	inc hl			;400e	23		#
+	inc hl			;400f	23		#
+	ld de,l406ch		;4010	11 6c 40	. l @
+	call 00c39h		;4013	cd 39 0c	. 9 .
+	ld de,l4040h		;4016	11 40 40	. @ @
+	jp 00c39h		;4019	c3 39 0c	. 9 .
 sub_401ch:
-	di			;401c
-	ld hl,0587fh		;401d
-	ld (hl),000h		;4020
-	ld hl,00001h		;4022
-	ld (05879h),hl		;4025
-	ld l,061h		;4028
-	ld (0587bh),hl		;402a
-	call sub_403ch		;402d
-	ld hl,(0587dh)		;4030
-	jp 00acah		;4033
+	di			;401c	f3		.
+	ld hl,0587fh		;401d	21 7f 58	! . X
+	ld (hl),000h		;4020	36 00		6 .
+	ld hl,00001h		;4022	21 01 00	! . .
+	ld (05879h),hl		;4025	22 79 58	" y X
+	ld l,061h		;4028	2e 61		. a
+	ld (0587bh),hl		;402a	22 7b 58	" { X
+	call sub_403ch		;402d	cd 3c 40	. < @
+	ld hl,(0587dh)		;4030	2a 7d 58	* } X
+	jp 00acah		;4033	c3 ca 0a	. . .
 sub_4036h:
-	ld hl,(0587dh)		;4036
-	jp 00ad0h		;4039
+	ld hl,(0587dh)		;4036	2a 7d 58	* } X
+	jp 00ad0h		;4039	c3 d0 0a	. . .
 sub_403ch:
-	ld a,018h		;403c
-	jr l4041h		;403e
+	ld a,018h		;403c	3e 18		> .
+	jr l4041h		;403e	18 01		. .
 l4040h:
-	xor a			;4040
+	xor a			;4040	af		.
 l4041h:
-	ld c,0e1h		;4041
-	ld d,001h		;4043
-	out (c),d		;4045
-	out (c),a		;4047
-	ret			;4049
+	ld c,0e1h		;4041	0e e1		. .
+	ld d,001h		;4043	16 01		. .
+	out (c),d		;4045	ed 51		. Q
+	out (c),a		;4047	ed 79		. y
+	ret			;4049	c9		.
 l404ah:
-	ld a,(05879h)		;404a
-	add a,0feh		;404d
-	ret			;404f
+	ld a,(05879h)		;404a	3a 79 58	: y X
+	add a,0feh		;404d	c6 fe		. .
+	ret			;404f	c9		.
 l4050h:
-	ld hl,05879h		;4050
-	dec (hl)		;4053
-	jr nz,l4059h		;4054
-	inc (hl)		;4056
-	jr l4050h		;4057
+	ld hl,05879h		;4050	21 79 58	! y X
+	dec (hl)		;4053	35		5
+	jr nz,l4059h		;4054	20 03		  .
+	inc (hl)		;4056	34		4
+	jr l4050h		;4057	18 f7		. .
 l4059h:
-	call sub_40adh		;4059
-	di			;405c
-	call sub_403ch		;405d
-	ld a,(hl)		;4060
-	ld hl,0587bh		;4061
-	inc (hl)		;4064
-	push af			;4065
-	call sub_4099h		;4066
-	pop af			;4069
-	ei			;406a
-	ret			;406b
+	call sub_40adh		;4059	cd ad 40	. . @
+	di			;405c	f3		.
+	call sub_403ch		;405d	cd 3c 40	. < @
+	ld a,(hl)		;4060	7e		~
+	ld hl,0587bh		;4061	21 7b 58	! { X
+	inc (hl)		;4064	34		4
+	push af			;4065	f5		.
+	call sub_4099h		;4066	cd 99 40	. . @
+	pop af			;4069	f1		.
+	ei			;406a	fb		.
+	ret			;406b	c9		.
 l406ch:
-	ld c,0e1h		;406c
-	in a,(c)		;406e
-	and 002h		;4070
-	ld b,0ffh		;4072
-	ret z			;4074
+	ld c,0e1h		;406c	0e e1		. .
+	in a,(c)		;406e	ed 78		. x
+	and 002h		;4070	e6 02		. .
+	ld b,0ffh		;4072	06 ff		. .
+	ret z			;4074	c8		.
 l4075h:
-	in a,(c)		;4075
-	rra			;4077
-	jr nc,l4092h		;4078
-	ld hl,0587bh		;407a
-	dec (hl)		;407d
-	jr z,l408eh		;407e
-	call sub_40adh		;4080
-	ex de,hl		;4083
-	call sub_3fabh		;4084
-	ld (de),a		;4087
-	ld hl,05879h		;4088
-	inc (hl)		;408b
-	jr l4075h		;408c
+	in a,(c)		;4075	ed 78		. x
+	rra			;4077	1f		.
+	jr nc,l4092h		;4078	30 18		0 .
+	ld hl,0587bh		;407a	21 7b 58	! { X
+	dec (hl)		;407d	35		5
+	jr z,l408eh		;407e	28 0e		( .
+	call sub_40adh		;4080	cd ad 40	. . @
+	ex de,hl		;4083	eb		.
+	call sub_3fabh		;4084	cd ab 3f	. . ?
+	ld (de),a		;4087	12		.
+	ld hl,05879h		;4088	21 79 58	! y X
+	inc (hl)		;408b	34		4
+	jr l4075h		;408c	18 e7		. .
 l408eh:
-	inc (hl)		;408e
-	call l4040h		;408f
+	inc (hl)		;408e	34		4
+	call l4040h		;408f	cd 40 40	. @ @
 l4092h:
-	call sub_4099h		;4092
-	ld b,000h		;4095
-	reti			;4097
+	call sub_4099h		;4092	cd 99 40	. . @
+	ld b,000h		;4095	06 00		. .
+	reti			;4097	ed 4d		. M
 sub_4099h:
-	ld a,(05872h)		;4099
-	rra			;409c
-	ret nc			;409d
-	ld a,(0587bh)		;409e
-	cp 015h			;40a1
-	ld de,07f80h		;40a3
-	jr nc,l40aah		;40a6
-	ld e,000h		;40a8
+	ld a,(XBIOS_internal_ca_sa_reg_a)	;4099	3a 72 58	: r X
+	rra			;409c	1f		.
+	ret nc			;409d	d0		.
+	ld a,(0587bh)		;409e	3a 7b 58	: { X
+	cp 015h			;40a1	fe 15		. .
+	ld de,07f80h		;40a3	11 80 7f	. . .
+	jr nc,l40aah		;40a6	30 02		0 .
+	ld e,000h		;40a8	1e 00		. .
 l40aah:
-	jp sub_3f95h		;40aa
+	jp sub_3f95h		;40aa	c3 95 3f	. . ?
 sub_40adh:
-	inc hl			;40ad
-	ld e,(hl)		;40ae
-	ld d,000h		;40af
-	inc (hl)		;40b1
-	ld a,(hl)		;40b2
-	cp 060h			;40b3
-	jr c,l40b8h		;40b5
-	ld (hl),d		;40b7
+	inc hl			;40ad	23		#
+	ld e,(hl)		;40ae	5e		^
+	ld d,000h		;40af	16 00		. .
+	inc (hl)		;40b1	34		4
+	ld a,(hl)		;40b2	7e		~
+	cp 060h			;40b3	fe 60		. `
+	jr c,l40b8h		;40b5	38 01		8 .
+	ld (hl),d		;40b7	72		r
 l40b8h:
-	ld hl,05880h		;40b8
-	add hl,de		;40bb
-	ret			;40bc
+	ld hl,05880h		;40b8	21 80 58	! . X
+	add hl,de		;40bb	19		.
+	ret			;40bc	c9		.
 XBIOS_ca_sa_intstatus:
-	di			;40bd
-	ld hl,05879h		;40be
-	ld b,(hl)		;40c1
-	dec b			;40c2
-	inc hl			;40c3
-	inc hl			;40c4
-	ld c,(hl)		;40c5
-	dec c			;40c6
-	ld hl,0587fh		;40c7
-	ld a,(hl)		;40ca
-	ld (hl),000h		;40cb
-	ei			;40cd
-	ret			;40ce
-	call sub_431bh		;40cf
-	ld hl,01e02h		;40d2
-	call l447ah		;40d5
-	ld de,0570ch		;40d8
-	ld hl,l4171h		;40db
-	ld bc,0003dh		;40de
-	ldir			;40e1
-	ld (057a3h),de		;40e3
-	xor a			;40e7
-	ld (0fff8h),a		;40e8
-	ld b,00bh		;40eb
-	ld hl,057d3h		;40ed
+	di			;40bd	f3		.
+	ld hl,05879h		;40be	21 79 58	! y X
+	ld b,(hl)		;40c1	46		F
+	dec b			;40c2	05		.
+	inc hl			;40c3	23		#
+	inc hl			;40c4	23		#
+	ld c,(hl)		;40c5	4e		N
+	dec c			;40c6	0d		.
+	ld hl,0587fh		;40c7	21 7f 58	! . X
+	ld a,(hl)		;40ca	7e		~
+	ld (hl),000h		;40cb	36 00		6 .
+	ei			;40cd	fb		.
+	ret			;40ce	c9		.
+	call sub_431bh		;40cf	cd 1b 43	. . C
+	ld hl,01e02h		;40d2	21 02 1e	! . .
+	call XBIOS_internal_km_set_speed	;40d5	cd 7a 44	. z D
+	ld de,0570ch		;40d8	11 0c 57	. . W
+	ld hl,l4171h		;40db	21 71 41	! q A
+	ld bc,0003dh		;40de	01 3d 00	. = .
+	ldir			;40e1	ed b0		. .
+	ld (057a3h),de		;40e3	ed 53 a3 57	. S . W
+	xor a			;40e7	af		.
+	ld (0fff8h),a		;40e8	32 f8 ff	2 . .
+	ld b,00bh		;40eb	06 0b		. .
+	ld hl,057d3h		;40ed	21 d3 57	! . W
 l40f0h:
-	ld (hl),a		;40f0
-	inc hl			;40f1
-	djnz l40f0h		;40f2
-	ld (057e2h),a		;40f4
-	ld (057a5h),a		;40f7
-	ld hl,0000eh		;40fa
-	call 00baah		;40fd
-	push hl			;4100
-	ld bc,00004h		;4101
-	add hl,bc		;4104
-	ld de,l4391h		;4105
-	ld bc,08381h		;4108
-	ld a,002h		;410b
-	call 009e4h		;410d
-	pop hl			;4110
-	ld bc,00202h		;4111
-	jp 00b47h		;4114
+	ld (hl),a		;40f0	77		w
+	inc hl			;40f1	23		#
+	djnz l40f0h		;40f2	10 fc		. .
+	ld (057e2h),a		;40f4	32 e2 57	2 . W
+	ld (057a5h),a		;40f7	32 a5 57	2 . W
+	ld hl,0000eh		;40fa	21 0e 00	! . .
+	call 00baah		;40fd	cd aa 0b	. . .
+	push hl			;4100	e5		.
+	ld bc,00004h		;4101	01 04 00	. . .
+	add hl,bc		;4104	09		.
+	ld de,l4391h		;4105	11 91 43	. . C
+	ld bc,08381h		;4108	01 81 83	. . .
+	ld a,002h		;410b	3e 02		> .
+	call 009e4h		;410d	cd e4 09	. . .
+	pop hl			;4110	e1		.
+	ld bc,00202h		;4111	01 02 02	. . .
+	jp 00b47h		;4114	c3 47 0b	. G .
 l4117h:
-	push hl			;4117
-	push bc			;4118
+	push hl			;4117	e5		.
+	push bc			;4118	c5		.
 l4119h:
-	ld hl,(0570ah)		;4119
-	call sub_413fh		;411c
-	ld (0570ah),hl		;411f
-	jr nc,l4119h		;4122
-	pop bc			;4124
-	pop hl			;4125
-	ret			;4126
+	ld hl,(0570ah)		;4119	2a 0a 57	* . W
+	call sub_413fh		;411c	cd 3f 41	. ? A
+	ld (0570ah),hl		;411f	22 0a 57	" . W
+	jr nc,l4119h		;4122	30 f5		0 .
+	pop bc			;4124	c1		.
+	pop hl			;4125	e1		.
+	ret			;4126	c9		.
 l4127h:
-	push hl			;4127
-	push bc			;4128
-	xor a			;4129
-	ld (0fff8h),a		;412a
-	ld hl,(0570ah)		;412d
-	call sub_4153h		;4130
-	jr c,l413bh		;4133
-	call sub_413fh		;4135
-	call c,l430dh		;4138
+	push hl			;4127	e5		.
+	push bc			;4128	c5		.
+	xor a			;4129	af		.
+	ld (0fff8h),a		;412a	32 f8 ff	2 . .
+	ld hl,(0570ah)		;412d	2a 0a 57	* . W
+	call sub_4153h		;4130	cd 53 41	. S A
+	jr c,l413bh		;4133	38 06		8 .
+	call sub_413fh		;4135	cd 3f 41	. ? A
+	call c,l430dh		;4138	dc 0d 43	. . C
 l413bh:
-	sbc a,a			;413b
-	pop bc			;413c
-	pop hl			;413d
-	ret			;413e
+	sbc a,a			;413b	9f		.
+	pop bc			;413c	c1		.
+	pop hl			;413d	e1		.
+	ret			;413e	c9		.
 sub_413fh:
-	call sub_4153h		;413f
-	ret c			;4142
-	call sub_4167h		;4143
-	ret nc			;4146
-	cp 080h			;4147
-	ret c			;4149
-	ld h,a			;414a
-	ld l,000h		;414b
-	cp 09fh			;414d
-	jr c,sub_413fh		;414f
-	scf			;4151
-	ret			;4152
+	call sub_4153h		;413f	cd 53 41	. S A
+	ret c			;4142	d8		.
+	call sub_4167h		;4143	cd 67 41	. g A
+	ret nc			;4146	d0		.
+	cp 080h			;4147	fe 80		. .
+	ret c			;4149	d8		.
+	ld h,a			;414a	67		g
+	ld l,000h		;414b	2e 00		. .
+	cp 09fh			;414d	fe 9f		. .
+	jr c,sub_413fh		;414f	38 ee		8 .
+	scf			;4151	37		7
+	ret			;4152	c9		.
 sub_4153h:
-	ld a,h			;4153
-	or a			;4154
-	push de			;4155
-	call nz,sub_421ah	;4156
-	pop de			;4159
-	inc l			;415a
-	jr nc,l4163h		;415b
-	push af			;415d
-	sbc a,a			;415e
-	ld (0fff8h),a		;415f
-	pop af			;4162
+	ld a,h			;4153	7c		|
+	or a			;4154	b7		.
+	push de			;4155	d5		.
+	call nz,sub_421ah	;4156	c4 1a 42	. . B
+	pop de			;4159	d1		.
+	inc l			;415a	2c		,
+	jr nc,l4163h		;415b	30 06		0 .
+	push af			;415d	f5		.
+	sbc a,a			;415e	9f		.
+	ld (0fff8h),a		;415f	32 f8 ff	2 . .
+	pop af			;4162	f1		.
 l4163h:
-	ret c			;4163
-	ld h,000h		;4164
-	ret			;4166
+	ret c			;4163	d8		.
+	ld h,000h		;4164	26 00		& .
+	ret			;4166	c9		.
 sub_4167h:
-	call l42e5h		;4167
-	ret nc			;416a
-	call sub_4242h		;416b
-	jr nc,sub_4167h		;416e
-	ret			;4170
+	call XBIOS_internal_km_kt_get	;4167	cd e5 42	. . B
+	ret nc			;416a	d0		.
+	call sub_4242h		;416b	cd 42 42	. B B
+	jr nc,sub_4167h		;416e	30 f7		0 .
+	ret			;4170	c9		.
 l4171h:
-	ld bc,00103h		;4171
-	ld a,(de)		;4174
-	ld bc,0011ah		;4175
-	ld de,01101h		;4178
-	ld bc,00113h		;417b
-	inc de			;417e
-	ld bc,00110h		;417f
-	djnz l4185h		;4182
-	rlca			;4184
+	ld bc,00103h		;4171	01 03 01	. . .
+	ld a,(de)		;4174	1a		.
+	ld bc,0011ah		;4175	01 1a 01	. . .
+	ld de,01101h		;4178	11 01 11	. . .
+	ld bc,00113h		;417b	01 13 01	. . .
+	inc de			;417e	13		.
+	ld bc,00110h		;417f	01 10 01	. . .
+	djnz l4185h		;4182	10 01		. .
+	rlca			;4184	07		.
 l4185h:
-	ld bc,0017fh		;4185
-	ex af,af'		;4188
-	ld bc,00115h		;4189
-	rla			;418c
-	ld bc,0031dh		;418d
-	ld b,002h		;4190
-	ld (bc),a		;4192
-	ld (bc),a		;4193
-	ld b,002h		;4194
-	ld bc,0011fh		;4196
-	ld d,001h		;4199
-	ld bc,00601h		;419b
-	ld bc,00112h		;419e
-	ld e,001h		;41a1
-	dec bc			;41a3
-	ld bc,0011ch		;41a4
-	dec b			;41a7
-	ld bc,00018h		;41a8
-	nop			;41ab
-	nop			;41ac
-	nop			;41ad
-l41aeh:
-	ld a,b			;41ae
-	call sub_422ah		;41af
-	ret nc			;41b2
-	push bc			;41b3
-	push de			;41b4
-	push hl			;41b5
-	call sub_41d2h		;41b6
-	ccf			;41b9
-	pop hl			;41ba
-	pop de			;41bb
-	pop bc			;41bc
-	ret nc			;41bd
-	dec de			;41be
-	ld a,c			;41bf
-	inc c			;41c0
+	ld bc,0017fh		;4185	01 7f 01	. . .
+	ex af,af'		;4188	08		.
+	ld bc,00115h		;4189	01 15 01	. . .
+	rla			;418c	17		.
+	ld bc,0031dh		;418d	01 1d 03	. . .
+	ld b,002h		;4190	06 02		. .
+	ld (bc),a		;4192	02		.
+	ld (bc),a		;4193	02		.
+	ld b,002h		;4194	06 02		. .
+	ld bc,0011fh		;4196	01 1f 01	. . .
+	ld d,001h		;4199	16 01		. .
+	ld bc,00601h		;419b	01 01 06	. . .
+	ld bc,00112h		;419e	01 12 01	. . .
+	ld e,001h		;41a1	1e 01		. .
+	dec bc			;41a3	0b		.
+	ld bc,0011ch		;41a4	01 1c 01	. . .
+	dec b			;41a7	05		.
+	ld bc,00018h		;41a8	01 18 00	. . .
+	nop			;41ab	00		.
+	nop			;41ac	00		.
+	nop			;41ad	00		.
+XBIOS_internal_km_set_expand:
+	ld a,b			;41ae	78		x
+	call sub_422ah		;41af	cd 2a 42	. * B
+	ret nc			;41b2	d0		.
+	push bc			;41b3	c5		.
+	push de			;41b4	d5		.
+	push hl			;41b5	e5		.
+	call sub_41d2h		;41b6	cd d2 41	. . A
+	ccf			;41b9	3f		?
+	pop hl			;41ba	e1		.
+	pop de			;41bb	d1		.
+	pop bc			;41bc	c1		.
+	ret nc			;41bd	d0		.
+	dec de			;41be	1b		.
+	ld a,c			;41bf	79		y
+	inc c			;41c0	0c		.
 l41c1h:
-	ld (de),a		;41c1
-	inc de			;41c2
-	ld a,(hl)		;41c3
-	inc hl			;41c4
-	dec c			;41c5
-	jr nz,l41c1h		;41c6
-	ld hl,0570bh		;41c8
-	ld a,b			;41cb
-	xor (hl)		;41cc
-	jr nz,l41d0h		;41cd
-	ld (hl),a		;41cf
+	ld (de),a		;41c1	12		.
+	inc de			;41c2	13		.
+	ld a,(hl)		;41c3	7e		~
+	inc hl			;41c4	23		#
+	dec c			;41c5	0d		.
+	jr nz,l41c1h		;41c6	20 f9		  .
+	ld hl,0570bh		;41c8	21 0b 57	! . W
+	ld a,b			;41cb	78		x
+	xor (hl)		;41cc	ae		.
+	jr nz,l41d0h		;41cd	20 01		  .
+	ld (hl),a		;41cf	77		w
 l41d0h:
-	scf			;41d0
-	ret			;41d1
+	scf			;41d0	37		7
+	ret			;41d1	c9		.
 sub_41d2h:
-	ld b,000h		;41d2
-	ld h,b			;41d4
-	ld l,a			;41d5
-	ld a,c			;41d6
-	sub l			;41d7
-	ret z			;41d8
-	jr nc,l41eah		;41d9
-	ld a,l			;41db
-	ld l,c			;41dc
-	ld c,a			;41dd
-	add hl,de		;41de
-	ex de,hl		;41df
-	add hl,bc		;41e0
-	call sub_420eh		;41e1
-	jr z,l4209h		;41e4
-	ldir			;41e6
-	jr l4209h		;41e8
+	ld b,000h		;41d2	06 00		. .
+	ld h,b			;41d4	60		`
+	ld l,a			;41d5	6f		o
+	ld a,c			;41d6	79		y
+	sub l			;41d7	95		.
+	ret z			;41d8	c8		.
+	jr nc,l41eah		;41d9	30 0f		0 .
+	ld a,l			;41db	7d		}
+	ld l,c			;41dc	69		i
+	ld c,a			;41dd	4f		O
+	add hl,de		;41de	19		.
+	ex de,hl		;41df	eb		.
+	add hl,bc		;41e0	09		.
+	call sub_420eh		;41e1	cd 0e 42	. . B
+	jr z,l4209h		;41e4	28 23		( #
+	ldir			;41e6	ed b0		. .
+	jr l4209h		;41e8	18 1f		. .
 l41eah:
-	ld c,a			;41ea
-	add hl,de		;41eb
-	push hl			;41ec
-	ld hl,(057a3h)		;41ed
-	add hl,bc		;41f0
-	ex de,hl		;41f1
-	ld hl,057a3h		;41f2
-	ld a,l			;41f5
-	sub e			;41f6
-	ld a,h			;41f7
-	sbc a,d			;41f8
-	pop hl			;41f9
-	ret c			;41fa
-	call sub_420eh		;41fb
-	ld hl,(057a3h)		;41fe
-	jr z,l4209h		;4201
-	push de			;4203
-	dec de			;4204
-	dec hl			;4205
-	lddr			;4206
-	pop de			;4208
+	ld c,a			;41ea	4f		O
+	add hl,de		;41eb	19		.
+	push hl			;41ec	e5		.
+	ld hl,(057a3h)		;41ed	2a a3 57	* . W
+	add hl,bc		;41f0	09		.
+	ex de,hl		;41f1	eb		.
+	ld hl,057a3h		;41f2	21 a3 57	! . W
+	ld a,l			;41f5	7d		}
+	sub e			;41f6	93		.
+	ld a,h			;41f7	7c		|
+	sbc a,d			;41f8	9a		.
+	pop hl			;41f9	e1		.
+	ret c			;41fa	d8		.
+	call sub_420eh		;41fb	cd 0e 42	. . B
+	ld hl,(057a3h)		;41fe	2a a3 57	* . W
+	jr z,l4209h		;4201	28 06		( .
+	push de			;4203	d5		.
+	dec de			;4204	1b		.
+	dec hl			;4205	2b		+
+	lddr			;4206	ed b8		. .
+	pop de			;4208	d1		.
 l4209h:
-	ld (057a3h),de		;4209
-	ret			;420d
+	ld (057a3h),de		;4209	ed 53 a3 57	. S . W
+	ret			;420d	c9		.
 sub_420eh:
-	ld a,(057a3h)		;420e
-	sub l			;4211
-	ld c,a			;4212
-	ld a,(057a4h)		;4213
-	sbc a,h			;4216
-	ld b,a			;4217
-	or c			;4218
-	ret			;4219
+	ld a,(057a3h)		;420e	3a a3 57	: . W
+	sub l			;4211	95		.
+	ld c,a			;4212	4f		O
+	ld a,(057a4h)		;4213	3a a4 57	: . W
+	sbc a,h			;4216	9c		.
+	ld b,a			;4217	47		G
+	or c			;4218	b1		.
+	ret			;4219	c9		.
 sub_421ah:
-	call sub_422ah		;421a
-	ret nc			;421d
-	cp l			;421e
-	ret z			;421f
-	ccf			;4220
-	ret nc			;4221
-	push hl			;4222
-	ld h,000h		;4223
-	add hl,de		;4225
-	ld a,(hl)		;4226
-	pop hl			;4227
-	scf			;4228
-	ret			;4229
+	call sub_422ah		;421a	cd 2a 42	. * B
+	ret nc			;421d	d0		.
+	cp l			;421e	bd		.
+	ret z			;421f	c8		.
+	ccf			;4220	3f		?
+	ret nc			;4221	d0		.
+	push hl			;4222	e5		.
+	ld h,000h		;4223	26 00		& .
+	add hl,de		;4225	19		.
+	ld a,(hl)		;4226	7e		~
+	pop hl			;4227	e1		.
+	scf			;4228	37		7
+	ret			;4229	c9		.
 sub_422ah:
-	and 07fh		;422a
-	cp 01fh			;422c
-	ret nc			;422e
-	push hl			;422f
-	ld hl,0570ch		;4230
-	ld de,00000h		;4233
-	inc a			;4236
+	and 07fh		;422a	e6 7f		. .
+	cp 01fh			;422c	fe 1f		. .
+	ret nc			;422e	d0		.
+	push hl			;422f	e5		.
+	ld hl,0570ch		;4230	21 0c 57	! . W
+	ld de,JB_jump_bank2_env	;4233	11 00 00	. . .
+	inc a			;4236	3c		<
 l4237h:
-	add hl,de		;4237
-	ld e,(hl)		;4238
-	inc hl			;4239
-	dec a			;423a
-	jr nz,l4237h		;423b
-	ld a,e			;423d
-	ex de,hl		;423e
-	pop hl			;423f
-	scf			;4240
-	ret			;4241
+	add hl,de		;4237	19		.
+	ld e,(hl)		;4238	5e		^
+	inc hl			;4239	23		#
+	dec a			;423a	3d		=
+	jr nz,l4237h		;423b	20 fa		  .
+	ld a,e			;423d	7b		{
+	ex de,hl		;423e	eb		.
+	pop hl			;423f	e1		.
+	scf			;4240	37		7
+	ret			;4241	c9		.
 sub_4242h:
-	push hl			;4242
-	push de			;4243
-	bit 3,b			;4244
-	jr z,l4262h		;4246
-	ld a,c			;4248
-	and 0f8h		;4249
-	rrca			;424b
-	rrca			;424c
-	rrca			;424d
-	ld hl,l4913h		;424e
-	add a,l			;4251
-	ld l,a			;4252
-	adc a,h			;4253
-	sub l			;4254
-	ld h,a			;4255
-	ld a,c			;4256
-	and 007h		;4257
-	ld d,a			;4259
-	ld a,(hl)		;425a
-	inc d			;425b
+	push hl			;4242	e5		.
+	push de			;4243	d5		.
+	bit 3,b			;4244	cb 58		. X
+	jr z,l4262h		;4246	28 1a		( .
+	ld a,c			;4248	79		y
+	and 0f8h		;4249	e6 f8		. .
+	rrca			;424b	0f		.
+	rrca			;424c	0f		.
+	rrca			;424d	0f		.
+	ld hl,l4913h		;424e	21 13 49	! . I
+	add a,l			;4251	85		.
+	ld l,a			;4252	6f		o
+	adc a,h			;4253	8c		.
+	sub l			;4254	95		.
+	ld h,a			;4255	67		g
+	ld a,c			;4256	79		y
+	and 007h		;4257	e6 07		. .
+	ld d,a			;4259	57		W
+	ld a,(hl)		;425a	7e		~
+	inc d			;425b	14		.
 l425ch:
-	rra			;425c
-	dec d			;425d
-	jr nz,l425ch		;425e
-	jr nc,l429bh		;4260
+	rra			;425c	1f		.
+	dec d			;425d	15		.
+	jr nz,l425ch		;425e	20 fc		  .
+	jr nc,l429bh		;4260	30 39		0 9
 l4262h:
-	ld e,c			;4262
-	ld d,000h		;4263
-	or a			;4265
-	bit 4,b			;4266
-	call nz,sub_429eh	;4268
-	jr c,l429bh		;426b
-	ld a,b			;426d
-	ld hl,l48c2h		;426e
-	bit 1,a			;4271
-	jr nz,l428fh		;4273
-	bit 7,a			;4275
-	jr nz,l4285h		;4277
-	ld hl,l47cfh		;4279
-	and 060h		;427c
-	jr nz,l428fh		;427e
-	ld hl,l477eh		;4280
-	jr l428fh		;4283
+	ld e,c			;4262	59		Y
+	ld d,000h		;4263	16 00		. .
+	or a			;4265	b7		.
+	bit 4,b			;4266	cb 60		. `
+	call nz,sub_429eh	;4268	c4 9e 42	. . B
+	jr c,l429bh		;426b	38 2e		8 .
+	ld a,b			;426d	78		x
+	ld hl,l48c2h		;426e	21 c2 48	! . H
+	bit 1,a			;4271	cb 4f		. O
+	jr nz,l428fh		;4273	20 1a		  .
+	bit 7,a			;4275	cb 7f		. .
+	jr nz,l4285h		;4277	20 0c		  .
+	ld hl,l47cfh		;4279	21 cf 47	! . G
+	and 060h		;427c	e6 60		. `
+	jr nz,l428fh		;427e	20 0f		  .
+	ld hl,l477eh		;4280	21 7e 47	! ~ G
+	jr l428fh		;4283	18 0a		. .
 l4285h:
-	ld hl,l4871h		;4285
-	and 060h		;4288
-	jr nz,l428fh		;428a
-	ld hl,l4820h		;428c
+	ld hl,l4871h		;4285	21 71 48	! q H
+	and 060h		;4288	e6 60		. `
+	jr nz,l428fh		;428a	20 03		  .
+	ld hl,l4820h		;428c	21 20 48	!   H
 l428fh:
-	add hl,de		;428f
-	ld a,(hl)		;4290
-	cp 09fh			;4291
-	jr z,l429bh		;4293
-	bit 2,b			;4295
-	call nz,sub_42d4h	;4297
-	scf			;429a
+	add hl,de		;428f	19		.
+	ld a,(hl)		;4290	7e		~
+	cp 09fh			;4291	fe 9f		. .
+	jr z,l429bh		;4293	28 06		( .
+	bit 2,b			;4295	cb 50		. P
+	call nz,sub_42d4h	;4297	c4 d4 42	. . B
+	scf			;429a	37		7
 l429bh:
-	pop de			;429b
-	pop hl			;429c
-	ret			;429d
+	pop de			;429b	d1		.
+	pop hl			;429c	e1		.
+	ret			;429d	c9		.
 sub_429eh:
-	ld hl,l477eh		;429e
-	call sub_42c2h		;42a1
-	ret c			;42a4
-	cp 07bh			;42a5
-	jr nc,l42ach		;42a7
-	cp 061h			;42a9
-	ret nc			;42ab
+	ld hl,l477eh		;429e	21 7e 47	! ~ G
+	call sub_42c2h		;42a1	cd c2 42	. . B
+	ret c			;42a4	d8		.
+	cp 07bh			;42a5	fe 7b		. {
+	jr nc,l42ach		;42a7	30 03		0 .
+	cp 061h			;42a9	fe 61		. a
+	ret nc			;42ab	d0		.
 l42ach:
-	ld hl,l47cfh		;42ac
-	call sub_42c2h		;42af
-	ld hl,l4820h		;42b2
-	call nc,sub_42c2h	;42b5
-	ld hl,l4871h		;42b8
-	call nc,sub_42c2h	;42bb
-	ret c			;42be
-	ld hl,l48c2h		;42bf
+	ld hl,l47cfh		;42ac	21 cf 47	! . G
+	call sub_42c2h		;42af	cd c2 42	. . B
+	ld hl,l4820h		;42b2	21 20 48	!   H
+	call nc,sub_42c2h	;42b5	d4 c2 42	. . B
+	ld hl,l4871h		;42b8	21 71 48	! q H
+	call nc,sub_42c2h	;42bb	d4 c2 42	. . B
+	ret c			;42be	d8		.
+	ld hl,l48c2h		;42bf	21 c2 48	! . H
 sub_42c2h:
-	add hl,de		;42c2
-	ld a,(hl)		;42c3
-	cp 03ah			;42c4
-	ret nc			;42c6
-	cp 00dh			;42c7
-	scf			;42c9
-	ret z			;42ca
-	cp 02bh			;42cb
-	ccf			;42cd
-	ret nc			;42ce
-	cp 02fh			;42cf
-	ret z			;42d1
-	scf			;42d2
-	ret			;42d3
+	add hl,de		;42c2	19		.
+	ld a,(hl)		;42c3	7e		~
+	cp 03ah			;42c4	fe 3a		. :
+	ret nc			;42c6	d0		.
+	cp 00dh			;42c7	fe 0d		. .
+	scf			;42c9	37		7
+	ret z			;42ca	c8		.
+	cp 02bh			;42cb	fe 2b		. +
+	ccf			;42cd	3f		?
+	ret nc			;42ce	d0		.
+	cp 02fh			;42cf	fe 2f		. /
+	ret z			;42d1	c8		.
+	scf			;42d2	37		7
+	ret			;42d3	c9		.
 sub_42d4h:
-	cp 07bh			;42d4
-	jr nc,l42dch		;42d6
-	cp 061h			;42d8
-	jr nc,l42e2h		;42da
+	cp 07bh			;42d4	fe 7b		. {
+	jr nc,l42dch		;42d6	30 04		0 .
+	cp 061h			;42d8	fe 61		. a
+	jr nc,l42e2h		;42da	30 06		0 .
 l42dch:
-	cp 0e0h			;42dc
-	ret c			;42de
-	cp 0fch			;42df
-	ret nc			;42e1
+	cp 0e0h			;42dc	fe e0		. .
+	ret c			;42de	d8		.
+	cp 0fch			;42df	fe fc		. .
+	ret nc			;42e1	d0		.
 l42e2h:
-	sub 020h		;42e2
-	ret			;42e4
-l42e5h:
-	push hl			;42e5
+	sub 020h		;42e2	d6 20		.  
+	ret			;42e4	c9		.
+XBIOS_internal_km_kt_get:
+	push hl			;42e5	e5		.
 l42e6h:
-	call sub_4327h		;42e6
-	jr nc,l430bh		;42e9
-	ld hl,057a5h		;42eb
-	ld a,b			;42ee
-	and 082h		;42ef
-	cp 080h			;42f1
-	jr nz,l4307h		;42f3
-	ld a,c			;42f5
-	cp 04eh			;42f6
-	ld a,004h		;42f8
-	jr z,l4303h		;42fa
-	ld a,c			;42fc
-	cp 001h			;42fd
-	ld a,010h		;42ff
-	jr nz,l4307h		;4301
+	call sub_4327h		;42e6	cd 27 43	. ' C
+	jr nc,l430bh		;42e9	30 20		0  
+	ld hl,057a5h		;42eb	21 a5 57	! . W
+	ld a,b			;42ee	78		x
+	and 082h		;42ef	e6 82		. .
+	cp 080h			;42f1	fe 80		. .
+	jr nz,l4307h		;42f3	20 12		  .
+	ld a,c			;42f5	79		y
+	cp 04eh			;42f6	fe 4e		. N
+	ld a,004h		;42f8	3e 04		> .
+	jr z,l4303h		;42fa	28 07		( .
+	ld a,c			;42fc	79		y
+	cp 001h			;42fd	fe 01		. .
+	ld a,010h		;42ff	3e 10		> .
+	jr nz,l4307h		;4301	20 04		  .
 l4303h:
-	xor (hl)		;4303
-	ld (hl),a		;4304
-	jr l42e6h		;4305
+	xor (hl)		;4303	ae		.
+	ld (hl),a		;4304	77		w
+	jr l42e6h		;4305	18 df		. .
 l4307h:
-	ld a,b			;4307
-	or (hl)			;4308
-	ld b,a			;4309
-	scf			;430a
+	ld a,b			;4307	78		x
+	or (hl)			;4308	b6		.
+	ld b,a			;4309	47		G
+	scf			;430a	37		7
 l430bh:
-	pop hl			;430b
-	ret			;430c
+	pop hl			;430b	e1		.
+	ret			;430c	c9		.
 l430dh:
-	push hl			;430d
-	push af			;430e
-	ld a,b			;430f
-	and 014h		;4310
-	ld (057a5h),a		;4312
-	call sub_433dh		;4315
-	pop af			;4318
-	pop hl			;4319
-	ret			;431a
+	push hl			;430d	e5		.
+	push af			;430e	f5		.
+	ld a,b			;430f	78		x
+	and 014h		;4310	e6 14		. .
+	ld (057a5h),a		;4312	32 a5 57	2 . W
+	call sub_433dh		;4315	cd 3d 43	. = C
+	pop af			;4318	f1		.
+	pop hl			;4319	e1		.
+	ret			;431a	c9		.
 sub_431bh:
-	di			;431b
-	ld hl,00014h		;431c
-	ld (057ceh),hl		;431f
-	ld l,h			;4322
-	ld (057d0h),hl		;4323
-	ret			;4326
+	di			;431b	f3		.
+	ld hl,00014h		;431c	21 14 00	! . .
+	ld (057ceh),hl		;431f	22 ce 57	" . W
+	ld l,h			;4322	6c		l
+	ld (057d0h),hl		;4323	22 d0 57	" . W
+	ret			;4326	c9		.
 sub_4327h:
-	di			;4327
-	or a			;4328
-	ld hl,057d0h		;4329
-	dec (hl)		;432c
-	jp m,l433ah		;432d
-	call sub_437fh		;4330
-	ld c,(hl)		;4333
-	inc hl			;4334
-	ld b,(hl)		;4335
-	scf			;4336
-	ld hl,057ceh		;4337
+	di			;4327	f3		.
+	or a			;4328	b7		.
+	ld hl,057d0h		;4329	21 d0 57	! . W
+	dec (hl)		;432c	35		5
+	jp m,l433ah		;432d	fa 3a 43	. : C
+	call sub_437fh		;4330	cd 7f 43	. . C
+	ld c,(hl)		;4333	4e		N
+	inc hl			;4334	23		#
+	ld b,(hl)		;4335	46		F
+	scf			;4336	37		7
+	ld hl,057ceh		;4337	21 ce 57	! . W
 l433ah:
-	inc (hl)		;433a
-	ei			;433b
-	ret			;433c
+	inc (hl)		;433a	34		4
+	ei			;433b	fb		.
+	ret			;433c	c9		.
 sub_433dh:
-	di			;433d
-	ld hl,057ceh		;433e
-	dec (hl)		;4341
-	jp p,l434bh		;4342
-	inc (hl)		;4345
-	call sub_4359h		;4346
-	inc hl			;4349
-	dec (hl)		;434a
+	di			;433d	f3		.
+	ld hl,057ceh		;433e	21 ce 57	! . W
+	dec (hl)		;4341	35		5
+	jp p,l434bh		;4342	f2 4b 43	. K C
+	inc (hl)		;4345	34		4
+	call sub_4359h		;4346	cd 59 43	. Y C
+	inc hl			;4349	23		#
+	dec (hl)		;434a	35		5
 l434bh:
-	ld a,(057d1h)		;434b
-	call sub_4388h		;434e
-	call sub_436ch		;4351
-	call sub_4359h		;4354
-	ei			;4357
-	ret			;4358
+	ld a,(057d1h)		;434b	3a d1 57	: . W
+	call sub_4388h		;434e	cd 88 43	. . C
+	call sub_436ch		;4351	cd 6c 43	. l C
+	call sub_4359h		;4354	cd 59 43	. Y C
+	ei			;4357	fb		.
+	ret			;4358	c9		.
 sub_4359h:
-	inc hl			;4359
-	dec (hl)		;435a
-	ret p			;435b
-	ld (hl),013h		;435c
-	ret			;435e
+	inc hl			;4359	23		#
+	dec (hl)		;435a	35		5
+	ret p			;435b	f0		.
+	ld (hl),013h		;435c	36 13		6 .
+	ret			;435e	c9		.
 sub_435fh:
-	ld hl,057ceh		;435f
-	dec (hl)		;4362
-	jp p,l4369h		;4363
-	inc (hl)		;4366
-	or a			;4367
-	ret			;4368
+	ld hl,057ceh		;435f	21 ce 57	! . W
+	dec (hl)		;4362	35		5
+	jp p,l4369h		;4363	f2 69 43	. i C
+	inc (hl)		;4366	34		4
+	or a			;4367	b7		.
+	ret			;4368	c9		.
 l4369h:
-	call sub_437fh		;4369
+	call sub_437fh		;4369	cd 7f 43	. . C
 sub_436ch:
-	ld (hl),c		;436c
-	inc hl			;436d
-	ld (hl),b		;436e
-	ld hl,057d0h		;436f
-	inc (hl)		;4372
-	scf			;4373
-	sbc a,a			;4374
-	ld (0fff8h),a		;4375
-	ret			;4378
+	ld (hl),c		;436c	71		q
+	inc hl			;436d	23		#
+	ld (hl),b		;436e	70		p
+	ld hl,057d0h		;436f	21 d0 57	! . W
+	inc (hl)		;4372	34		4
+	scf			;4373	37		7
+	sbc a,a			;4374	9f		.
+	ld (0fff8h),a		;4375	32 f8 ff	2 . .
+	ret			;4378	c9		.
 sub_4379h:
-	ld a,(057d0h)		;4379
-	dec a			;437c
-	rla			;437d
-	ret			;437e
+	ld a,(057d0h)		;4379	3a d0 57	: . W
+	dec a			;437c	3d		=
+	rla			;437d	17		.
+	ret			;437e	c9		.
 sub_437fh:
-	inc hl			;437f
-	inc (hl)		;4380
-	ld a,(hl)		;4381
-	cp 014h			;4382
-	jr nz,sub_4388h		;4384
-	xor a			;4386
-	ld (hl),a		;4387
+	inc hl			;437f	23		#
+	inc (hl)		;4380	34		4
+	ld a,(hl)		;4381	7e		~
+	cp 014h			;4382	fe 14		. .
+	jr nz,sub_4388h		;4384	20 02		  .
+	xor a			;4386	af		.
+	ld (hl),a		;4387	77		w
 sub_4388h:
-	add a,a			;4388
-	add a,0a6h		;4389
-	ld l,a			;438b
-	adc a,057h		;438c
-	sub l			;438e
-	ld h,a			;438f
-	ret			;4390
+	add a,a			;4388	87		.
+	add a,0a6h		;4389	c6 a6		. .
+	ld l,a			;438b	6f		o
+	adc a,057h		;438c	ce 57		. W
+	sub l			;438e	95		.
+	ld h,a			;438f	67		g
+	ret			;4390	c9		.
 l4391h:
-	ld a,(0bffah)		;4391
-	and 082h		;4394
-	ld b,a			;4396
-	ld a,(0bffdh)		;4397
-	and 040h		;439a
-	or b			;439c
-	ld b,a			;439d
-	ld a,(0bff2h)		;439e
-	and 020h		;43a1
-	or b			;43a3
-	ld b,a			;43a4
-	ld de,0bff0h		;43a5
-	ld hl,057d3h		;43a8
+	ld a,(0bffah)		;4391	3a fa bf	: . .
+	and 082h		;4394	e6 82		. .
+	ld b,a			;4396	47		G
+	ld a,(0bffdh)		;4397	3a fd bf	: . .
+	and 040h		;439a	e6 40		. @
+	or b			;439c	b0		.
+	ld b,a			;439d	47		G
+	ld a,(0bff2h)		;439e	3a f2 bf	: . .
+	and 020h		;43a1	e6 20		.  
+	or b			;43a3	b0		.
+	ld b,a			;43a4	47		G
+	ld de,0bff0h		;43a5	11 f0 bf	. . .
+	ld hl,057d3h		;43a8	21 d3 57	! . W
 l43abh:
-	ld a,(de)		;43ab
-	ld c,a			;43ac
-	ld a,(hl)		;43ad
-	ld (hl),c		;43ae
-	cpl			;43af
-	and c			;43b0
-	call nz,sub_4440h	;43b1
-	inc hl			;43b4
-	inc de			;43b5
-	ld a,l			;43b6
-	cp 0deh			;43b7
-	jr nz,l43abh		;43b9
-	ld hl,057dfh		;43bb
-	dec (hl)		;43be
-	ret nz			;43bf
-	inc (hl)		;43c0
-	call sub_4379h		;43c1
-	ret nc			;43c4
-	ld de,(057e0h)		;43c5
-	ld a,(de)		;43c9
-	ld hl,(057e2h)		;43ca
-	and l			;43cd
-	ret z			;43ce
-	set 3,b			;43cf
+	ld a,(de)		;43ab	1a		.
+	ld c,a			;43ac	4f		O
+	ld a,(hl)		;43ad	7e		~
+	ld (hl),c		;43ae	71		q
+	cpl			;43af	2f		/
+	and c			;43b0	a1		.
+	call nz,sub_4440h	;43b1	c4 40 44	. @ D
+	inc hl			;43b4	23		#
+	inc de			;43b5	13		.
+	ld a,l			;43b6	7d		}
+	cp 0deh			;43b7	fe de		. .
+	jr nz,l43abh		;43b9	20 f0		  .
+	ld hl,057dfh		;43bb	21 df 57	! . W
+	dec (hl)		;43be	35		5
+	ret nz			;43bf	c0		.
+	inc (hl)		;43c0	34		4
+	call sub_4379h		;43c1	cd 79 43	. y C
+	ret nc			;43c4	d0		.
+	ld de,(057e0h)		;43c5	ed 5b e0 57	. [ . W
+	ld a,(de)		;43c9	1a		.
+	ld hl,(057e2h)		;43ca	2a e2 57	* . W
+	and l			;43cd	a5		.
+	ret z			;43ce	c8		.
+	set 3,b			;43cf	cb d8		. .
 sub_43d1h:
-	push hl			;43d1
-	push de			;43d2
-	push af			;43d3
-	ld (057e2h),hl		;43d4
-	ld a,e			;43d7
-	and 00fh		;43d8
-	add a,a			;43da
-	add a,a			;43db
-	add a,a			;43dc
-	add a,h			;43dd
-	cp 048h			;43de
-	jr c,l43e8h		;43e0
-	cp 04fh			;43e2
-	jr c,l4432h		;43e4
-	sub 007h		;43e6
+	push hl			;43d1	e5		.
+	push de			;43d2	d5		.
+	push af			;43d3	f5		.
+	ld (057e2h),hl		;43d4	22 e2 57	" . W
+	ld a,e			;43d7	7b		{
+	and 00fh		;43d8	e6 0f		. .
+	add a,a			;43da	87		.
+	add a,a			;43db	87		.
+	add a,a			;43dc	87		.
+	add a,h			;43dd	84		.
+	cp 048h			;43de	fe 48		. H
+	jr c,l43e8h		;43e0	38 06		8 .
+	cp 04fh			;43e2	fe 4f		. O
+	jr c,l4432h		;43e4	38 4c		8 L
+	sub 007h		;43e6	d6 07		. .
 l43e8h:
-	ld c,a			;43e8
-	cp 008h			;43e9
-	jr nz,l43fah		;43eb
-	call sub_445ch		;43ed
-	jr c,l43fah		;43f0
-	cp 023h			;43f2
-	jr nz,l43fah		;43f4
-	ld a,001h		;43f6
-	out (0f8h),a		;43f8
+	ld c,a			;43e8	4f		O
+	cp 008h			;43e9	fe 08		. .
+	jr nz,l43fah		;43eb	20 0d		  .
+	call sub_445ch		;43ed	cd 5c 44	. \ D
+	jr c,l43fah		;43f0	38 08		8 .
+	cp 023h			;43f2	fe 23		. #
+	jr nz,l43fah		;43f4	20 04		  .
+	ld a,001h		;43f6	3e 01		> .
+	out (0f8h),a		;43f8	d3 f8		. .
 l43fah:
-	ld a,(057d2h)		;43fa
-	or a			;43fd
-	jr z,l4421h		;43fe
-	ld a,c			;4400
-	cp 009h			;4401
-	jr nz,l440ah		;4403
-	call sub_4436h		;4405
-	jr l4424h		;4408
+	ld a,(057d2h)		;43fa	3a d2 57	: . W
+	or a			;43fd	b7		.
+	jr z,l4421h		;43fe	28 21		( !
+	ld a,c			;4400	79		y
+	cp 009h			;4401	fe 09		. .
+	jr nz,l440ah		;4403	20 05		  .
+	call sub_4436h		;4405	cd 36 44	. 6 D
+	jr l4424h		;4408	18 1a		. .
 l440ah:
-	cp 001h			;440a
-	jr nz,l4421h		;440c
-	call sub_445ch		;440e
-	jr c,l4421h		;4411
-	cp 024h			;4413
-	jr nz,l4421h		;4415
-	ld hl,0004ch		;4417
-	set 5,(hl)		;441a
-	call sub_443dh		;441c
-	jr l4424h		;441f
+	cp 001h			;440a	fe 01		. .
+	jr nz,l4421h		;440c	20 13		  .
+	call sub_445ch		;440e	cd 5c 44	. \ D
+	jr c,l4421h		;4411	38 0e		8 .
+	cp 024h			;4413	fe 24		. $
+	jr nz,l4421h		;4415	20 0a		  .
+	ld hl,0004ch		;4417	21 4c 00	! L .
+	set 5,(hl)		;441a	cb ee		. .
+	call sub_443dh		;441c	cd 3d 44	. = D
+	jr l4424h		;441f	18 03		. .
 l4421h:
-	call sub_435fh		;4421
+	call sub_435fh		;4421	cd 5f 43	. _ C
 l4424h:
-	xor a			;4424
-	ld hl,057e4h		;4425
-	bit 3,b			;4428
-	jr nz,l442eh		;442a
-	inc hl			;442c
-	inc a			;442d
+	xor a			;4424	af		.
+	ld hl,057e4h		;4425	21 e4 57	! . W
+	bit 3,b			;4428	cb 58		. X
+	jr nz,l442eh		;442a	20 02		  .
+	inc hl			;442c	23		#
+	inc a			;442d	3c		<
 l442eh:
-	add a,(hl)		;442e
-	ld (057dfh),a		;442f
+	add a,(hl)		;442e	86		.
+	ld (057dfh),a		;442f	32 df 57	2 . W
 l4432h:
-	pop af			;4432
-	pop de			;4433
-	pop hl			;4434
-	ret			;4435
+	pop af			;4432	f1		.
+	pop de			;4433	d1		.
+	pop hl			;4434	e1		.
+	ret			;4435	c9		.
 sub_4436h:
-	bit 1,b			;4436
-	jr z,sub_443dh		;4438
-	rst 0			;443a
-	ex de,hl		;443b
-	ld b,h			;443c
+	bit 1,b			;4436	cb 48		. H
+	jr z,sub_443dh		;4438	28 03		( .
+	rst 0			;443a	c7		.
+	ex de,hl		;443b	eb		.
+	ld b,h			;443c	44		D
 sub_443dh:
-	rst 0			;443d
-	sub 045h		;443e
+	rst 0			;443d	c7		.
+	sub 045h		;443e	d6 45		. E
 sub_4440h:
-	push hl			;4440
-	push de			;4441
-	push bc			;4442
-	ld (057e0h),de		;4443
-	ld d,a			;4447
-	ld a,080h		;4448
-	ld h,0ffh		;444a
+	push hl			;4440	e5		.
+	push de			;4441	d5		.
+	push bc			;4442	c5		.
+	ld (057e0h),de		;4443	ed 53 e0 57	. S . W
+	ld d,a			;4447	57		W
+	ld a,080h		;4448	3e 80		> .
+	ld h,0ffh		;444a	26 ff		& .
 l444ch:
-	rlca			;444c
-	inc h			;444d
-	srl d			;444e
-	jr nc,l444ch		;4450
-	ld l,a			;4452
-	call sub_43d1h		;4453
-	jr nz,l444ch		;4456
-	pop bc			;4458
-	pop de			;4459
-	pop hl			;445a
-	ret			;445b
+	rlca			;444c	07		.
+	inc h			;444d	24		$
+	srl d			;444e	cb 3a		. :
+	jr nc,l444ch		;4450	30 fa		0 .
+	ld l,a			;4452	6f		o
+	call sub_43d1h		;4453	cd d1 43	. . C
+	jr nz,l444ch		;4456	20 f4		  .
+	pop bc			;4458	c1		.
+	pop de			;4459	d1		.
+	pop hl			;445a	e1		.
+	ret			;445b	c9		.
 sub_445ch:
-	ld a,b			;445c
-	and 022h		;445d
-	cp 022h			;445f
-	ret c			;4461
-	ld hl,0bff0h		;4462
-	ld e,009h		;4465
-	ld a,(0bff9h)		;4467
-	and 080h		;446a
+	ld a,b			;445c	78		x
+	and 022h		;445d	e6 22		. "
+	cp 022h			;445f	fe 22		. "
+	ret c			;4461	d8		.
+	ld hl,0bff0h		;4462	21 f0 bf	! . .
+	ld e,009h		;4465	1e 09		. .
+	ld a,(0bff9h)		;4467	3a f9 bf	: . .
+	and 080h		;446a	e6 80		. .
 l446ch:
-	adc a,(hl)		;446c
-	inc hl			;446d
-	dec e			;446e
-	jr nz,l446ch		;446f
-	inc hl			;4471
-	adc a,(hl)		;4472
-	ret			;4473
-	ld a,0ffh		;4474
-	ld (057d2h),a		;4476
-	ret			;4479
-l447ah:
-	ld (057e4h),hl		;447a
-	ret			;447d
-l447eh:
-	ld a,c			;447e
-	cp 051h			;447f
-	ret nc			;4481
-	ld a,d			;4482
-	ld e,c			;4483
-	ld d,000h		;4484
-	ld hl,l477eh		;4486
-	call sub_44a1h		;4489
-	ld hl,l47cfh		;448c
-	call sub_44a1h		;448f
-	ld hl,l4820h		;4492
-	call sub_44a1h		;4495
-	ld hl,l4871h		;4498
-	call sub_44a1h		;449b
-	ld hl,l48c2h		;449e
+	adc a,(hl)		;446c	8e		.
+	inc hl			;446d	23		#
+	dec e			;446e	1d		.
+	jr nz,l446ch		;446f	20 fb		  .
+	inc hl			;4471	23		#
+	adc a,(hl)		;4472	8e		.
+	ret			;4473	c9		.
+	ld a,0ffh		;4474	3e ff		> .
+	ld (057d2h),a		;4476	32 d2 57	2 . W
+	ret			;4479	c9		.
+XBIOS_internal_km_set_speed:
+	ld (057e4h),hl		;447a	22 e4 57	" . W
+	ret			;447d	c9		.
+XBIOS_internal_km_set_key:
+	ld a,c			;447e	79		y
+	cp 051h			;447f	fe 51		. Q
+	ret nc			;4481	d0		.
+	ld a,d			;4482	7a		z
+	ld e,c			;4483	59		Y
+	ld d,000h		;4484	16 00		. .
+	ld hl,l477eh		;4486	21 7e 47	! ~ G
+	call sub_44a1h		;4489	cd a1 44	. . D
+	ld hl,l47cfh		;448c	21 cf 47	! . G
+	call sub_44a1h		;448f	cd a1 44	. . D
+	ld hl,l4820h		;4492	21 20 48	!   H
+	call sub_44a1h		;4495	cd a1 44	. . D
+	ld hl,l4871h		;4498	21 71 48	! q H
+	call sub_44a1h		;449b	cd a1 44	. . D
+	ld hl,l48c2h		;449e	21 c2 48	! . H
 sub_44a1h:
-	rra			;44a1
-	ret nc			;44a2
-	add hl,de		;44a3
-	ld (hl),b		;44a4
-	ret			;44a5
-	rst 38h			;44a6
-	rst 38h			;44a7
-	rst 38h			;44a8
-	rst 38h			;44a9
-	rst 38h			;44aa
-	rst 38h			;44ab
-	rst 38h			;44ac
+	rra			;44a1	1f		.
+	ret nc			;44a2	d0		.
+	add hl,de		;44a3	19		.
+	ld (hl),b		;44a4	70		p
+	ret			;44a5	c9		.
+	rst 38h			;44a6	ff		.
+	rst 38h			;44a7	ff		.
+	rst 38h			;44a8	ff		.
+	rst 38h			;44a9	ff		.
+	rst 38h			;44aa	ff		.
+	rst 38h			;44ab	ff		.
+	rst 38h			;44ac	ff		.
 sub_44adh:
-	call sub_474fh		;44ad
-	ld hl,0b600h		;44b0
-	ld a,h			;44b3
-	rrca			;44b4
-	out (0f5h),a		;44b5
-	xor a			;44b7
-	out (0f6h),a		;44b8
-	ld (057f9h),a		;44ba
-	ld de,02c98h		;44bd
-	ld bc,00820h		;44c0
+	call sub_474fh		;44ad	cd 4f 47	. O G
+	ld hl,0b600h		;44b0	21 00 b6	! . .
+	ld a,h			;44b3	7c		|
+	rrca			;44b4	0f		.
+	out (0f5h),a		;44b5	d3 f5		. .
+	xor a			;44b7	af		.
+	out (0f6h),a		;44b8	d3 f6		. .
+	ld (057f9h),a		;44ba	32 f9 57	2 . W
+	ld de,02c98h		;44bd	11 98 2c	. . ,
+	ld bc,00820h		;44c0	01 20 08	.   .
 l44c3h:
-	push bc			;44c3
+	push bc			;44c3	c5		.
 l44c4h:
-	ld (hl),e		;44c4
-	inc hl			;44c5
-	ld (hl),d		;44c6
-	inc hl			;44c7
-	inc de			;44c8
-	djnz l44c4h		;44c9
-	ex de,hl		;44cb
-	ld bc,00160h		;44cc
-	add hl,bc		;44cf
-	ex de,hl		;44d0
-	pop bc			;44d1
-	dec c			;44d2
-	jr nz,l44c3h		;44d3
-	ld hl,057e9h		;44d5
+	ld (hl),e		;44c4	73		s
+	inc hl			;44c5	23		#
+	ld (hl),d		;44c6	72		r
+	inc hl			;44c7	23		#
+	inc de			;44c8	13		.
+	djnz l44c4h		;44c9	10 f9		. .
+	ex de,hl		;44cb	eb		.
+	ld bc,00160h		;44cc	01 60 01	. ` .
+	add hl,bc		;44cf	09		.
+	ex de,hl		;44d0	eb		.
+	pop bc			;44d1	c1		.
+	dec c			;44d2	0d		.
+	jr nz,l44c3h		;44d3	20 ee		  .
+	ld hl,057e9h		;44d5	21 e9 57	! . W
 l44d8h:
-	ld (hl),e		;44d8
-	inc hl			;44d9
-	ld (hl),d		;44da
-	inc hl			;44db
-	inc de			;44dc
-	djnz l44d8h		;44dd
-	ld hl,05930h		;44df
-	ld de,05931h		;44e2
-	ld bc,05ccfh		;44e5
-	ld (hl),000h		;44e8
-	ldir			;44ea
-	jp l46ddh		;44ec
+	ld (hl),e		;44d8	73		s
+	inc hl			;44d9	23		#
+	ld (hl),d		;44da	72		r
+	inc hl			;44db	23		#
+	inc de			;44dc	13		.
+	djnz l44d8h		;44dd	10 f9		. .
+	ld hl,05930h		;44df	21 30 59	! 0 Y
+	ld de,05931h		;44e2	11 31 59	. 1 Y
+	ld bc,05ccfh		;44e5	01 cf 5c	. . \
+	ld (hl),000h		;44e8	36 00		6 .
+	ldir			;44ea	ed b0		. .
+	jp l46ddh		;44ec	c3 dd 46	. . F
 sub_44efh:
-	call sub_474fh		;44ef
-	ld hl,0b800h		;44f2
-	in a,(0f8h)		;44f5
-	and 010h		;44f7
-	jr nz,l44feh		;44f9
-	ld hl,0b790h		;44fb
+	call sub_474fh		;44ef	cd 4f 47	. O G
+	ld hl,0b800h		;44f2	21 00 b8	! . .
+	in a,(0f8h)		;44f5	db f8		. .
+	and 010h		;44f7	e6 10		. .
+	jr nz,l44feh		;44f9	20 03		  .
+	ld hl,0b790h		;44fb	21 90 b7	! . .
 l44feh:
-	ld de,057f9h		;44fe
-	ld b,010h		;4501
+	ld de,057f9h		;44fe	11 f9 57	. . W
+	ld b,010h		;4501	06 10		. .
 l4503h:
-	dec hl			;4503
-	dec de			;4504
-	ld c,(hl)		;4505
-	ld a,(de)		;4506
-	ld (hl),a		;4507
-	ld a,c			;4508
-	ld (de),a		;4509
-	djnz l4503h		;450a
-	ret			;450c
+	dec hl			;4503	2b		+
+	dec de			;4504	1b		.
+	ld c,(hl)		;4505	4e		N
+	ld a,(de)		;4506	1a		.
+	ld (hl),a		;4507	77		w
+	ld a,c			;4508	79		y
+	ld (de),a		;4509	12		.
+	djnz l4503h		;450a	10 f7		. .
+	ret			;450c	c9		.
 sub_450dh:
-	call sub_474fh		;450d
-	ld a,l			;4510
-	sub e			;4511
-	inc a			;4512
-	ld b,a			;4513
-	ld a,(057f9h)		;4514
-	add a,a			;4517
-	jr nc,l451bh		;4518
-	ld e,l			;451a
+	call sub_474fh		;450d	cd 4f 47	. O G
+	ld a,l			;4510	7d		}
+	sub e			;4511	93		.
+	inc a			;4512	3c		<
+	ld b,a			;4513	47		G
+	ld a,(057f9h)		;4514	3a f9 57	: . W
+	add a,a			;4517	87		.
+	jr nc,l451bh		;4518	30 01		0 .
+	ld e,l			;451a	5d		]
 l451bh:
-	ld a,h			;451b
-	ld l,b			;451c
-	ld h,000h		;451d
-	add hl,hl		;451f
-	add hl,hl		;4520
-	add hl,hl		;4521
-	inc a			;4522
-	ld c,a			;4523
+	ld a,h			;451b	7c		|
+	ld l,b			;451c	68		h
+	ld h,000h		;451d	26 00		& .
+	add hl,hl		;451f	29		)
+	add hl,hl		;4520	29		)
+	add hl,hl		;4521	29		)
+	inc a			;4522	3c		<
+	ld c,a			;4523	4f		O
 l4524h:
-	ld a,d			;4524
-	cp c			;4525
-	ret nc			;4526
-	push bc			;4527
-	push de			;4528
-	push hl			;4529
-	call sub_4588h		;452a
-	pop hl			;452d
-	pop de			;452e
-	pop bc			;452f
-	inc d			;4530
-	jr l4524h		;4531
+	ld a,d			;4524	7a		z
+	cp c			;4525	b9		.
+	ret nc			;4526	d0		.
+	push bc			;4527	c5		.
+	push de			;4528	d5		.
+	push hl			;4529	e5		.
+	call sub_4588h		;452a	cd 88 45	. . E
+	pop hl			;452d	e1		.
+	pop de			;452e	d1		.
+	pop bc			;452f	c1		.
+	inc d			;4530	14		.
+	jr l4524h		;4531	18 f1		. .
 l4533h:
-	ld l,a			;4533
-	call sub_474fh		;4534
-	jr l4578h		;4537
+	ld l,a			;4533	6f		o
+	call sub_474fh		;4534	cd 4f 47	. O G
+	jr l4578h		;4537	18 3f		. ?
 l4539h:
-	call sub_474fh		;4539
-	ld a,(057f9h)		;453c
-	add a,a			;453f
-	jr c,l454bh		;4540
-	push de			;4542
-	ld a,059h		;4543
-	sub e			;4545
-	call nz,sub_4596h	;4546
-	jr l4554h		;4549
+	call sub_474fh		;4539	cd 4f 47	. O G
+	ld a,(057f9h)		;453c	3a f9 57	: . W
+	add a,a			;453f	87		.
+	jr c,l454bh		;4540	38 09		8 .
+	push de			;4542	d5		.
+	ld a,059h		;4543	3e 59		> Y
+	sub e			;4545	93		.
+	call nz,sub_4596h	;4546	c4 96 45	. . E
+	jr l4554h		;4549	18 09		. .
 l454bh:
-	push de			;454b
-	ld a,059h		;454c
-	ld l,e			;454e
-	ld e,a			;454f
-	sub l			;4550
-	call nz,sub_45a9h	;4551
+	push de			;454b	d5		.
+	ld a,059h		;454c	3e 59		> Y
+	ld l,e			;454e	6b		k
+	ld e,a			;454f	5f		_
+	sub l			;4550	95		.
+	call nz,sub_45a9h	;4551	c4 a9 45	. . E
 l4554h:
-	pop de			;4554
-	ld e,059h		;4555
-	jr l4576h		;4557
+	pop de			;4554	d1		.
+	ld e,059h		;4555	1e 59		. Y
+	jr l4576h		;4557	18 1d		. .
 l4559h:
-	ld l,a			;4559
-	add a,e			;455a
-	ld h,a			;455b
-	call sub_474fh		;455c
-	ld a,(057f9h)		;455f
-	add a,a			;4562
-	jr c,l456eh		;4563
-	push de			;4565
-	ld e,h			;4566
-	ld a,l			;4567
-	or a			;4568
-	call nz,sub_45a9h	;4569
-	jr l4575h		;456c
+	ld l,a			;4559	6f		o
+	add a,e			;455a	83		.
+	ld h,a			;455b	67		g
+	call sub_474fh		;455c	cd 4f 47	. O G
+	ld a,(057f9h)		;455f	3a f9 57	: . W
+	add a,a			;4562	87		.
+	jr c,l456eh		;4563	38 09		8 .
+	push de			;4565	d5		.
+	ld e,h			;4566	5c		\
+	ld a,l			;4567	7d		}
+	or a			;4568	b7		.
+	call nz,sub_45a9h	;4569	c4 a9 45	. . E
+	jr l4575h		;456c	18 07		. .
 l456eh:
-	push de			;456e
-	ld e,h			;456f
-	ld a,l			;4570
-	or a			;4571
-	call nz,sub_4596h	;4572
+	push de			;456e	d5		.
+	ld e,h			;456f	5c		\
+	ld a,l			;4570	7d		}
+	or a			;4571	b7		.
+	call nz,sub_4596h	;4572	c4 96 45	. . E
 l4575h:
-	pop de			;4575
+	pop de			;4575	d1		.
 l4576h:
-	ld l,001h		;4576
+	ld l,001h		;4576	2e 01		. .
 l4578h:
-	ld a,(057f9h)		;4578
-	add a,a			;457b
-	jr nc,l4582h		;457c
-	ld a,e			;457e
-	add a,l			;457f
-	dec a			;4580
-	ld e,a			;4581
+	ld a,(057f9h)		;4578	3a f9 57	: . W
+	add a,a			;457b	87		.
+	jr nc,l4582h		;457c	30 04		0 .
+	ld a,e			;457e	7b		{
+	add a,l			;457f	85		.
+	dec a			;4580	3d		=
+	ld e,a			;4581	5f		_
 l4582h:
-	ld b,l			;4582
-	ld h,000h		;4583
-	add hl,hl		;4585
-	add hl,hl		;4586
-	add hl,hl		;4587
+	ld b,l			;4582	45		E
+	ld h,000h		;4583	26 00		& .
+	add hl,hl		;4585	29		)
+	add hl,hl		;4586	29		)
+	add hl,hl		;4587	29		)
 sub_4588h:
-	ld c,l			;4588
-	ld b,h			;4589
-	call sub_46a1h		;458a
-	ld l,e			;458d
-	ld h,d			;458e
-	inc de			;458f
-	ld (hl),000h		;4590
-	dec bc			;4592
-	ldir			;4593
-	ret			;4595
+	ld c,l			;4588	4d		M
+	ld b,h			;4589	44		D
+	call sub_46a1h		;458a	cd a1 46	. . F
+	ld l,e			;458d	6b		k
+	ld h,d			;458e	62		b
+	inc de			;458f	13		.
+	ld (hl),000h		;4590	36 00		6 .
+	dec bc			;4592	0b		.
+	ldir			;4593	ed b0		. .
+	ret			;4595	c9		.
 sub_4596h:
-	ld c,a			;4596
-	call sub_46a1h		;4597
-	ld l,c			;459a
-	ld h,000h		;459b
-	add hl,hl		;459d
-	add hl,hl		;459e
-	add hl,hl		;459f
-	ld b,h			;45a0
-	ld c,l			;45a1
-	ld hl,00008h		;45a2
-	add hl,de		;45a5
-	ldir			;45a6
-	ret			;45a8
+	ld c,a			;4596	4f		O
+	call sub_46a1h		;4597	cd a1 46	. . F
+	ld l,c			;459a	69		i
+	ld h,000h		;459b	26 00		& .
+	add hl,hl		;459d	29		)
+	add hl,hl		;459e	29		)
+	add hl,hl		;459f	29		)
+	ld b,h			;45a0	44		D
+	ld c,l			;45a1	4d		M
+	ld hl,JB_jump_screen_env	;45a2	21 08 00	! . .
+	add hl,de		;45a5	19		.
+	ldir			;45a6	ed b0		. .
+	ret			;45a8	c9		.
 sub_45a9h:
-	ld c,a			;45a9
-	call sub_46a1h		;45aa
-	ld l,c			;45ad
-	ld h,000h		;45ae
-	add hl,hl		;45b0
-	add hl,hl		;45b1
-	add hl,hl		;45b2
-	ld b,h			;45b3
-	ld c,l			;45b4
-	dec de			;45b5
-	ld hl,00008h		;45b6
-	add hl,de		;45b9
-	ex de,hl		;45ba
-	lddr			;45bb
-	ret			;45bd
+	ld c,a			;45a9	4f		O
+	call sub_46a1h		;45aa	cd a1 46	. . F
+	ld l,c			;45ad	69		i
+	ld h,000h		;45ae	26 00		& .
+	add hl,hl		;45b0	29		)
+	add hl,hl		;45b1	29		)
+	add hl,hl		;45b2	29		)
+	ld b,h			;45b3	44		D
+	ld c,l			;45b4	4d		M
+	dec de			;45b5	1b		.
+	ld hl,JB_jump_screen_env	;45b6	21 08 00	! . .
+	add hl,de		;45b9	19		.
+	ex de,hl		;45ba	eb		.
+	lddr			;45bb	ed b8		. .
+	ret			;45bd	c9		.
 sub_45beh:
-	ld l,c			;45be
-	call sub_474fh		;45bf
-	ld c,l			;45c2
-	call sub_46a1h		;45c3
-	ld l,c			;45c6
-	ld h,000h		;45c7
-	add hl,hl		;45c9
-	add hl,hl		;45ca
-	add hl,hl		;45cb
-	ld bc,0b800h		;45cc
-	add hl,bc		;45cf
+	ld l,c			;45be	69		i
+	call sub_474fh		;45bf	cd 4f 47	. O G
+	ld c,l			;45c2	4d		M
+	call sub_46a1h		;45c3	cd a1 46	. . F
+	ld l,c			;45c6	69		i
+	ld h,000h		;45c7	26 00		& .
+	add hl,hl		;45c9	29		)
+	add hl,hl		;45ca	29		)
+	add hl,hl		;45cb	29		)
+	ld bc,0b800h		;45cc	01 00 b8	. . .
+	add hl,bc		;45cf	09		.
 l45d0h:
-	jp l45d0h		;45d0
+	jp l45d0h		;45d0	c3 d0 45	. . E
 sub_45d3h:
-	di			;45d3
-	ld hl,057fah		;45d4
-	ld c,(hl)		;45d7
-	ld (hl),a		;45d8
-	and 006h		;45d9
-	add a,0ech		;45db
-	ld l,a			;45dd
-	adc a,045h		;45de
-	sub l			;45e0
-	ld h,a			;45e1
-	ld a,(hl)		;45e2
-	inc hl			;45e3
-	ld h,(hl)		;45e4
-	ld l,a			;45e5
-	ld (l45d0h+1),hl	;45e6
-	ld a,c			;45e9
-	ei			;45ea
-	ret			;45eb
-	call p,00445h		;45ec
-	ld b,(hl)		;45ef
-	jp m,00d45h		;45f0
-	ld b,(hl)		;45f3
-	ld bc,00008h		;45f4
-	ldir			;45f7
-	ret			;45f9
-	ld b,008h		;45fa
+	di			;45d3	f3		.
+	ld hl,057fah		;45d4	21 fa 57	! . W
+	ld c,(hl)		;45d7	4e		N
+	ld (hl),a		;45d8	77		w
+	and 006h		;45d9	e6 06		. .
+	add a,0ech		;45db	c6 ec		. .
+	ld l,a			;45dd	6f		o
+	adc a,045h		;45de	ce 45		. E
+	sub l			;45e0	95		.
+	ld h,a			;45e1	67		g
+	ld a,(hl)		;45e2	7e		~
+	inc hl			;45e3	23		#
+	ld h,(hl)		;45e4	66		f
+	ld l,a			;45e5	6f		o
+	ld (l45d0h+1),hl	;45e6	22 d1 45	" . E
+	ld a,c			;45e9	79		y
+	ei			;45ea	fb		.
+	ret			;45eb	c9		.
+	call p,00445h		;45ec	f4 45 04	. E .
+	ld b,(hl)		;45ef	46		F
+	jp m,00d45h		;45f0	fa 45 0d	. E .
+	ld b,(hl)		;45f3	46		F
+	ld bc,JB_jump_screen_env	;45f4	01 08 00	. . .
+	ldir			;45f7	ed b0		. .
+	ret			;45f9	c9		.
+	ld b,008h		;45fa	06 08		. .
 l45fch:
-	ld a,(hl)		;45fc
-	cpl			;45fd
-	ld (de),a		;45fe
-	inc de			;45ff
-	inc hl			;4600
-	djnz l45fch		;4601
-	ret			;4603
-	ld bc,00007h		;4604
-	ldir			;4607
-	ld a,0ffh		;4609
-	ld (de),a		;460b
-	ret			;460c
-	ld b,007h		;460d
+	ld a,(hl)		;45fc	7e		~
+	cpl			;45fd	2f		/
+	ld (de),a		;45fe	12		.
+	inc de			;45ff	13		.
+	inc hl			;4600	23		#
+	djnz l45fch		;4601	10 f9		. .
+	ret			;4603	c9		.
+	ld bc,JB_jump_hl_addr	;4604	01 07 00	. . .
+	ldir			;4607	ed b0		. .
+	ld a,0ffh		;4609	3e ff		> .
+	ld (de),a		;460b	12		.
+	ret			;460c	c9		.
+	ld b,007h		;460d	06 07		. .
 l460fh:
-	ld a,(hl)		;460f
-	cpl			;4610
-	ld (de),a		;4611
-	inc de			;4612
-	inc hl			;4613
-	djnz l460fh		;4614
-	xor a			;4616
-	ld (de),a		;4617
-	ret			;4618
+	ld a,(hl)		;460f	7e		~
+	cpl			;4610	2f		/
+	ld (de),a		;4611	12		.
+	inc de			;4612	13		.
+	inc hl			;4613	23		#
+	djnz l460fh		;4614	10 f9		. .
+	xor a			;4616	af		.
+	ld (de),a		;4617	12		.
+	ret			;4618	c9		.
 l4619h:
-	push bc			;4619
-	call sub_461fh		;461a
-	pop bc			;461d
-	ret			;461e
+	push bc			;4619	c5		.
+	call sub_461fh		;461a	cd 1f 46	. . F
+	pop bc			;461d	c1		.
+	ret			;461e	c9		.
 sub_461fh:
-	call sub_474fh		;461f
-	call sub_46a1h		;4622
-	ld l,008h		;4625
+	call sub_474fh		;461f	cd 4f 47	. O G
+	call sub_46a1h		;4622	cd a1 46	. . F
+	ld l,008h		;4625	2e 08		. .
 l4627h:
-	ld a,(de)		;4627
-	cpl			;4628
-	ld (de),a		;4629
-	inc de			;462a
-	dec l			;462b
-	jr nz,l4627h		;462c
-	ret			;462e
+	ld a,(de)		;4627	1a		.
+	cpl			;4628	2f		/
+	ld (de),a		;4629	12		.
+	inc de			;462a	13		.
+	dec l			;462b	2d		-
+	jr nz,l4627h		;462c	20 f9		  .
+	ret			;462e	c9		.
 l462fh:
-	call sub_474fh		;462f
-	push de			;4632
-	ld a,d			;4633
-	call sub_46bdh		;4634
-	push hl			;4637
-	ld a,e			;4638
-	sub d			;4639
-	ld de,057fbh		;463a
-	ld bc,00010h		;463d
-	call sub_4698h		;4640
-	ldir			;4643
-	pop de			;4645
-	add a,a			;4646
-	jr z,l4653h		;4647
-	add a,a			;4649
-	add a,a			;464a
-	add a,a			;464b
-	ld c,a			;464c
-	ld a,000h		;464d
-	adc a,a			;464f
-	ld b,a			;4650
-	ldir			;4651
+	call sub_474fh		;462f	cd 4f 47	. O G
+	push de			;4632	d5		.
+	ld a,d			;4633	7a		z
+	call sub_46bdh		;4634	cd bd 46	. . F
+	push hl			;4637	e5		.
+	ld a,e			;4638	7b		{
+	sub d			;4639	92		.
+	ld de,057fbh		;463a	11 fb 57	. . W
+	ld bc,00010h		;463d	01 10 00	. . .
+	call sub_4698h		;4640	cd 98 46	. . F
+	ldir			;4643	ed b0		. .
+	pop de			;4645	d1		.
+	add a,a			;4646	87		.
+	jr z,l4653h		;4647	28 0a		( .
+	add a,a			;4649	87		.
+	add a,a			;464a	87		.
+	add a,a			;464b	87		.
+	ld c,a			;464c	4f		O
+	ld a,000h		;464d	3e 00		> .
+	adc a,a			;464f	8f		.
+	ld b,a			;4650	47		G
+	ldir			;4651	ed b0		. .
 l4653h:
-	ld hl,057fbh		;4653
-	ld bc,00010h		;4656
-	ldir			;4659
-	pop de			;465b
-	ld d,e			;465c
-	jr l4691h		;465d
+	ld hl,057fbh		;4653	21 fb 57	! . W
+	ld bc,00010h		;4656	01 10 00	. . .
+	ldir			;4659	ed b0		. .
+	pop de			;465b	d1		.
+	ld d,e			;465c	53		S
+	jr l4691h		;465d	18 32		. 2
 l465fh:
-	call sub_474fh		;465f
-	push de			;4662
-	ld a,e			;4663
-	call sub_46bdh		;4664
-	push hl			;4667
-	ld a,e			;4668
-	sub d			;4669
-	ld de,057fbh		;466a
-	ld bc,00010h		;466d
-	call sub_4698h		;4670
-	ldir			;4673
-	ex de,hl		;4675
-	pop hl			;4676
-	add a,a			;4677
-	jr z,l4687h		;4678
-	add a,a			;467a
-	add a,a			;467b
-	add a,a			;467c
-	ld c,a			;467d
-	ld a,000h		;467e
-	adc a,a			;4680
-	ld b,a			;4681
-	dec de			;4682
-	dec hl			;4683
-	lddr			;4684
-	inc hl			;4686
+	call sub_474fh		;465f	cd 4f 47	. O G
+	push de			;4662	d5		.
+	ld a,e			;4663	7b		{
+	call sub_46bdh		;4664	cd bd 46	. . F
+	push hl			;4667	e5		.
+	ld a,e			;4668	7b		{
+	sub d			;4669	92		.
+	ld de,057fbh		;466a	11 fb 57	. . W
+	ld bc,00010h		;466d	01 10 00	. . .
+	call sub_4698h		;4670	cd 98 46	. . F
+	ldir			;4673	ed b0		. .
+	ex de,hl		;4675	eb		.
+	pop hl			;4676	e1		.
+	add a,a			;4677	87		.
+	jr z,l4687h		;4678	28 0d		( .
+	add a,a			;467a	87		.
+	add a,a			;467b	87		.
+	add a,a			;467c	87		.
+	ld c,a			;467d	4f		O
+	ld a,000h		;467e	3e 00		> .
+	adc a,a			;4680	8f		.
+	ld b,a			;4681	47		G
+	dec de			;4682	1b		.
+	dec hl			;4683	2b		+
+	lddr			;4684	ed b8		. .
+	inc hl			;4686	23		#
 l4687h:
-	ex de,hl		;4687
-	ld hl,057fbh		;4688
-	ld bc,00010h		;468b
-	ldir			;468e
-	pop de			;4690
+	ex de,hl		;4687	eb		.
+	ld hl,057fbh		;4688	21 fb 57	! . W
+	ld bc,00010h		;468b	01 10 00	. . .
+	ldir			;468e	ed b0		. .
+	pop de			;4690	d1		.
 l4691h:
-	ld e,000h		;4691
-	ld a,05ah		;4693
-	jp l4533h		;4695
+	ld e,000h		;4691	1e 00		. .
+	ld a,05ah		;4693	3e 5a		> Z
+	jp l4533h		;4695	c3 33 45	. 3 E
 sub_4698h:
-	push af			;4698
+	push af			;4698	f5		.
 l4699h:
-	in a,(0f8h)		;4699
-	and 040h		;469b
-	jr z,l4699h		;469d
-	pop af			;469f
-	ret			;46a0
+	in a,(0f8h)		;4699	db f8		. .
+	and 040h		;469b	e6 40		. @
+	jr z,l4699h		;469d	28 fa		( .
+	pop af			;469f	f1		.
+	ret			;46a0	c9		.
 sub_46a1h:
-	ld a,(057f9h)		;46a1
-	add a,a			;46a4
-	jr nc,l46abh		;46a5
-	ld a,059h		;46a7
-	sub e			;46a9
-	ld e,a			;46aa
+	ld a,(057f9h)		;46a1	3a f9 57	: . W
+	add a,a			;46a4	87		.
+	jr nc,l46abh		;46a5	30 04		0 .
+	ld a,059h		;46a7	3e 59		> Y
+	sub e			;46a9	93		.
+	ld e,a			;46aa	5f		_
 l46abh:
-	ld a,d			;46ab
-	call sub_46bdh		;46ac
-	ld a,e			;46af
-	ld e,(hl)		;46b0
-	inc hl			;46b1
-	ld d,(hl)		;46b2
-	ld l,a			;46b3
-	ld h,000h		;46b4
-	add hl,hl		;46b6
-	add hl,hl		;46b7
-	add hl,hl		;46b8
-	add hl,de		;46b9
-	add hl,de		;46ba
-	ex de,hl		;46bb
-	ret			;46bc
+	ld a,d			;46ab	7a		z
+	call sub_46bdh		;46ac	cd bd 46	. . F
+	ld a,e			;46af	7b		{
+	ld e,(hl)		;46b0	5e		^
+	inc hl			;46b1	23		#
+	ld d,(hl)		;46b2	56		V
+	ld l,a			;46b3	6f		o
+	ld h,000h		;46b4	26 00		& .
+	add hl,hl		;46b6	29		)
+	add hl,hl		;46b7	29		)
+	add hl,hl		;46b8	29		)
+	add hl,de		;46b9	19		.
+	add hl,de		;46ba	19		.
+	ex de,hl		;46bb	eb		.
+	ret			;46bc	c9		.
 sub_46bdh:
-	add a,a			;46bd
-	add a,a			;46be
-	add a,a			;46bf
-	ld l,a			;46c0
-	ld h,05bh		;46c1
-	add hl,hl		;46c3
-	ret			;46c4
+	add a,a			;46bd	87		.
+	add a,a			;46be	87		.
+	add a,a			;46bf	87		.
+	ld l,a			;46c0	6f		o
+	ld h,05bh		;46c1	26 5b		& [
+	add hl,hl		;46c3	29		)
+	ret			;46c4	c9		.
 sub_46c5h:
-	ld hl,0000eh		;46c5
-	call 00baah		;46c8
-	ld (0580eh),hl		;46cb
-	ld bc,00004h		;46ce
-	add hl,bc		;46d1
-	ld de,l471ch		;46d2
-	ld bc,08281h		;46d5
-	ld a,002h		;46d8
-	jp 009e4h		;46da
+	ld hl,0000eh		;46c5	21 0e 00	! . .
+	call 00baah		;46c8	cd aa 0b	. . .
+	ld (0580eh),hl		;46cb	22 0e 58	" . X
+	ld bc,00004h		;46ce	01 04 00	. . .
+	add hl,bc		;46d1	09		.
+	ld de,l471ch		;46d2	11 1c 47	. . G
+	ld bc,08281h		;46d5	01 81 82	. . .
+	ld a,002h		;46d8	3e 02		> .
+	jp 009e4h		;46da	c3 e4 09	. . .
 l46ddh:
-	ld hl,l4749h		;46dd
-	ld de,05810h		;46e0
-	ld bc,00006h		;46e3
-	ldir			;46e6
-	ld hl,00a0ah		;46e8
-	call sub_4745h		;46eb
-	xor a			;46ee
-	ld (0580dh),a		;46ef
-	ld hl,(0580eh)		;46f2
-	ld bc,(0580bh)		;46f5
-	jp 00b8ch		;46f9
+	ld hl,l4749h		;46dd	21 49 47	! I G
+	ld de,05810h		;46e0	11 10 58	. . X
+	ld bc,00006h		;46e3	01 06 00	. . .
+	ldir			;46e6	ed b0		. .
+	ld hl,00a0ah		;46e8	21 0a 0a	! . .
+	call sub_4745h		;46eb	cd 45 47	. E G
+	xor a			;46ee	af		.
+	ld (0580dh),a		;46ef	32 0d 58	2 . X
+	ld hl,(0580eh)		;46f2	2a 0e 58	* . X
+	ld bc,(0580bh)		;46f5	ed 4b 0b 58	. K . X
+	jp 00b8ch		;46f9	c3 8c 0b	. . .
 sub_46fch:
-	and 00fh		;46fc
-	inc a			;46fe
-	jr l4702h		;46ff
+	and 00fh		;46fc	e6 0f		. .
+	inc a			;46fe	3c		<
+	jr l4702h		;46ff	18 01		. .
 l4701h:
-	xor a			;4701
+	xor a			;4701	af		.
 l4702h:
-	ld hl,(0580eh)		;4702
-	inc hl			;4705
-	inc hl			;4706
-	ld e,a			;4707
-	ld d,000h		;4708
-	ld (hl),d		;470a
-	cp 003h			;470b
-	jr nc,l4719h		;470d
-	push hl			;470f
-	ld hl,05810h		;4710
-	add hl,de		;4713
-	add hl,de		;4714
-	ld (hl),b		;4715
-	inc hl			;4716
-	ld (hl),c		;4717
-	pop hl			;4718
+	ld hl,(0580eh)		;4702	2a 0e 58	* . X
+	inc hl			;4705	23		#
+	inc hl			;4706	23		#
+	ld e,a			;4707	5f		_
+	ld d,000h		;4708	16 00		. .
+	ld (hl),d		;470a	72		r
+	cp 003h			;470b	fe 03		. .
+	jr nc,l4719h		;470d	30 0a		0 .
+	push hl			;470f	e5		.
+	ld hl,05810h		;4710	21 10 58	! . X
+	add hl,de		;4713	19		.
+	add hl,de		;4714	19		.
+	ld (hl),b		;4715	70		p
+	inc hl			;4716	23		#
+	ld (hl),c		;4717	71		q
+	pop hl			;4718	e1		.
 l4719h:
-	ld (hl),001h		;4719
-	ret			;471b
+	ld (hl),001h		;4719	36 01		6 .
+	ret			;471b	c9		.
 l471ch:
-	ld hl,0580dh		;471c
-	ld a,(hl)		;471f
-	inc (hl)		;4720
-	rra			;4721
-	ld de,05814h		;4722
-	ld a,(0580bh)		;4725
-	jr nc,l472eh		;4728
-	inc de			;472a
-	ld a,(0580ch)		;472b
+	ld hl,0580dh		;471c	21 0d 58	! . X
+	ld a,(hl)		;471f	7e		~
+	inc (hl)		;4720	34		4
+	rra			;4721	1f		.
+	ld de,05814h		;4722	11 14 58	. . X
+	ld a,(0580bh)		;4725	3a 0b 58	: . X
+	jr nc,l472eh		;4728	30 04		0 .
+	inc de			;472a	13		.
+	ld a,(0580ch)		;472b	3a 0c 58	: . X
 l472eh:
-	ld hl,(0580eh)		;472e
-	inc hl			;4731
-	inc hl			;4732
-	inc hl			;4733
-	ld (hl),a		;4734
-	ex de,hl		;4735
-	ld a,(hl)		;4736
-	dec hl			;4737
-	dec hl			;4738
-	cp (hl)			;4739
-	sbc a,a			;473a
-	and 080h		;473b
-	dec hl			;473d
-	dec hl			;473e
-	xor (hl)		;473f
-	xor 040h		;4740
-	out (0f7h),a		;4742
-	ret			;4744
+	ld hl,(0580eh)		;472e	2a 0e 58	* . X
+	inc hl			;4731	23		#
+	inc hl			;4732	23		#
+	inc hl			;4733	23		#
+	ld (hl),a		;4734	77		w
+	ex de,hl		;4735	eb		.
+	ld a,(hl)		;4736	7e		~
+	dec hl			;4737	2b		+
+	dec hl			;4738	2b		+
+	cp (hl)			;4739	be		.
+	sbc a,a			;473a	9f		.
+	and 080h		;473b	e6 80		. .
+	dec hl			;473d	2b		+
+	dec hl			;473e	2b		+
+	xor (hl)		;473f	ae		.
+	xor 040h		;4740	ee 40		. @
+	out (0f7h),a		;4742	d3 f7		. .
+	ret			;4744	c9		.
 sub_4745h:
-	ld (0580bh),hl		;4745
-	ret			;4748
+	ld (0580bh),hl		;4745	22 0b 58	" . X
+	ret			;4748	c9		.
 l4749h:
-	ld bc,msg_sysmsg	;4749
-	ld bc,03c3ch		;474c
+	ld bc,msg_sysmsg	;4749	01 01 01	. . .
+	ld bc,03c3ch		;474c	01 3c 3c	. < <
 sub_474fh:
-	pop bc			;474f
-	ld a,082h		;4750
-	call 00c74h		;4752
-	push af			;4755
-	call 00003h		;4756
-	pop af			;4759
-	jp 00c74h		;475a
-	in a,(0f8h)		;475d
-	and 010h		;475f
-	ld b,020h		;4761
-	jr nz,l4767h		;4763
-	ld b,019h		;4765
+	pop bc			;474f	c1		.
+	ld a,082h		;4750	3e 82		> .
+	call 00c74h		;4752	cd 74 0c	. t .
+	push af			;4755	f5		.
+	call JB_jump_bc_addr	;4756	cd 03 00	. . .
+	pop af			;4759	f1		.
+	jp 00c74h		;475a	c3 74 0c	. t .
+	in a,(0f8h)		;475d	db f8		. .
+	and 010h		;475f	e6 10		. .
+	ld b,020h		;4761	06 20		.  
+	jr nz,l4767h		;4763	20 02		  .
+	ld b,019h		;4765	06 19		. .
 l4767h:
-	ld a,d			;4767
-	cp b			;4768
-	ret nc			;4769
-	call sub_476fh		;476a
-	scf			;476d
-	ret			;476e
+	ld a,d			;4767	7a		z
+	cp b			;4768	b8		.
+	ret nc			;4769	d0		.
+	call sub_476fh		;476a	cd 6f 47	. o G
+	scf			;476d	37		7
+	ret			;476e	c9		.
 sub_476fh:
-	rst 8			;476f
-	ld (hl),d		;4770
-	ld b,a			;4771
-	push hl			;4772
-	call l46abh		;4773
-	ex de,hl		;4776
-	pop de			;4777
-	ld bc,00008h		;4778
-	ldir			;477b
-	ret			;477d
+	rst 8			;476f	cf		.
+	ld (hl),d		;4770	72		r
+	ld b,a			;4771	47		G
+	push hl			;4772	e5		.
+	call l46abh		;4773	cd ab 46	. . F
+	ex de,hl		;4776	eb		.
+	pop de			;4777	d1		.
+	ld bc,JB_jump_screen_env	;4778	01 08 00	. . .
+	ldir			;477b	ed b0		. .
+	ret			;477d	c9		.
 l477eh:
-	add a,e			;477e
-	sub l			;477f
-	add a,c			;4780
-	adc a,l			;4781
-	sbc a,a			;4782
-	sub h			;4783
-	sub h			;4784
-	sbc a,a			;4785
-	dec de			;4786
-	sbc a,a			;4787
-	adc a,h			;4788
-	adc a,l			;4789
-	sbc a,a			;478a
-	adc a,a			;478b
-	sub c			;478c
-	sub e			;478d
-	adc a,c			;478e
-	ld e,l			;478f
-	dec c			;4790
-	inc hl			;4791
-	adc a,(hl)		;4792
-	sbc a,a			;4793
-	xor c			;4794
-	sub d			;4795
-	dec a			;4796
-	dec l			;4797
-	ld e,e			;4798
-	ld (hl),b		;4799
-	and (hl)		;479a
-	dec sp			;479b
-	cpl			;479c
-	ld l,030h		;479d
-	add hl,sp		;479f
-	ld l,a			;47a0
-	ld l,c			;47a1
-	ld l,h			;47a2
-	ld l,e			;47a3
-	ld l,l			;47a4
-	inc l			;47a5
-	jr c,l47dfh		;47a6
-	ld (hl),l		;47a8
-	ld a,c			;47a9
-	ld l,b			;47aa
-	ld l,d			;47ab
-	ld l,(hl)		;47ac
-	jr nz,l47e5h		;47ad
-	dec (hl)		;47af
-	ld (hl),d		;47b0
-	ld (hl),h		;47b1
-	ld h,a			;47b2
-	ld h,(hl)		;47b3
-	ld h,d			;47b4
-	halt			;47b5
-	inc (hl)		;47b6
-	inc sp			;47b7
-	ld h,l			;47b8
-	ld (hl),a		;47b9
-	ld (hl),e		;47ba
-	ld h,h			;47bb
-	ld h,e			;47bc
-	ld a,b			;47bd
-	ld sp,08032h		;47be
-	ld (hl),c		;47c1
-	add hl,bc		;47c2
-	ld h,c			;47c3
-	sbc a,a			;47c4
-	ld a,d			;47c5
-	adc a,d			;47c6
-	add a,l			;47c7
-	sbc a,a			;47c8
-	adc a,e			;47c9
-	sbc a,b			;47ca
-	add a,a			;47cb
-	dec c			;47cc
-	sub (hl)		;47cd
-	sbc a,a			;47ce
+	add a,e			;477e	83		.
+	sub l			;477f	95		.
+	add a,c			;4780	81		.
+	adc a,l			;4781	8d		.
+	sbc a,a			;4782	9f		.
+	sub h			;4783	94		.
+	sub h			;4784	94		.
+	sbc a,a			;4785	9f		.
+	dec de			;4786	1b		.
+	sbc a,a			;4787	9f		.
+	adc a,h			;4788	8c		.
+	adc a,l			;4789	8d		.
+	sbc a,a			;478a	9f		.
+	adc a,a			;478b	8f		.
+	sub c			;478c	91		.
+	sub e			;478d	93		.
+	adc a,c			;478e	89		.
+	ld e,l			;478f	5d		]
+	dec c			;4790	0d		.
+	inc hl			;4791	23		#
+	adc a,(hl)		;4792	8e		.
+	sbc a,a			;4793	9f		.
+	xor c			;4794	a9		.
+	sub d			;4795	92		.
+	dec a			;4796	3d		=
+	dec l			;4797	2d		-
+	ld e,e			;4798	5b		[
+	ld (hl),b		;4799	70		p
+	and (hl)		;479a	a6		.
+	dec sp			;479b	3b		;
+	cpl			;479c	2f		/
+	ld l,030h		;479d	2e 30		. 0
+	add hl,sp		;479f	39		9
+	ld l,a			;47a0	6f		o
+	ld l,c			;47a1	69		i
+	ld l,h			;47a2	6c		l
+	ld l,e			;47a3	6b		k
+	ld l,l			;47a4	6d		m
+	inc l			;47a5	2c		,
+	jr c,l47dfh		;47a6	38 37		8 7
+	ld (hl),l		;47a8	75		u
+	ld a,c			;47a9	79		y
+	ld l,b			;47aa	68		h
+	ld l,d			;47ab	6a		j
+	ld l,(hl)		;47ac	6e		n
+	jr nz,l47e5h		;47ad	20 36		  6
+	dec (hl)		;47af	35		5
+	ld (hl),d		;47b0	72		r
+	ld (hl),h		;47b1	74		t
+	ld h,a			;47b2	67		g
+	ld h,(hl)		;47b3	66		f
+	ld h,d			;47b4	62		b
+	halt			;47b5	76		v
+	inc (hl)		;47b6	34		4
+	inc sp			;47b7	33		3
+	ld h,l			;47b8	65		e
+	ld (hl),a		;47b9	77		w
+	ld (hl),e		;47ba	73		s
+	ld h,h			;47bb	64		d
+	ld h,e			;47bc	63		c
+	ld a,b			;47bd	78		x
+	ld sp,08032h		;47be	31 32 80	1 2 .
+	ld (hl),c		;47c1	71		q
+	add hl,bc		;47c2	09		.
+	ld h,c			;47c3	61		a
+	sbc a,a			;47c4	9f		.
+	ld a,d			;47c5	7a		z
+	adc a,d			;47c6	8a		.
+	add a,l			;47c7	85		.
+	sbc a,a			;47c8	9f		.
+	adc a,e			;47c9	8b		.
+	sbc a,b			;47ca	98		.
+	add a,a			;47cb	87		.
+	dec c			;47cc	0d		.
+	sub (hl)		;47cd	96		.
+	sbc a,a			;47ce	9f		.
 l47cfh:
-	add a,h			;47cf
-	sub l			;47d0
-	add a,d			;47d1
-	adc a,l			;47d2
-	sbc a,a			;47d3
-	sub h			;47d4
-	sub h			;47d5
-	sbc a,a			;47d6
-	dec de			;47d7
-	sbc a,a			;47d8
-	adc a,h			;47d9
-	adc a,l			;47da
-	sbc a,a			;47db
-	sub b			;47dc
-	sub c			;47dd
-	sub e			;47de
+	add a,h			;47cf	84		.
+	sub l			;47d0	95		.
+	add a,d			;47d1	82		.
+	adc a,l			;47d2	8d		.
+	sbc a,a			;47d3	9f		.
+	sub h			;47d4	94		.
+	sub h			;47d5	94		.
+	sbc a,a			;47d6	9f		.
+	dec de			;47d7	1b		.
+	sbc a,a			;47d8	9f		.
+	adc a,h			;47d9	8c		.
+	adc a,l			;47da	8d		.
+	sbc a,a			;47db	9f		.
+	sub b			;47dc	90		.
+	sub c			;47dd	91		.
+	sub e			;47de	93		.
 l47dfh:
-	adc a,c			;47df
-	ld a,l			;47e0
-	dec c			;47e1
-	ld a,08eh		;47e2
-	sbc a,a			;47e4
+	adc a,c			;47df	89		.
+	ld a,l			;47e0	7d		}
+	dec c			;47e1	0d		.
+	ld a,08eh		;47e2	3e 8e		> .
+	sbc a,a			;47e4	9f		.
 l47e5h:
-	ld b,b			;47e5
-	sub d			;47e6
-	dec hl			;47e7
-	ld e,a			;47e8
-	ld a,e			;47e9
-	ld d,b			;47ea
-	inc a			;47eb
-	ld a,(02e3fh)		;47ec
-	add hl,hl		;47ef
-	jr z,l4841h		;47f0
-	ld c,c			;47f2
-	ld c,h			;47f3
-	ld c,e			;47f4
-	ld c,l			;47f5
-	inc l			;47f6
-	ld hl,(l5526h)		;47f7
-	ld e,c			;47fa
-	ld c,b			;47fb
-	ld c,d			;47fc
-	ld c,(hl)		;47fd
-	jr nz,l4827h		;47fe
-	dec h			;4800
-	ld d,d			;4801
-	ld d,h			;4802
-	ld b,a			;4803
-	ld b,(hl)		;4804
-	ld b,d			;4805
-	ld d,(hl)		;4806
-	inc h			;4807
-	and e			;4808
-	ld b,l			;4809
-	ld d,a			;480a
-	ld d,e			;480b
-	ld b,h			;480c
-	ld b,e			;480d
-	ld e,b			;480e
-	ld hl,08022h		;480f
-	ld d,c			;4812
-	add hl,bc		;4813
-	ld b,c			;4814
-	sbc a,a			;4815
-	ld e,d			;4816
+	ld b,b			;47e5	40		@
+	sub d			;47e6	92		.
+	dec hl			;47e7	2b		+
+	ld e,a			;47e8	5f		_
+	ld a,e			;47e9	7b		{
+	ld d,b			;47ea	50		P
+	inc a			;47eb	3c		<
+	ld a,(02e3fh)		;47ec	3a 3f 2e	: ? .
+	add hl,hl		;47ef	29		)
+	jr z,l4841h		;47f0	28 4f		( O
+	ld c,c			;47f2	49		I
+	ld c,h			;47f3	4c		L
+	ld c,e			;47f4	4b		K
+	ld c,l			;47f5	4d		M
+	inc l			;47f6	2c		,
+	ld hl,(l5526h)		;47f7	2a 26 55	* & U
+	ld e,c			;47fa	59		Y
+	ld c,b			;47fb	48		H
+	ld c,d			;47fc	4a		J
+	ld c,(hl)		;47fd	4e		N
+	jr nz,l4827h		;47fe	20 27		  '
+	dec h			;4800	25		%
+	ld d,d			;4801	52		R
+	ld d,h			;4802	54		T
+	ld b,a			;4803	47		G
+	ld b,(hl)		;4804	46		F
+	ld b,d			;4805	42		B
+	ld d,(hl)		;4806	56		V
+	inc h			;4807	24		$
+	and e			;4808	a3		.
+	ld b,l			;4809	45		E
+	ld d,a			;480a	57		W
+	ld d,e			;480b	53		S
+	ld b,h			;480c	44		D
+	ld b,e			;480d	43		C
+	ld e,b			;480e	58		X
+	ld hl,08022h		;480f	21 22 80	! " .
+	ld d,c			;4812	51		Q
+	add hl,bc		;4813	09		.
+	ld b,c			;4814	41		A
+	sbc a,a			;4815	9f		.
+	ld e,d			;4816	5a		Z
 l4817h:
-	adc a,d			;4817
-	add a,(hl)		;4818
-	sbc a,a			;4819
+	adc a,d			;4817	8a		.
+	add a,(hl)		;4818	86		.
+	sbc a,a			;4819	9f		.
 l481ah:
-	adc a,e			;481a
-	sbc a,b			;481b
-	adc a,b			;481c
-	dec c			;481d
-	sub (hl)		;481e
-	sbc a,a			;481f
+	adc a,e			;481a	8b		.
+	sbc a,b			;481b	98		.
+	adc a,b			;481c	88		.
+	dec c			;481d	0d		.
+	sub (hl)		;481e	96		.
+	sbc a,a			;481f	9f		.
 l4820h:
-	sbc a,a			;4820
-	sbc a,a			;4821
-	sbc a,a			;4822
-	sbc a,a			;4823
-	sbc a,a			;4824
-	sbc a,a			;4825
-	sbc a,a			;4826
+	sbc a,a			;4820	9f		.
+	sbc a,a			;4821	9f		.
+	sbc a,a			;4822	9f		.
+	sbc a,a			;4823	9f		.
+	sbc a,a			;4824	9f		.
+	sbc a,a			;4825	9f		.
+	sbc a,a			;4826	9f		.
 l4827h:
-	sbc a,a			;4827
-	dec de			;4828
-	sbc a,a			;4829
-	sbc a,a			;482a
-	sbc a,a			;482b
-	sbc a,a			;482c
-	sbc a,a			;482d
-	sbc a,a			;482e
-	sbc a,a			;482f
-	sub a			;4830
-	dec e			;4831
-	dec c			;4832
-	call c,09f9fh		;4833
-	nop			;4836
-	sbc a,a			;4837
-	rst 18h			;4838
-	rra			;4839
-	dec de			;483a
-	djnz l481ah		;483b
-	ld e,01ch		;483d
-	cp e			;483f
-	ret m			;4840
+	sbc a,a			;4827	9f		.
+	dec de			;4828	1b		.
+	sbc a,a			;4829	9f		.
+	sbc a,a			;482a	9f		.
+	sbc a,a			;482b	9f		.
+	sbc a,a			;482c	9f		.
+	sbc a,a			;482d	9f		.
+	sbc a,a			;482e	9f		.
+	sbc a,a			;482f	9f		.
+	sub a			;4830	97		.
+	dec e			;4831	1d		.
+	dec c			;4832	0d		.
+	call c,09f9fh		;4833	dc 9f 9f	. . .
+	nop			;4836	00		.
+	sbc a,a			;4837	9f		.
+	rst 18h			;4838	df		.
+	rra			;4839	1f		.
+	dec de			;483a	1b		.
+	djnz l481ah		;483b	10 dd		. .
+	ld e,01ch		;483d	1e 1c		. .
+	cp e			;483f	bb		.
+	ret m			;4840	f8		.
 l4841h:
-	or 00fh			;4841
-	add hl,bc		;4843
-	inc c			;4844
-	dec bc			;4845
-	dec c			;4846
-	push af			;4847
-	rst 30h			;4848
-	cp c			;4849
-	dec d			;484a
-	add hl,de		;484b
-	ex af,af'		;484c
-	ld a,(bc)		;484d
-	ld c,020h		;484e
-	xor d			;4850
+	or 00fh			;4841	f6 0f		. .
+	add hl,bc		;4843	09		.
+	inc c			;4844	0c		.
+	dec bc			;4845	0b		.
+	dec c			;4846	0d		.
+	push af			;4847	f5		.
+	rst 30h			;4848	f7		.
+	cp c			;4849	b9		.
+	dec d			;484a	15		.
+	add hl,de		;484b	19		.
+	ex af,af'		;484c	08		.
+	ld a,(bc)		;484d	0a		.
+	ld c,020h		;484e	0e 20		.  
+	xor d			;4850	aa		.
 l4851h:
-	cp b			;4851
-	ld (de),a		;4852
-	inc d			;4853
-	rlca			;4854
-	ld b,002h		;4855
-	ld d,0a9h		;4857
-	or a			;4859
-	dec b			;485a
-	rla			;485b
-	inc de			;485c
-	inc b			;485d
-	inc bc			;485e
-	jr l4817h		;485f
-	xor b			;4861
-	sbc a,a			;4862
-	ld de,00109h		;4863
-	sbc a,a			;4866
-	ld a,(de)		;4867
-	sbc a,d			;4868
-	sbc a,a			;4869
-	sbc a,a			;486a
-	sbc a,a			;486b
-	sbc a,a			;486c
-	sbc a,a			;486d
-	sbc a,a			;486e
-	sbc a,c			;486f
-	sbc a,a			;4870
+	cp b			;4851	b8		.
+	ld (de),a		;4852	12		.
+	inc d			;4853	14		.
+	rlca			;4854	07		.
+	ld b,002h		;4855	06 02		. .
+	ld d,0a9h		;4857	16 a9		. .
+	or a			;4859	b7		.
+	dec b			;485a	05		.
+	rla			;485b	17		.
+	inc de			;485c	13		.
+	inc b			;485d	04		.
+	inc bc			;485e	03		.
+	jr l4817h		;485f	18 b6		. .
+	xor b			;4861	a8		.
+	sbc a,a			;4862	9f		.
+	ld de,00109h		;4863	11 09 01	. . .
+	sbc a,a			;4866	9f		.
+	ld a,(de)		;4867	1a		.
+	sbc a,d			;4868	9a		.
+	sbc a,a			;4869	9f		.
+	sbc a,a			;486a	9f		.
+	sbc a,a			;486b	9f		.
+	sbc a,a			;486c	9f		.
+	sbc a,a			;486d	9f		.
+	sbc a,a			;486e	9f		.
+	sbc a,c			;486f	99		.
+	sbc a,a			;4870	9f		.
 l4871h:
-	sbc a,a			;4871
-	sbc a,a			;4872
-	sbc a,a			;4873
-	sbc a,a			;4874
-	sbc a,a			;4875
-	sbc a,a			;4876
-	sbc a,a			;4877
-	sbc a,a			;4878
-	dec de			;4879
-	sbc a,a			;487a
-	sbc a,a			;487b
-	sbc a,a			;487c
-	sbc a,a			;487d
-	sbc a,a			;487e
-	sbc a,a			;487f
-	sbc a,a			;4880
-	sub a			;4881
-	dec e			;4882
-	dec c			;4883
-	call m,09f9fh		;4884
-	nop			;4887
-	sbc a,a			;4888
-	rst 38h			;4889
-	rra			;488a
+	sbc a,a			;4871	9f		.
+	sbc a,a			;4872	9f		.
+	sbc a,a			;4873	9f		.
+	sbc a,a			;4874	9f		.
+	sbc a,a			;4875	9f		.
+	sbc a,a			;4876	9f		.
+	sbc a,a			;4877	9f		.
+	sbc a,a			;4878	9f		.
+	dec de			;4879	1b		.
+	sbc a,a			;487a	9f		.
+	sbc a,a			;487b	9f		.
+	sbc a,a			;487c	9f		.
+	sbc a,a			;487d	9f		.
+	sbc a,a			;487e	9f		.
+	sbc a,a			;487f	9f		.
+	sbc a,a			;4880	9f		.
+	sub a			;4881	97		.
+	dec e			;4882	1d		.
+	dec c			;4883	0d		.
+	call m,09f9fh		;4884	fc 9f 9f	. . .
+	nop			;4887	00		.
+	sbc a,a			;4888	9f		.
+	rst 38h			;4889	ff		.
+	rra			;488a	1f		.
 l488bh:
-	dec de			;488b
-	djnz l488bh		;488c
-	ld e,01ch		;488e
-	cp h			;4890
-	ret c			;4891
-	sub 00fh		;4892
-	add hl,bc		;4894
-	inc c			;4895
-	dec bc			;4896
-	dec c			;4897
-	push de			;4898
-	rst 10h			;4899
-	sbc a,a			;489a
-	dec d			;489b
-	add hl,de		;489c
-	ex af,af'		;489d
-	ld a,(bc)		;489e
-	ld c,020h		;489f
-	sbc a,a			;48a1
-	sbc a,a			;48a2
-	ld (de),a		;48a3
-	inc d			;48a4
-	rlca			;48a5
+	dec de			;488b	1b		.
+	djnz l488bh		;488c	10 fd		. .
+	ld e,01ch		;488e	1e 1c		. .
+	cp h			;4890	bc		.
+	ret c			;4891	d8		.
+	sub 00fh		;4892	d6 0f		. .
+	add hl,bc		;4894	09		.
+	inc c			;4895	0c		.
+	dec bc			;4896	0b		.
+	dec c			;4897	0d		.
+	push de			;4898	d5		.
+	rst 10h			;4899	d7		.
+	sbc a,a			;489a	9f		.
+	dec d			;489b	15		.
+	add hl,de		;489c	19		.
+	ex af,af'		;489d	08		.
+	ld a,(bc)		;489e	0a		.
+	ld c,020h		;489f	0e 20		.  
+	sbc a,a			;48a1	9f		.
+	sbc a,a			;48a2	9f		.
+	ld (de),a		;48a3	12		.
+	inc d			;48a4	14		.
+	rlca			;48a5	07		.
 l48a6h:
-	ld b,002h		;48a6
-	ld d,09fh		;48a8
-	sbc a,a			;48aa
-	dec b			;48ab
-	rla			;48ac
-	inc de			;48ad
-	inc b			;48ae
-	inc bc			;48af
-	jr l4851h		;48b0
-	sbc a,a			;48b2
-	sbc a,a			;48b3
-	ld de,00109h		;48b4
-	sbc a,a			;48b7
-	ld a,(de)		;48b8
-	sbc a,d			;48b9
-	sbc a,a			;48ba
-	sbc a,a			;48bb
-	sbc a,a			;48bc
-	sbc a,a			;48bd
-	sbc a,a			;48be
-	sbc a,a			;48bf
-	sbc a,c			;48c0
-	sbc a,a			;48c1
+	ld b,002h		;48a6	06 02		. .
+	ld d,09fh		;48a8	16 9f		. .
+	sbc a,a			;48aa	9f		.
+	dec b			;48ab	05		.
+	rla			;48ac	17		.
+	inc de			;48ad	13		.
+	inc b			;48ae	04		.
+	inc bc			;48af	03		.
+	jr l4851h		;48b0	18 9f		. .
+	sbc a,a			;48b2	9f		.
+	sbc a,a			;48b3	9f		.
+	ld de,00109h		;48b4	11 09 01	. . .
+	sbc a,a			;48b7	9f		.
+	ld a,(de)		;48b8	1a		.
+	sbc a,d			;48b9	9a		.
+	sbc a,a			;48ba	9f		.
+	sbc a,a			;48bb	9f		.
+	sbc a,a			;48bc	9f		.
+	sbc a,a			;48bd	9f		.
+	sbc a,a			;48be	9f		.
+	sbc a,a			;48bf	9f		.
+	sbc a,c			;48c0	99		.
+	sbc a,a			;48c1	9f		.
 l48c2h:
-	sbc a,a			;48c2
-	jr nc,$-95		;48c3
-	sbc a,a			;48c5
-	add hl,sp		;48c6
-	ld (hl),033h		;48c7
-	ld (09f1bh),a		;48c9
-	sbc a,a			;48cc
-	sbc a,a			;48cd
-	jr c,l4904h		;48ce
-	dec (hl)		;48d0
-	ld sp,09f9fh		;48d1
-	dec c			;48d4
-	xor h			;48d5
-	scf			;48d6
-	sbc a,a			;48d7
-	ld e,h			;48d8
-	sbc a,a			;48d9
-	sbc a,07eh		;48da
-	sbc a,a			;48dc
-	and l			;48dd
-	xor e			;48de
-	ld e,(hl)		;48df
-	xor (hl)		;48e0
-	ld a,h			;48e1
-	ld a,a			;48e2
-	cp 0a1h			;48e3
-	sbc a,a			;48e5
-	sbc a,a			;48e6
-	sbc a,a			;48e7
-	sbc a,a			;48e8
-	sbc a,a			;48e9
-	ld h,b			;48ea
-	or h			;48eb
-	ld e,(hl)		;48ec
-	cp l			;48ed
-	sbc a,a			;48ee
-	sbc a,a			;48ef
-	sbc a,a			;48f0
-	jr nz,l48a6h		;48f1
-	and d			;48f3
-	cp (hl)			;48f4
-	cp a			;48f5
-	sbc a,a			;48f6
-	or b			;48f7
-	cp d			;48f8
-	sbc a,a			;48f9
-	or c			;48fa
-	xor l			;48fb
-	sbc a,a			;48fc
-	sbc a,a			;48fd
-	cp d			;48fe
-	and a			;48ff
-	and h			;4900
-	sbc a,a			;4901
-	xor a			;4902
-	or d			;4903
+	sbc a,a			;48c2	9f		.
+	jr nc,$-95		;48c3	30 9f		0 .
+	sbc a,a			;48c5	9f		.
+	add hl,sp		;48c6	39		9
+	ld (hl),033h		;48c7	36 33		6 3
+	ld (09f1bh),a		;48c9	32 1b 9f	2 . .
+	sbc a,a			;48cc	9f		.
+	sbc a,a			;48cd	9f		.
+	jr c,l4904h		;48ce	38 34		8 4
+	dec (hl)		;48d0	35		5
+	ld sp,09f9fh		;48d1	31 9f 9f	1 . .
+	dec c			;48d4	0d		.
+	xor h			;48d5	ac		.
+	scf			;48d6	37		7
+	sbc a,a			;48d7	9f		.
+	ld e,h			;48d8	5c		\
+	sbc a,a			;48d9	9f		.
+	sbc a,07eh		;48da	de 7e		. ~
+	sbc a,a			;48dc	9f		.
+	and l			;48dd	a5		.
+	xor e			;48de	ab		.
+	ld e,(hl)		;48df	5e		^
+	xor (hl)		;48e0	ae		.
+	ld a,h			;48e1	7c		|
+	ld a,a			;48e2	7f		.
+	cp 0a1h			;48e3	fe a1		. .
+	sbc a,a			;48e5	9f		.
+	sbc a,a			;48e6	9f		.
+	sbc a,a			;48e7	9f		.
+	sbc a,a			;48e8	9f		.
+	sbc a,a			;48e9	9f		.
+	ld h,b			;48ea	60		`
+	or h			;48eb	b4		.
+	ld e,(hl)		;48ec	5e		^
+	cp l			;48ed	bd		.
+	sbc a,a			;48ee	9f		.
+	sbc a,a			;48ef	9f		.
+	sbc a,a			;48f0	9f		.
+	jr nz,l48a6h		;48f1	20 b3		  .
+	and d			;48f3	a2		.
+	cp (hl)			;48f4	be		.
+	cp a			;48f5	bf		.
+	sbc a,a			;48f6	9f		.
+	or b			;48f7	b0		.
+	cp d			;48f8	ba		.
+	sbc a,a			;48f9	9f		.
+	or c			;48fa	b1		.
+	xor l			;48fb	ad		.
+	sbc a,a			;48fc	9f		.
+	sbc a,a			;48fd	9f		.
+	cp d			;48fe	ba		.
+	and a			;48ff	a7		.
+	and h			;4900	a4		.
+	sbc a,a			;4901	9f		.
+	xor a			;4902	af		.
+	or d			;4903	b2		.
 l4904h:
-	sbc a,a			;4904
-	sbc a,a			;4905
-	add hl,bc		;4906
-	and b			;4907
-	sbc a,a			;4908
-	sbc a,a			;4909
-	sbc a,a			;490a
-	sbc a,a			;490b
-	sbc a,a			;490c
-	sbc a,a			;490d
-	sbc a,a			;490e
-	sbc a,a			;490f
-	dec c			;4910
-	ld l,09fh		;4911
+	sbc a,a			;4904	9f		.
+	sbc a,a			;4905	9f		.
+	add hl,bc		;4906	09		.
+	and b			;4907	a0		.
+	sbc a,a			;4908	9f		.
+	sbc a,a			;4909	9f		.
+	sbc a,a			;490a	9f		.
+	sbc a,a			;490b	9f		.
+	sbc a,a			;490c	9f		.
+	sbc a,a			;490d	9f		.
+	sbc a,a			;490e	9f		.
+	sbc a,a			;490f	9f		.
+	dec c			;4910	0d		.
+	ld l,09fh		;4911	2e 9f		. .
 l4913h:
-	jp p,05bf0h		;4913
-	rst 38h			;4916
-	rst 38h			;4917
-	rst 38h			;4918
-	rst 38h			;4919
-	rst 38h			;491a
-	cp e			;491b
-	pop bc			;491c
-	nop			;491d
-	call sub_46c5h		;491e
-	call sub_4a89h		;4921
-	call sub_4f4ah		;4924
-	xor a			;4927
-	ld (0582dh),a		;4928
+	jp p,05bf0h		;4913	f2 f0 5b	. . [
+	rst 38h			;4916	ff		.
+	rst 38h			;4917	ff		.
+	rst 38h			;4918	ff		.
+	rst 38h			;4919	ff		.
+	rst 38h			;491a	ff		.
+	cp e			;491b	bb		.
+	pop bc			;491c	c1		.
+	nop			;491d	00		.
+	call sub_46c5h		;491e	cd c5 46	. . F
+	call sub_4a89h		;4921	cd 89 4a	. . J
+	call sub_4f4ah		;4924	cd 4a 4f	. J O
+	xor a			;4927	af		.
+	ld (0582dh),a		;4928	32 2d 58	2 - X
 XBIOS_te_reset:
-	call sub_4affh		;492b
-	call sub_4adbh		;492e
-	jr l4966h		;4931
+	call sub_4affh		;492b	cd ff 4a	. . J
+	call sub_4adbh		;492e	cd db 4a	. . J
+	jr l4966h		;4931	18 33		. 3
 l4933h:
-	ld a,c			;4933
-	ld hl,(05816h)		;4934
-	jp (hl)			;4937
+	ld a,c			;4933	79		y
+	ld hl,(05816h)		;4934	2a 16 58	* . X
+	jp (hl)			;4937	e9		.
 l4938h:
-	call sub_4abdh		;4938
-	ld a,c			;493b
-	cp 020h			;493c
-	jr c,l4946h		;493e
-	call sub_4ba7h		;4940
-	jp l4aa9h		;4943
+	call sub_4abdh		;4938	cd bd 4a	. . J
+	ld a,c			;493b	79		y
+	cp 020h			;493c	fe 20		.  
+	jr c,l4946h		;493e	38 06		8 .
+	call sub_4ba7h		;4940	cd a7 4b	. . K
+	jp l4aa9h		;4943	c3 a9 4a	. . J
 l4946h:
-	cp 01bh			;4946
-	jr z,l4953h		;4948
-	ld hl,l4a21h		;494a
-	call sub_4972h		;494d
-	jp l4aa9h		;4950
+	cp 01bh			;4946	fe 1b		. .
+	jr z,l4953h		;4948	28 09		( .
+	ld hl,l4a21h		;494a	21 21 4a	! ! J
+	call sub_4972h		;494d	cd 72 49	. r I
+	jp l4aa9h		;4950	c3 a9 4a	. . J
 l4953h:
-	call sub_496dh		;4953
-	ld hl,l4988h		;4956
-	call sub_4972h		;4959
-	ret c			;495c
-	ld hl,04a2eh		;495d
-	call sub_4972h		;4960
-	call nc,sub_4ba7h	;4963
+	call sub_496dh		;4953	cd 6d 49	. m I
+	ld hl,l4988h		;4956	21 88 49	! . I
+	call sub_4972h		;4959	cd 72 49	. r I
+	ret c			;495c	d8		.
+	ld hl,04a2eh		;495d	21 2e 4a	! . J
+	call sub_4972h		;4960	cd 72 49	. r I
+	call nc,sub_4ba7h	;4963	d4 a7 4b	. . K
 l4966h:
-	call l4aa9h		;4966
-	ld hl,l4938h		;4969
-	push hl			;496c
+	call l4aa9h		;4966	cd a9 4a	. . J
+	ld hl,l4938h		;4969	21 38 49	! 8 I
+	push hl			;496c	e5		.
 sub_496dh:
-	pop hl			;496d
-	ld (05816h),hl		;496e
-	ret			;4971
+	pop hl			;496d	e1		.
+	ld (05816h),hl		;496e	22 16 58	" . X
+	ret			;4971	c9		.
 sub_4972h:
-	ld b,(hl)		;4972
+	ld b,(hl)		;4972	46		F
 l4973h:
-	inc hl			;4973
-	cp (hl)			;4974
-	inc hl			;4975
-	jr nc,l497ch		;4976
-	inc hl			;4978
-	djnz l4973h		;4979
-	ccf			;497b
+	inc hl			;4973	23		#
+	cp (hl)			;4974	be		.
+	inc hl			;4975	23		#
+	jr nc,l497ch		;4976	30 04		0 .
+	inc hl			;4978	23		#
+	djnz l4973h		;4979	10 f8		. .
+	ccf			;497b	3f		?
 l497ch:
-	ret nz			;497c
-	ld e,(hl)		;497d
-	inc hl			;497e
-	ld d,(hl)		;497f
-	ld hl,(05828h)		;4980
-	call 00005h		;4983
-	scf			;4986
-	ret			;4987
+	ret nz			;497c	c0		.
+	ld e,(hl)		;497d	5e		^
+	inc hl			;497e	23		#
+	ld d,(hl)		;497f	56		V
+	ld hl,(XBIOS_te_viewport_cursor_col)	;4980	2a 28 58	* ( X
+	call JB_jump_de_addr	;4983	cd 05 00	. . .
+	scf			;4986	37		7
+	ret			;4987	c9		.
 l4988h:
-	rlca			;4988
-	ld h,e			;4989
-	xor d			;498a
-	ld c,c			;498b
-	ld h,d			;498c
-	sbc a,(hl)		;498d
-	ld c,c			;498e
-	ld e,c			;498f
-	call nc,05849h		;4990
-	out (c),c		;4993
-	inc (hl)		;4995
-	jp z,03349h		;4996
-	ret nz			;4999
-	ld c,c			;499a
-	ld (l49b6h),a		;499b
-	call sub_496dh		;499e
-	sub 020h		;49a1
-	and 03fh		;49a3
-	call sub_4d2fh		;49a5
-	jr l4966h		;49a8
-	call sub_496dh		;49aa
-	sub 020h		;49ad
-	and 03fh		;49af
-	call sub_4d28h		;49b1
-	jr l4966h		;49b4
+	rlca			;4988	07		.
+	ld h,e			;4989	63		c
+	xor d			;498a	aa		.
+	ld c,c			;498b	49		I
+	ld h,d			;498c	62		b
+	sbc a,(hl)		;498d	9e		.
+	ld c,c			;498e	49		I
+	ld e,c			;498f	59		Y
+	call nc,05849h		;4990	d4 49 58	. I X
+	out (c),c		;4993	ed 49		. I
+	inc (hl)		;4995	34		4
+	jp z,03349h		;4996	ca 49 33	. I 3
+	ret nz			;4999	c0		.
+	ld c,c			;499a	49		I
+	ld (l49b6h),a		;499b	32 b6 49	2 . I
+	call sub_496dh		;499e	cd 6d 49	. m I
+	sub 020h		;49a1	d6 20		.  
+	and 03fh		;49a3	e6 3f		. ?
+	call sub_4d2fh		;49a5	cd 2f 4d	. / M
+	jr l4966h		;49a8	18 bc		. .
+	call sub_496dh		;49aa	cd 6d 49	. m I
+	sub 020h		;49ad	d6 20		.  
+	and 03fh		;49af	e6 3f		. ?
+	call sub_4d28h		;49b1	cd 28 4d	. ( M
+	jr l4966h		;49b4	18 b0		. .
 l49b6h:
-	call sub_496dh		;49b6
-	and 007h		;49b9
-	call sub_4d4bh		;49bb
-	jr l4966h		;49be
-	call sub_496dh		;49c0
-	and 003h		;49c3
-	call sub_4b37h		;49c5
-	jr l4966h		;49c8
-	call sub_496dh		;49ca
-	rrca			;49cd
-	sbc a,a			;49ce
-	ld (05820h),a		;49cf
-	jr l4966h		;49d2
-	call sub_496dh		;49d4
-	call sub_4a1ch		;49d7
-	ld (05818h),a		;49da
-	call sub_496dh		;49dd
-	call sub_4a1ch		;49e0
-	ld hl,(05817h)		;49e3
-	ld l,a			;49e6
-	call sub_4c6bh		;49e7
-	jp l4966h		;49ea
-	call sub_496dh		;49ed
-	call sub_4a1ch		;49f0
-	ld (05819h),a		;49f3
-	call sub_496dh		;49f6
-	call sub_4a1ch		;49f9
-	ld (05818h),a		;49fc
-	call sub_496dh		;49ff
-	call sub_4a1ch		;4a02
-	ld (0581ah),a		;4a05
-	call sub_496dh		;4a08
-	call sub_4a1ch		;4a0b
-	ld de,(05819h)		;4a0e
-	ld e,a			;4a12
-	ld hl,(05818h)		;4a13
-	call sub_4b81h		;4a16
-	jp l4966h		;4a19
+	call sub_496dh		;49b6	cd 6d 49	. m I
+	and 007h		;49b9	e6 07		. .
+	call sub_4d4bh		;49bb	cd 4b 4d	. K M
+	jr l4966h		;49be	18 a6		. .
+	call sub_496dh		;49c0	cd 6d 49	. m I
+	and 003h		;49c3	e6 03		. .
+	call sub_4b37h		;49c5	cd 37 4b	. 7 K
+	jr l4966h		;49c8	18 9c		. .
+	call sub_496dh		;49ca	cd 6d 49	. m I
+	rrca			;49cd	0f		.
+	sbc a,a			;49ce	9f		.
+	ld (05820h),a		;49cf	32 20 58	2   X
+	jr l4966h		;49d2	18 92		. .
+	call sub_496dh		;49d4	cd 6d 49	. m I
+	call sub_4a1ch		;49d7	cd 1c 4a	. . J
+	ld (05818h),a		;49da	32 18 58	2 . X
+	call sub_496dh		;49dd	cd 6d 49	. m I
+	call sub_4a1ch		;49e0	cd 1c 4a	. . J
+	ld hl,(05817h)		;49e3	2a 17 58	* . X
+	ld l,a			;49e6	6f		o
+	call sub_4c6bh		;49e7	cd 6b 4c	. k L
+	jp l4966h		;49ea	c3 66 49	. f I
+	call sub_496dh		;49ed	cd 6d 49	. m I
+	call sub_4a1ch		;49f0	cd 1c 4a	. . J
+	ld (05819h),a		;49f3	32 19 58	2 . X
+	call sub_496dh		;49f6	cd 6d 49	. m I
+	call sub_4a1ch		;49f9	cd 1c 4a	. . J
+	ld (05818h),a		;49fc	32 18 58	2 . X
+	call sub_496dh		;49ff	cd 6d 49	. m I
+	call sub_4a1ch		;4a02	cd 1c 4a	. . J
+	ld (0581ah),a		;4a05	32 1a 58	2 . X
+	call sub_496dh		;4a08	cd 6d 49	. m I
+	call sub_4a1ch		;4a0b	cd 1c 4a	. . J
+	ld de,(05819h)		;4a0e	ed 5b 19 58	. [ . X
+	ld e,a			;4a12	5f		_
+	ld hl,(05818h)		;4a13	2a 18 58	* . X
+	call sub_4b81h		;4a16	cd 81 4b	. . K
+	jp l4966h		;4a19	c3 66 49	. f I
 sub_4a1ch:
-	sub 020h		;4a1c
-	ret nc			;4a1e
-	xor a			;4a1f
-	ret			;4a20
+	sub 020h		;4a1c	d6 20		.  
+	ret nc			;4a1e	d0		.
+	xor a			;4a1f	af		.
+	ret			;4a20	c9		.
 l4a21h:
-	inc b			;4a21
-	dec c			;4a22
-	dec a			;4a23
-	ld c,h			;4a24
-	ld a,(bc)		;4a25
-	ld b,c			;4a26
-	ld c,h			;4a27
-	ex af,af'		;4a28
-	xor 04bh		;4a29
-	rlca			;4a2b
-	call 01e4bh		;4a2c
-	ld a,c			;4a2f
-	dec l			;4a30
-	ld c,e			;4a31
-	ld a,b			;4a32
-	jr nc,l4a80h		;4a33
-	ld (hl),a		;4a35
-	jp (hl)			;4a36
-	ld c,e			;4a37
-	halt			;4a38
-	push hl			;4a39
-	ld c,e			;4a3a
-	ld (hl),l		;4a3b
-	ld de,0724dh		;4a3c
-	inc c			;4a3f
-	ld c,l			;4a40
-	ld (hl),c		;4a41
-	dec de			;4a42
-	ld c,l			;4a43
-	ld (hl),b		;4a44
-	ld d,04dh		;4a45
-	ld l,a			;4a47
-	rst 8			;4a48
-	ld c,h			;4a49
-	ld l,h			;4a4a
-	rst 0			;4a4b
-	ld c,h			;4a4c
-	ld l,e			;4a4d
-	ld l,b			;4a4e
-	ld c,h			;4a4f
-	ld l,d			;4a50
-	ld a,l			;4a51
-	ld c,h			;4a52
-	ld h,(hl)		;4a53
-	ret c			;4a54
-	ld c,d			;4a55
-	ld h,l			;4a56
-	in a,(04ah)		;4a57
-	ld h,h			;4a59
-	sub c			;4a5a
-	ld c,h			;4a5b
-	ld c,(hl)		;4a5c
-	or 04ch			;4a5d
-	ld c,l			;4a5f
-	jp po,l4c4ch		;4a60
-	defb 0ddh,04ch ;ld c,ixh	;4a63
-	ld c,e			;4a65
-	pop bc			;4a66
-	ld c,h			;4a67
-	ld c,d			;4a68
-	or b			;4a69
-	ld c,h			;4a6a
-	ld c,c			;4a6b
-	dec de			;4a6c
-	ld c,h			;4a6d
-	ld c,b			;4a6e
-	ld h,e			;4a6f
-	ld c,h			;4a70
-	ld b,l			;4a71
-	and l			;4a72
-	ld c,h			;4a73
-	ld b,h			;4a74
-	ex af,af'		;4a75
-	ld c,h			;4a76
-	ld b,e			;4a77
-	jr $+78			;4a78
-	ld b,d			;4a7a
-	inc c			;4a7b
-	ld c,h			;4a7c
-	ld b,c			;4a7d
-	ei			;4a7e
-	ld c,e			;4a7f
+	inc b			;4a21	04		.
+	dec c			;4a22	0d		.
+	dec a			;4a23	3d		=
+	ld c,h			;4a24	4c		L
+	ld a,(bc)		;4a25	0a		.
+	ld b,c			;4a26	41		A
+	ld c,h			;4a27	4c		L
+	ex af,af'		;4a28	08		.
+	xor 04bh		;4a29	ee 4b		. K
+	rlca			;4a2b	07		.
+	call 01e4bh		;4a2c	cd 4b 1e	. K .
+	ld a,c			;4a2f	79		y
+	dec l			;4a30	2d		-
+	ld c,e			;4a31	4b		K
+	ld a,b			;4a32	78		x
+	jr nc,l4a80h		;4a33	30 4b		0 K
+	ld (hl),a		;4a35	77		w
+	jp (hl)			;4a36	e9		.
+	ld c,e			;4a37	4b		K
+	halt			;4a38	76		v
+	push hl			;4a39	e5		.
+	ld c,e			;4a3a	4b		K
+	ld (hl),l		;4a3b	75		u
+	ld de,0724dh		;4a3c	11 4d 72	. M r
+	inc c			;4a3f	0c		.
+	ld c,l			;4a40	4d		M
+	ld (hl),c		;4a41	71		q
+	dec de			;4a42	1b		.
+	ld c,l			;4a43	4d		M
+	ld (hl),b		;4a44	70		p
+	ld d,04dh		;4a45	16 4d		. M
+	ld l,a			;4a47	6f		o
+	rst 8			;4a48	cf		.
+	ld c,h			;4a49	4c		L
+	ld l,h			;4a4a	6c		l
+	rst 0			;4a4b	c7		.
+	ld c,h			;4a4c	4c		L
+	ld l,e			;4a4d	6b		k
+	ld l,b			;4a4e	68		h
+	ld c,h			;4a4f	4c		L
+	ld l,d			;4a50	6a		j
+	ld a,l			;4a51	7d		}
+	ld c,h			;4a52	4c		L
+	ld h,(hl)		;4a53	66		f
+	ret c			;4a54	d8		.
+	ld c,d			;4a55	4a		J
+	ld h,l			;4a56	65		e
+	in a,(04ah)		;4a57	db 4a		. J
+	ld h,h			;4a59	64		d
+	sub c			;4a5a	91		.
+	ld c,h			;4a5b	4c		L
+	ld c,(hl)		;4a5c	4e		N
+	or 04ch			;4a5d	f6 4c		. L
+	ld c,l			;4a5f	4d		M
+	jp po,l4c4ch		;4a60	e2 4c 4c	. L L
+	defb 0ddh,04ch ;ld c,ixh	;4a63	dd 4c		. L
+	ld c,e			;4a65	4b		K
+	pop bc			;4a66	c1		.
+	ld c,h			;4a67	4c		L
+	ld c,d			;4a68	4a		J
+	or b			;4a69	b0		.
+	ld c,h			;4a6a	4c		L
+	ld c,c			;4a6b	49		I
+	dec de			;4a6c	1b		.
+	ld c,h			;4a6d	4c		L
+	ld c,b			;4a6e	48		H
+	ld h,e			;4a6f	63		c
+	ld c,h			;4a70	4c		L
+	ld b,l			;4a71	45		E
+	and l			;4a72	a5		.
+	ld c,h			;4a73	4c		L
+	ld b,h			;4a74	44		D
+	ex af,af'		;4a75	08		.
+	ld c,h			;4a76	4c		L
+	ld b,e			;4a77	43		C
+	jr $+78			;4a78	18 4c		. L
+	ld b,d			;4a7a	42		B
+	inc c			;4a7b	0c		.
+	ld c,h			;4a7c	4c		L
+	ld b,c			;4a7d	41		A
+	ei			;4a7e	fb		.
+	ld c,e			;4a7f	4b		K
 l4a80h:
-	ld b,b			;4a80
-	rst 38h			;4a81
-	ld c,h			;4a82
-	ld sp,l4f5fh		;4a83
-	jr nc,$+94		;4a86
-	ld c,a			;4a88
+	ld b,b			;4a80	40		@
+	rst 38h			;4a81	ff		.
+	ld c,h			;4a82	4c		L
+	ld sp,l4f5fh		;4a83	31 5f 4f	1 _ O
+	jr nc,$+94		;4a86	30 5c		0 \
+	ld c,a			;4a88	4f		O
 sub_4a89h:
-	ld hl,0000eh		;4a89
-	call 00baah		;4a8c
-	ld (0581bh),hl		;4a8f
-	push hl			;4a92
-	ld de,00004h		;4a93
-	add hl,de		;4a96
-	ld de,l4ab1h		;4a97
-	ld bc,08381h		;4a9a
-	ld a,002h		;4a9d
-	call 009e4h		;4a9f
-	pop hl			;4aa2
-	ld bc,00000h		;4aa3
-	jp 00b47h		;4aa6
+	ld hl,0000eh		;4a89	21 0e 00	! . .
+	call 00baah		;4a8c	cd aa 0b	. . .
+	ld (0581bh),hl		;4a8f	22 1b 58	" . X
+	push hl			;4a92	e5		.
+	ld de,00004h		;4a93	11 04 00	. . .
+	add hl,de		;4a96	19		.
+	ld de,l4ab1h		;4a97	11 b1 4a	. . J
+	ld bc,08381h		;4a9a	01 81 83	. . .
+	ld a,002h		;4a9d	3e 02		> .
+	call 009e4h		;4a9f	cd e4 09	. . .
+	pop hl			;4aa2	e1		.
+	ld bc,JB_jump_bank2_env	;4aa3	01 00 00	. . .
+	jp 00b47h		;4aa6	c3 47 0b	. G .
 l4aa9h:
-	ld hl,(0581bh)		;4aa9
-	inc hl			;4aac
-	inc hl			;4aad
-	ld (hl),00ah		;4aae
-	ret			;4ab0
+	ld hl,(0581bh)		;4aa9	2a 1b 58	* . X
+	inc hl			;4aac	23		#
+	inc hl			;4aad	23		#
+	ld (hl),00ah		;4aae	36 0a		6 .
+	ret			;4ab0	c9		.
 l4ab1h:
-	ld hl,(0581dh)		;4ab1
-	ld a,h			;4ab4
-	cpl			;4ab5
-	and l			;4ab6
-	ret z			;4ab7
-	ld (0581eh),a		;4ab8
-	jr l4acch		;4abb
+	ld hl,(0581dh)		;4ab1	2a 1d 58	* . X
+	ld a,h			;4ab4	7c		|
+	cpl			;4ab5	2f		/
+	and l			;4ab6	a5		.
+	ret z			;4ab7	c8		.
+	ld (0581eh),a		;4ab8	32 1e 58	2 . X
+	jr l4acch		;4abb	18 0f		. .
 sub_4abdh:
-	ld hl,(0581bh)		;4abd
-	inc hl			;4ac0
-	inc hl			;4ac1
-	ld (hl),000h		;4ac2
-	ld hl,0581eh		;4ac4
-	ld a,(hl)		;4ac7
-	ld (hl),000h		;4ac8
-	or a			;4aca
-	ret z			;4acb
+	ld hl,(0581bh)		;4abd	2a 1b 58	* . X
+	inc hl			;4ac0	23		#
+	inc hl			;4ac1	23		#
+	ld (hl),000h		;4ac2	36 00		6 .
+	ld hl,0581eh		;4ac4	21 1e 58	! . X
+	ld a,(hl)		;4ac7	7e		~
+	ld (hl),000h		;4ac8	36 00		6 .
+	or a			;4aca	b7		.
+	ret z			;4acb	c8		.
 l4acch:
-	ld hl,(05828h)		;4acc
-	ld de,(05825h)		;4acf
-	add hl,de		;4ad3
-	ex de,hl		;4ad4
-	jp l4619h		;4ad5
-	xor a			;4ad8
-	jr l4addh		;4ad9
+	ld hl,(XBIOS_te_viewport_cursor_col)	;4acc	2a 28 58	* ( X
+	ld de,(XBIOS_te_viewport_left)	;4acf	ed 5b 25 58	. [ % X
+	add hl,de		;4ad3	19		.
+	ex de,hl		;4ad4	eb		.
+	jp l4619h		;4ad5	c3 19 46	. . F
+	xor a			;4ad8	af		.
+	jr l4addh		;4ad9	18 02		. .
 sub_4adbh:
-	ld a,0ffh		;4adb
+	ld a,0ffh		;4adb	3e ff		> .
 l4addh:
-	ld (0581dh),a		;4add
-	ret			;4ae0
+	ld (0581dh),a		;4add	32 1d 58	2 . X
+	ret			;4ae0	c9		.
 sub_4ae1h:
-	di			;4ae1
-	ld hl,(0581bh)		;4ae2
-	inc hl			;4ae5
-	inc hl			;4ae6
-	ld e,(hl)		;4ae7
-	ld (hl),000h		;4ae8
-	ei			;4aea
-	ret			;4aeb
+	di			;4ae1	f3		.
+	ld hl,(0581bh)		;4ae2	2a 1b 58	* . X
+	inc hl			;4ae5	23		#
+	inc hl			;4ae6	23		#
+	ld e,(hl)		;4ae7	5e		^
+	ld (hl),000h		;4ae8	36 00		6 .
+	ei			;4aea	fb		.
+	ret			;4aeb	c9		.
 l4aech:
-	ld hl,(0581bh)		;4aec
-	inc hl			;4aef
-	inc hl			;4af0
-	ld (hl),e		;4af1
-	ret			;4af2
+	ld hl,(0581bh)		;4aec	2a 1b 58	* . X
+	inc hl			;4aef	23		#
+	inc hl			;4af0	23		#
+	ld (hl),e		;4af1	73		s
+	ret			;4af2	c9		.
 XBIOS_te_ask:
-	ld bc,(05825h)		;4af3
-	ld de,(05821h)		;4af7
-	ld hl,(05828h)		;4afb
-	ret			;4afe
+	ld bc,(XBIOS_te_viewport_left)	;4af3	ed 4b 25 58	. K % X
+	ld de,(XBIOS_te_viewport_width)	;4af7	ed 5b 21 58	. [ ! X
+	ld hl,(XBIOS_te_viewport_cursor_col)	;4afb	2a 28 58	* ( X
+	ret			;4afe	c9		.
 sub_4affh:
-	call sub_44adh		;4aff
-	ld a,(00512h)		;4b02
-	call sub_4d4bh		;4b05
-	xor a			;4b08
-	ld (0582ch),a		;4b09
-	call sub_45d3h		;4b0c
-	ld a,001h		;4b0f
-	call sub_4d28h		;4b11
-	ld a,03fh		;4b14
-	call sub_4d2fh		;4b16
-	xor a			;4b19
-	ld h,a			;4b1a
-	ld l,a			;4b1b
-	ld (0581fh),hl		;4b1c
-	ld (05828h),hl		;4b1f
-	ld (0582ah),hl		;4b22
-	ld (05825h),hl		;4b25
-	call sub_4be5h		;4b28
-	jr l4b48h		;4b2b
-	xor a			;4b2d
-	jr l4b32h		;4b2e
-	ld a,0ffh		;4b30
+	call sub_44adh		;4aff	cd ad 44	. . D
+	ld a,(00512h)		;4b02	3a 12 05	: . .
+	call sub_4d4bh		;4b05	cd 4b 4d	. K M
+	xor a			;4b08	af		.
+	ld (0582ch),a		;4b09	32 2c 58	2 , X
+	call sub_45d3h		;4b0c	cd d3 45	. . E
+	ld a,001h		;4b0f	3e 01		> .
+	call sub_4d28h		;4b11	cd 28 4d	. ( M
+	ld a,03fh		;4b14	3e 3f		> ?
+	call sub_4d2fh		;4b16	cd 2f 4d	. / M
+	xor a			;4b19	af		.
+	ld h,a			;4b1a	67		g
+	ld l,a			;4b1b	6f		o
+	ld (0581fh),hl		;4b1c	22 1f 58	" . X
+	ld (XBIOS_te_viewport_cursor_col),hl	;4b1f	22 28 58	" ( X
+	ld (0582ah),hl		;4b22	22 2a 58	" * X
+	ld (XBIOS_te_viewport_left),hl	;4b25	22 25 58	" % X
+	call sub_4be5h		;4b28	cd e5 4b	. . K
+	jr l4b48h		;4b2b	18 1b		. .
+	xor a			;4b2d	af		.
+	jr l4b32h		;4b2e	18 02		. .
+	ld a,0ffh		;4b30	3e ff		> .
 l4b32h:
-	ld (0581fh),a		;4b32
-	ld a,002h		;4b35
+	ld (0581fh),a		;4b32	32 1f 58	2 . X
+	ld a,002h		;4b35	3e 02		> .
 sub_4b37h:
-	cp 002h			;4b37
-	jr z,l4b41h		;4b39
-	ret nc			;4b3b
-	ld hl,0581fh		;4b3c
-	ld (hl),000h		;4b3f
+	cp 002h			;4b37	fe 02		. .
+	jr z,l4b41h		;4b39	28 06		( .
+	ret nc			;4b3b	d0		.
+	ld hl,0581fh		;4b3c	21 1f 58	! . X
+	ld (hl),000h		;4b3f	36 00		6 .
 l4b41h:
-	call sub_4ca5h		;4b41
-	xor a			;4b44
-	ld (05820h),a		;4b45
+	call sub_4ca5h		;4b41	cd a5 4c	. . L
+	xor a			;4b44	af		.
+	ld (05820h),a		;4b45	32 20 58	2   X
 l4b48h:
-	in a,(0f8h)		;4b48
-	and 010h		;4b4a
-	ld h,018h		;4b4c
-	ld de,00005h		;4b4e
-	jr z,l4b57h		;4b51
-	ld h,01fh		;4b53
-	ld d,004h		;4b55
+	in a,(0f8h)		;4b48	db f8		. .
+	and 010h		;4b4a	e6 10		. .
+	ld h,018h		;4b4c	26 18		& .
+	ld de,JB_jump_de_addr	;4b4e	11 05 00	. . .
+	jr z,l4b57h		;4b51	28 04		( .
+	ld h,01fh		;4b53	26 1f		& .
+	ld d,004h		;4b55	16 04		. .
 l4b57h:
-	ld l,059h		;4b57
-	ld (05823h),hl		;4b59
-	ld a,(0581fh)		;4b5c
-	or a			;4b5f
-	ld hl,0174fh		;4b60
-	jr nz,l4b71h		;4b63
-	ld hl,(05823h)		;4b65
-	call XBIOS_te_stl_ask	;4b68
-	jr z,l4b6eh		;4b6b
-	dec h			;4b6d
+	ld l,059h		;4b57	2e 59		. Y
+	ld (05823h),hl		;4b59	22 23 58	" # X
+	ld a,(0581fh)		;4b5c	3a 1f 58	: . X
+	or a			;4b5f	b7		.
+	ld hl,0174fh		;4b60	21 4f 17	! O .
+	jr nz,l4b71h		;4b63	20 0c		  .
+	ld hl,(05823h)		;4b65	2a 23 58	* # X
+	call XBIOS_te_stl_ask	;4b68	cd 57 4f	. W O
+	jr z,l4b6eh		;4b6b	28 01		( .
+	dec h			;4b6d	25		%
 l4b6eh:
-	ld de,00000h		;4b6e
+	ld de,JB_jump_bank2_env	;4b6e	11 00 00	. . .
 l4b71h:
-	ld (05821h),hl		;4b71
-	ld (05825h),de		;4b74
-	ld hl,(05828h)		;4b78
-	call sub_4c6bh		;4b7b
-	jp l4fa2h		;4b7e
+	ld (XBIOS_te_viewport_width),hl	;4b71	22 21 58	" ! X
+	ld (XBIOS_te_viewport_left),de	;4b74	ed 53 25 58	. S % X
+	ld hl,(XBIOS_te_viewport_cursor_col)	;4b78	2a 28 58	* ( X
+	call sub_4c6bh		;4b7b	cd 6b 4c	. k L
+	jp l4fa2h		;4b7e	c3 a2 4f	. . O
 sub_4b81h:
-	ld bc,(05823h)		;4b81
-	call sub_4b9dh		;4b85
-	ld (05825h),hl		;4b88
-	ex de,hl		;4b8b
-	add hl,de		;4b8c
-	call sub_4b9dh		;4b8d
-	or a			;4b90
-	sbc hl,de		;4b91
-	ld (05821h),hl		;4b93
-	ld hl,00000h		;4b96
-	ld (05828h),hl		;4b99
-	ret			;4b9c
+	ld bc,(05823h)		;4b81	ed 4b 23 58	. K # X
+	call sub_4b9dh		;4b85	cd 9d 4b	. . K
+	ld (XBIOS_te_viewport_left),hl	;4b88	22 25 58	" % X
+	ex de,hl		;4b8b	eb		.
+	add hl,de		;4b8c	19		.
+	call sub_4b9dh		;4b8d	cd 9d 4b	. . K
+	or a			;4b90	b7		.
+	sbc hl,de		;4b91	ed 52		. R
+	ld (XBIOS_te_viewport_width),hl	;4b93	22 21 58	" ! X
+	ld hl,JB_jump_bank2_env	;4b96	21 00 00	! . .
+	ld (XBIOS_te_viewport_cursor_col),hl	;4b99	22 28 58	" ( X
+	ret			;4b9c	c9		.
 sub_4b9dh:
-	ld a,c			;4b9d
-	cp l			;4b9e
-	jr nc,l4ba2h		;4b9f
-	ld l,c			;4ba1
+	ld a,c			;4b9d	79		y
+	cp l			;4b9e	bd		.
+	jr nc,l4ba2h		;4b9f	30 01		0 .
+	ld l,c			;4ba1	69		i
 l4ba2h:
-	ld a,b			;4ba2
-	cp h			;4ba3
-	ret nc			;4ba4
-	ld h,b			;4ba5
-	ret			;4ba6
+	ld a,b			;4ba2	78		x
+	cp h			;4ba3	bc		.
+	ret nc			;4ba4	d0		.
+	ld h,b			;4ba5	60		`
+	ret			;4ba6	c9		.
 sub_4ba7h:
-	ld de,(05828h)		;4ba7
-	ld hl,(05825h)		;4bab
-	add hl,de		;4bae
-	ex de,hl		;4baf
-	push hl			;4bb0
-	call sub_45beh		;4bb1
-	pop hl			;4bb4
-	ld a,(05821h)		;4bb5
-	cp l			;4bb8
-	jr z,l4bc0h		;4bb9
-	inc l			;4bbb
-	ld (05828h),hl		;4bbc
-	ret			;4bbf
+	ld de,(XBIOS_te_viewport_cursor_col)	;4ba7	ed 5b 28 58	. [ ( X
+	ld hl,(XBIOS_te_viewport_left)	;4bab	2a 25 58	* % X
+	add hl,de		;4bae	19		.
+	ex de,hl		;4baf	eb		.
+	push hl			;4bb0	e5		.
+	call sub_45beh		;4bb1	cd be 45	. . E
+	pop hl			;4bb4	e1		.
+	ld a,(XBIOS_te_viewport_width)	;4bb5	3a 21 58	: ! X
+	cp l			;4bb8	bd		.
+	jr z,l4bc0h		;4bb9	28 05		( .
+	inc l			;4bbb	2c		,
+	ld (XBIOS_te_viewport_cursor_col),hl	;4bbc	22 28 58	" ( X
+	ret			;4bbf	c9		.
 l4bc0h:
-	ld a,(05827h)		;4bc0
-	or a			;4bc3
-	ret z			;4bc4
-	ld l,000h		;4bc5
-	ld (05828h),hl		;4bc7
-	jp l4c41h		;4bca
+	ld a,(05827h)		;4bc0	3a 27 58	: ' X
+	or a			;4bc3	b7		.
+	ret z			;4bc4	c8		.
+	ld l,000h		;4bc5	2e 00		. .
+	ld (XBIOS_te_viewport_cursor_col),hl	;4bc7	22 28 58	" ( X
+	jp l4c41h		;4bca	c3 41 4c	. A L
 sub_4bcdh:
-	ld bc,00a0bh		;4bcd
-	call sub_4bd6h		;4bd0
-	ld bc,0010ch		;4bd3
+	ld bc,00a0bh		;4bcd	01 0b 0a	. . .
+	call sub_4bd6h		;4bd0	cd d6 4b	. . K
+	ld bc,0010ch		;4bd3	01 0c 01	. . .
 sub_4bd6h:
-	ld a,c			;4bd6
-	out (0f8h),a		;4bd7
+	ld a,c			;4bd6	79		y
+	out (0f8h),a		;4bd7	d3 f8		. .
 l4bd9h:
-	ld a,0b3h		;4bd9
+	ld a,0b3h		;4bd9	3e b3		> .
 l4bdbh:
-	ex (sp),hl		;4bdb
-	ex (sp),hl		;4bdc
-	ex (sp),hl		;4bdd
-	ex (sp),hl		;4bde
-	dec a			;4bdf
-	jr nz,l4bdbh		;4be0
-	djnz l4bd9h		;4be2
-	ret			;4be4
+	ex (sp),hl		;4bdb	e3		.
+	ex (sp),hl		;4bdc	e3		.
+	ex (sp),hl		;4bdd	e3		.
+	ex (sp),hl		;4bde	e3		.
+	dec a			;4bdf	3d		=
+	jr nz,l4bdbh		;4be0	20 f9		  .
+	djnz l4bd9h		;4be2	10 f5		. .
+	ret			;4be4	c9		.
 sub_4be5h:
-	ld a,0ffh		;4be5
-	jr l4beah		;4be7
-	xor a			;4be9
+	ld a,0ffh		;4be5	3e ff		> .
+	jr l4beah		;4be7	18 01		. .
+	xor a			;4be9	af		.
 l4beah:
-	ld (05827h),a		;4bea
-	ret			;4bed
-	dec l			;4bee
-	jp p,l4c79h		;4bef
-	ld a,(05827h)		;4bf2
-	or a			;4bf5
-	ret z			;4bf6
-	ld a,(05821h)		;4bf7
-	ld l,a			;4bfa
-	call sub_4c81h		;4bfb
-	jp p,l4c06h		;4bfe
-	ld a,(05820h)		;4c01
-	or a			;4c04
-	ret z			;4c05
+	ld (05827h),a		;4bea	32 27 58	2 ' X
+	ret			;4bed	c9		.
+	dec l			;4bee	2d		-
+	jp p,l4c79h		;4bef	f2 79 4c	. y L
+	ld a,(05827h)		;4bf2	3a 27 58	: ' X
+	or a			;4bf5	b7		.
+	ret z			;4bf6	c8		.
+	ld a,(XBIOS_te_viewport_width)	;4bf7	3a 21 58	: ! X
+	ld l,a			;4bfa	6f		o
+	call sub_4c81h		;4bfb	cd 81 4c	. . L
+	jp p,l4c06h		;4bfe	f2 06 4c	. . L
+	ld a,(05820h)		;4c01	3a 20 58	:   X
+	or a			;4c04	b7		.
+	ret z			;4c05	c8		.
 l4c06h:
-	jr l4c79h		;4c06
-	dec l			;4c08
-	ret m			;4c09
-	jr l4c79h		;4c0a
-	call sub_4c88h		;4c0c
-	jr nc,l4c16h		;4c0f
-	ld a,(05820h)		;4c11
-	or a			;4c14
-	ret z			;4c15
+	jr l4c79h		;4c06	18 71		. q
+	dec l			;4c08	2d		-
+	ret m			;4c09	f8		.
+	jr l4c79h		;4c0a	18 6d		. m
+	call sub_4c88h		;4c0c	cd 88 4c	. . L
+	jr nc,l4c16h		;4c0f	30 05		0 .
+	ld a,(05820h)		;4c11	3a 20 58	:   X
+	or a			;4c14	b7		.
+	ret z			;4c15	c8		.
 l4c16h:
-	jr l4c79h		;4c16
-	inc l			;4c18
-	jr sub_4c6bh		;4c19
-	ld a,(05820h)		;4c1b
-	or a			;4c1e
-	jr nz,l4c31h		;4c1f
-	dec h			;4c21
-	jp p,l4c79h		;4c22
-	ld a,(05826h)		;4c25
-	ld d,a			;4c28
-	ld hl,(05821h)		;4c29
-	add a,h			;4c2c
-	ld e,a			;4c2d
-	jp l465fh		;4c2e
+	jr l4c79h		;4c16	18 61		. a
+	inc l			;4c18	2c		,
+	jr sub_4c6bh		;4c19	18 50		. P
+	ld a,(05820h)		;4c1b	3a 20 58	:   X
+	or a			;4c1e	b7		.
+	jr nz,l4c31h		;4c1f	20 10		  .
+	dec h			;4c21	25		%
+	jp p,l4c79h		;4c22	f2 79 4c	. y L
+	ld a,(XBIOS_te_viewport_top)	;4c25	3a 26 58	: & X
+	ld d,a			;4c28	57		W
+	ld hl,(XBIOS_te_viewport_width)	;4c29	2a 21 58	* ! X
+	add a,h			;4c2c	84		.
+	ld e,a			;4c2d	5f		_
+	jp l465fh		;4c2e	c3 5f 46	. _ F
 l4c31h:
-	call sub_4c81h		;4c31
-	call l4c79h		;4c34
-	call sub_4c81h		;4c37
-	jp l4cc7h		;4c3a
-	ld l,000h		;4c3d
-	jr l4c79h		;4c3f
+	call sub_4c81h		;4c31	cd 81 4c	. . L
+	call l4c79h		;4c34	cd 79 4c	. y L
+	call sub_4c81h		;4c37	cd 81 4c	. . L
+	jp l4cc7h		;4c3a	c3 c7 4c	. . L
+	ld l,000h		;4c3d	2e 00		. .
+	jr l4c79h		;4c3f	18 38		. 8
 l4c41h:
-	ld a,(05820h)		;4c41
-	or a			;4c44
-	jr nz,l4c57h		;4c45
-	inc h			;4c47
-	ld a,(05822h)		;4c48
-	cp h			;4c4b
+	ld a,(05820h)		;4c41	3a 20 58	:   X
+	or a			;4c44	b7		.
+	jr nz,l4c57h		;4c45	20 10		  .
+	inc h			;4c47	24		$
+	ld a,(XBIOS_te_viewport_height)	;4c48	3a 22 58	: " X
+	cp h			;4c4b	bc		.
 l4c4ch:
-	jr nc,l4c79h		;4c4c
-	ld de,(05825h)		;4c4e
-	add a,d			;4c52
-	ld e,a			;4c53
-	jp l462fh		;4c54
+	jr nc,l4c79h		;4c4c	30 2b		0 +
+	ld de,(XBIOS_te_viewport_left)	;4c4e	ed 5b 25 58	. [ % X
+	add a,d			;4c52	82		.
+	ld e,a			;4c53	5f		_
+	jp l462fh		;4c54	c3 2f 46	. / F
 l4c57h:
-	call sub_4c88h		;4c57
-	call l4c79h		;4c5a
-	call sub_4c88h		;4c5d
-	jp l4cc7h		;4c60
-	ld hl,00000h		;4c63
-	jr l4c79h		;4c66
-	ld hl,(0582ah)		;4c68
+	call sub_4c88h		;4c57	cd 88 4c	. . L
+	call l4c79h		;4c5a	cd 79 4c	. y L
+	call sub_4c88h		;4c5d	cd 88 4c	. . L
+	jp l4cc7h		;4c60	c3 c7 4c	. . L
+	ld hl,JB_jump_bank2_env	;4c63	21 00 00	! . .
+	jr l4c79h		;4c66	18 11		. .
+	ld hl,(0582ah)		;4c68	2a 2a 58	* * X
 sub_4c6bh:
-	ld a,(05821h)		;4c6b
-	cp l			;4c6e
-	jr nc,l4c72h		;4c6f
-	ld l,a			;4c71
+	ld a,(XBIOS_te_viewport_width)	;4c6b	3a 21 58	: ! X
+	cp l			;4c6e	bd		.
+	jr nc,l4c72h		;4c6f	30 01		0 .
+	ld l,a			;4c71	6f		o
 l4c72h:
-	ld a,(05822h)		;4c72
-	cp h			;4c75
-	jr nc,l4c79h		;4c76
-	ld h,a			;4c78
+	ld a,(XBIOS_te_viewport_height)	;4c72	3a 22 58	: " X
+	cp h			;4c75	bc		.
+	jr nc,l4c79h		;4c76	30 01		0 .
+	ld h,a			;4c78	67		g
 l4c79h:
-	ld (05828h),hl		;4c79
-	ret			;4c7c
-	ld (0582ah),hl		;4c7d
-	ret			;4c80
+	ld (XBIOS_te_viewport_cursor_col),hl	;4c79	22 28 58	" ( X
+	ret			;4c7c	c9		.
+	ld (0582ah),hl		;4c7d	22 2a 58	" * X
+	ret			;4c80	c9		.
 sub_4c81h:
-	dec h			;4c81
-	ret p			;4c82
-	ld a,(05822h)		;4c83
-	ld h,a			;4c86
-	ret			;4c87
+	dec h			;4c81	25		%
+	ret p			;4c82	f0		.
+	ld a,(XBIOS_te_viewport_height)	;4c83	3a 22 58	: " X
+	ld h,a			;4c86	67		g
+	ret			;4c87	c9		.
 sub_4c88h:
-	inc h			;4c88
-	ld a,(05822h)		;4c89
-	cp h			;4c8c
-	ret nc			;4c8d
-	ld h,000h		;4c8e
-	ret			;4c90
-	push hl			;4c91
-	ld de,(05825h)		;4c92
-	add hl,de		;4c96
-	ld a,(05821h)		;4c97
-	add a,e			;4c9a
-	ld l,a			;4c9b
-	dec h			;4c9c
-	ld a,h			;4c9d
-	sub d			;4c9e
-	call p,sub_450dh	;4c9f
-	pop hl			;4ca2
-	jr l4ccfh		;4ca3
+	inc h			;4c88	24		$
+	ld a,(XBIOS_te_viewport_height)	;4c89	3a 22 58	: " X
+	cp h			;4c8c	bc		.
+	ret nc			;4c8d	d0		.
+	ld h,000h		;4c8e	26 00		& .
+	ret			;4c90	c9		.
+	push hl			;4c91	e5		.
+	ld de,(XBIOS_te_viewport_left)	;4c92	ed 5b 25 58	. [ % X
+	add hl,de		;4c96	19		.
+	ld a,(XBIOS_te_viewport_width)	;4c97	3a 21 58	: ! X
+	add a,e			;4c9a	83		.
+	ld l,a			;4c9b	6f		o
+	dec h			;4c9c	25		%
+	ld a,h			;4c9d	7c		|
+	sub d			;4c9e	92		.
+	call p,sub_450dh	;4c9f	f4 0d 45	. . E
+	pop hl			;4ca2	e1		.
+	jr l4ccfh		;4ca3	18 2a		. *
 sub_4ca5h:
-	ld de,(05825h)		;4ca5
-	ld hl,(05821h)		;4ca9
-	add hl,de		;4cac
-	jp sub_450dh		;4cad
-	push hl			;4cb0
-	ld bc,(05825h)		;4cb1
-	add hl,bc		;4cb5
-	ex de,hl		;4cb6
-	inc d			;4cb7
-	ld e,c			;4cb8
-	ld hl,(05821h)		;4cb9
-	add hl,bc		;4cbc
-	call sub_450dh		;4cbd
-	pop hl			;4cc0
-	ex de,hl		;4cc1
-	ld hl,(05821h)		;4cc2
-	jr l4cd2h		;4cc5
+	ld de,(XBIOS_te_viewport_left)	;4ca5	ed 5b 25 58	. [ % X
+	ld hl,(XBIOS_te_viewport_width)	;4ca9	2a 21 58	* ! X
+	add hl,de		;4cac	19		.
+	jp sub_450dh		;4cad	c3 0d 45	. . E
+	push hl			;4cb0	e5		.
+	ld bc,(XBIOS_te_viewport_left)	;4cb1	ed 4b 25 58	. K % X
+	add hl,bc		;4cb5	09		.
+	ex de,hl		;4cb6	eb		.
+	inc d			;4cb7	14		.
+	ld e,c			;4cb8	59		Y
+	ld hl,(XBIOS_te_viewport_width)	;4cb9	2a 21 58	* ! X
+	add hl,bc		;4cbc	09		.
+	call sub_450dh		;4cbd	cd 0d 45	. . E
+	pop hl			;4cc0	e1		.
+	ex de,hl		;4cc1	eb		.
+	ld hl,(XBIOS_te_viewport_width)	;4cc2	2a 21 58	* ! X
+	jr l4cd2h		;4cc5	18 0b		. .
 l4cc7h:
-	ex de,hl		;4cc7
-	ld e,000h		;4cc8
-	ld hl,(05821h)		;4cca
-	jr l4cd2h		;4ccd
+	ex de,hl		;4cc7	eb		.
+	ld e,000h		;4cc8	1e 00		. .
+	ld hl,(XBIOS_te_viewport_width)	;4cca	2a 21 58	* ! X
+	jr l4cd2h		;4ccd	18 03		. .
 l4ccfh:
-	ld d,h			;4ccf
-	ld e,000h		;4cd0
+	ld d,h			;4ccf	54		T
+	ld e,000h		;4cd0	1e 00		. .
 l4cd2h:
-	ld a,l			;4cd2
-	sub e			;4cd3
-	inc a			;4cd4
-	ld hl,(05825h)		;4cd5
-	add hl,de		;4cd8
-	ex de,hl		;4cd9
-	jp l4533h		;4cda
-	ld bc,l465fh		;4cdd
-	jr l4ce5h		;4ce0
-	ld bc,l462fh		;4ce2
+	ld a,l			;4cd2	7d		}
+	sub e			;4cd3	93		.
+	inc a			;4cd4	3c		<
+	ld hl,(XBIOS_te_viewport_left)	;4cd5	2a 25 58	* % X
+	add hl,de		;4cd8	19		.
+	ex de,hl		;4cd9	eb		.
+	jp l4533h		;4cda	c3 33 45	. 3 E
+	ld bc,l465fh		;4cdd	01 5f 46	. _ F
+	jr l4ce5h		;4ce0	18 03		. .
+	ld bc,l462fh		;4ce2	01 2f 46	. / F
 l4ce5h:
-	ld a,(05822h)		;4ce5
-	cp h			;4ce8
-	jr z,l4cc7h		;4ce9
-	ld d,h			;4ceb
-	ld hl,(05825h)		;4cec
-	add a,h			;4cef
-	ld e,a			;4cf0
-	ld a,d			;4cf1
-	add a,h			;4cf2
-	ld d,a			;4cf3
-	push bc			;4cf4
-	ret			;4cf5
-	ld de,(05825h)		;4cf6
-	add hl,de		;4cfa
-	ex de,hl		;4cfb
-	jp l4539h		;4cfc
-	ld a,(05821h)		;4cff
-	sub l			;4d02
-	ld de,(05825h)		;4d03
-	add hl,de		;4d07
-	ex de,hl		;4d08
-	jp l4559h		;4d09
-	ld bc,0fd02h		;4d0c
-	jr l4d1eh		;4d0f
-	ld bc,0fd00h		;4d11
-	jr l4d1eh		;4d14
-	ld bc,0fb04h		;4d16
-	jr l4d1eh		;4d19
-	ld bc,0fb00h		;4d1b
+	ld a,(XBIOS_te_viewport_height)	;4ce5	3a 22 58	: " X
+	cp h			;4ce8	bc		.
+	jr z,l4cc7h		;4ce9	28 dc		( .
+	ld d,h			;4ceb	54		T
+	ld hl,(XBIOS_te_viewport_left)	;4cec	2a 25 58	* % X
+	add a,h			;4cef	84		.
+	ld e,a			;4cf0	5f		_
+	ld a,d			;4cf1	7a		z
+	add a,h			;4cf2	84		.
+	ld d,a			;4cf3	57		W
+	push bc			;4cf4	c5		.
+	ret			;4cf5	c9		.
+	ld de,(XBIOS_te_viewport_left)	;4cf6	ed 5b 25 58	. [ % X
+	add hl,de		;4cfa	19		.
+	ex de,hl		;4cfb	eb		.
+	jp l4539h		;4cfc	c3 39 45	. 9 E
+	ld a,(XBIOS_te_viewport_width)	;4cff	3a 21 58	: ! X
+	sub l			;4d02	95		.
+	ld de,(XBIOS_te_viewport_left)	;4d03	ed 5b 25 58	. [ % X
+	add hl,de		;4d07	19		.
+	ex de,hl		;4d08	eb		.
+	jp l4559h		;4d09	c3 59 45	. Y E
+	ld bc,0fd02h		;4d0c	01 02 fd	. . .
+	jr l4d1eh		;4d0f	18 0d		. .
+	ld bc,0fd00h		;4d11	01 00 fd	. . .
+	jr l4d1eh		;4d14	18 08		. .
+	ld bc,0fb04h		;4d16	01 04 fb	. . .
+	jr l4d1eh		;4d19	18 03		. .
+	ld bc,0fb00h		;4d1b	01 00 fb	. . .
 l4d1eh:
-	ld hl,0582ch		;4d1e
-	ld a,(hl)		;4d21
-	and b			;4d22
-	or c			;4d23
-	ld (hl),a		;4d24
-	jp sub_45d3h		;4d25
+	ld hl,0582ch		;4d1e	21 2c 58	! , X
+	ld a,(hl)		;4d21	7e		~
+	and b			;4d22	a0		.
+	or c			;4d23	b1		.
+	ld (hl),a		;4d24	77		w
+	jp sub_45d3h		;4d25	c3 d3 45	. . E
 sub_4d28h:
-	ld e,000h		;4d28
-	call sub_4d31h		;4d2a
-	jr XBIOS_te_set_border	;4d2d
+	ld e,000h		;4d28	1e 00		. .
+	call sub_4d31h		;4d2a	cd 31 4d	. 1 M
+	jr XBIOS_te_set_border	;4d2d	18 16		. .
 sub_4d2fh:
-	ld e,001h		;4d2f
+	ld e,001h		;4d2f	1e 01		. .
 sub_4d31h:
-	ld c,a			;4d31
-	ld b,a			;4d32
-	push bc			;4d33
-	ld a,e			;4d34
-	call sub_46fch		;4d35
-	pop bc			;4d38
-	ret			;4d39
+	ld c,a			;4d31	4f		O
+	ld b,a			;4d32	47		G
+	push bc			;4d33	c5		.
+	ld a,e			;4d34	7b		{
+	call sub_46fch		;4d35	cd fc 46	. . F
+	pop bc			;4d38	c1		.
+	ret			;4d39	c9		.
 XBIOS_te_set_ink:
-	and 00fh		;4d3a
-	dec a			;4d3c
-	jr z,sub_4d2fh		;4d3d
-	inc a			;4d3f
-	jr z,sub_4d28h		;4d40
-	jp sub_46fch		;4d42
+	and 00fh		;4d3a	e6 0f		. .
+	dec a			;4d3c	3d		=
+	jr z,sub_4d2fh		;4d3d	28 f0		( .
+	inc a			;4d3f	3c		<
+	jr z,sub_4d28h		;4d40	28 e6		( .
+	jp sub_46fch		;4d42	c3 fc 46	. . F
 XBIOS_te_set_border:
-	jp l4701h		;4d45
+	jp l4701h		;4d45	c3 01 47	. . G
 XBIOS_te_set_speed:
-	jp sub_4745h		;4d48
+	jp sub_4745h		;4d48	c3 45 47	. E G
 sub_4d4bh:
-	rst 8			;4d4b
-	ld c,(hl)		;4d4c
-	ld c,l			;4d4d
-	push af			;4d4e
-	ld a,(0582dh)		;4d4f
-	call sub_4d59h		;4d52
-	pop af			;4d55
-	ld (0582dh),a		;4d56
+	rst 8			;4d4b	cf		.
+	ld c,(hl)		;4d4c	4e		N
+	ld c,l			;4d4d	4d		M
+	push af			;4d4e	f5		.
+	ld a,(0582dh)		;4d4f	3a 2d 58	: - X
+	call sub_4d59h		;4d52	cd 59 4d	. Y M
+	pop af			;4d55	f1		.
+	ld (0582dh),a		;4d56	32 2d 58	2 - X
 sub_4d59h:
-	ld l,a			;4d59
-	add a,a			;4d5a
-	add a,a			;4d5b
-	add a,l			;4d5c
-	add a,a			;4d5d
-	add a,l			;4d5e
-	ld l,a			;4d5f
-	ld h,000h		;4d60
-	ld de,l4d90h		;4d62
-	add hl,de		;4d65
-	ld b,00bh		;4d66
+	ld l,a			;4d59	6f		o
+	add a,a			;4d5a	87		.
+	add a,a			;4d5b	87		.
+	add a,l			;4d5c	85		.
+	add a,a			;4d5d	87		.
+	add a,l			;4d5e	85		.
+	ld l,a			;4d5f	6f		o
+	ld h,000h		;4d60	26 00		& .
+	ld de,unknown_1_blk_start	;4d62	11 90 4d	. . M
+	add hl,de		;4d65	19		.
+	ld b,00bh		;4d66	06 0b		. .
 l4d68h:
-	push bc			;4d68
-	push de			;4d69
-	push hl			;4d6a
-	call sub_4d85h		;4d6b
-	ex de,hl		;4d6e
-	call sub_4d85h		;4d6f
-	ld b,008h		;4d72
+	push bc			;4d68	c5		.
+	push de			;4d69	d5		.
+	push hl			;4d6a	e5		.
+	call sub_4d85h		;4d6b	cd 85 4d	. . M
+	ex de,hl		;4d6e	eb		.
+	call sub_4d85h		;4d6f	cd 85 4d	. . M
+	ld b,008h		;4d72	06 08		. .
 l4d74h:
-	ld c,(hl)		;4d74
-	ld a,(de)		;4d75
-	ld (hl),a		;4d76
-	ld a,c			;4d77
-	ld (de),a		;4d78
-	inc de			;4d79
-	inc hl			;4d7a
-	djnz l4d74h		;4d7b
-	pop hl			;4d7d
-	pop de			;4d7e
-	pop bc			;4d7f
-	inc de			;4d80
-	inc hl			;4d81
-	djnz l4d68h		;4d82
-	ret			;4d84
+	ld c,(hl)		;4d74	4e		N
+	ld a,(de)		;4d75	1a		.
+	ld (hl),a		;4d76	77		w
+	ld a,c			;4d77	79		y
+	ld (de),a		;4d78	12		.
+	inc de			;4d79	13		.
+	inc hl			;4d7a	23		#
+	djnz l4d74h		;4d7b	10 f7		. .
+	pop hl			;4d7d	e1		.
+	pop de			;4d7e	d1		.
+	pop bc			;4d7f	c1		.
+	inc de			;4d80	13		.
+	inc hl			;4d81	23		#
+	djnz l4d68h		;4d82	10 e4		. .
+	ret			;4d84	c9		.
 sub_4d85h:
-	ld l,(hl)		;4d85
-	ld h,000h		;4d86
-	add hl,hl		;4d88
-	add hl,hl		;4d89
-	add hl,hl		;4d8a
-	ld bc,0b800h		;4d8b
-	add hl,bc		;4d8e
-	ret			;4d8f
-l4d90h:
-	inc hl			;4d90
-	ld b,b			;4d91
-	ld e,e			;4d92
-	ld e,h			;4d93
-	ld e,l			;4d94
-	ld e,(hl)		;4d95
-	ld h,b			;4d96
-	ld a,e			;4d97
-	ld a,h			;4d98
-	ld a,l			;4d99
-	ld a,(hl)		;4d9a
-	inc hl			;4d9b
-	jp pe,0f5a2h		;4d9c
-	and (hl)		;4d9f
-	ld e,(hl)		;4da0
-	ld h,b			;4da1
-	pop hl			;4da2
-	xor 0ebh		;4da3
-	or d			;4da5
-	inc hl			;4da6
-	and (hl)		;4da7
-	ret nc			;4da8
-	out (0d4h),a		;4da9
-	ld e,(hl)		;4dab
-	ld h,b			;4dac
-	ret p			;4dad
-	di			;4dae
-	call p,0a3bah		;4daf
-	ld b,b			;4db2
-	ld e,e			;4db3
-	ld e,h			;4db4
-	ld e,l			;4db5
-	ld e,(hl)		;4db6
-	ld h,b			;4db7
-	ld a,e			;4db8
-	ld a,h			;4db9
-	ld a,l			;4dba
-	ld a,(hl)		;4dbb
-	inc hl			;4dbc
-	ld b,b			;4dbd
-	sub 0d8h		;4dbe
-	rst 10h			;4dc0
-	ld e,(hl)		;4dc1
-	ld h,b			;4dc2
-	or 0f8h			;4dc3
-	rst 30h			;4dc5
-	ld a,(hl)		;4dc6
-	inc hl			;4dc7
-	pop bc			;4dc8
-	ret nc			;4dc9
-	out (0d7h),a		;4dca
-	call nc,0f0e1h		;4dcc
-	di			;4dcf
-	rst 30h			;4dd0
-	call p,04023h		;4dd1
-	and d			;4dd4
-	ld e,h			;4dd5
-	pop hl			;4dd6
-	ld e,(hl)		;4dd7
-	xor 0eah		;4dd8
-	defb 0edh ;next byte illegal after ed	;4dda
-	ex de,hl		;4ddb
-	call pe,sub_40adh	;4ddc
-	xor a			;4ddf
-	exx			;4de0
-	xor (hl)		;4de1
-	ld e,(hl)		;4de2
-	ld h,b			;4de3
-	or d			;4de4
-	ld sp,hl		;4de5
-	ld a,l			;4de6
-	ld a,(hl)		;4de7
+	ld l,(hl)		;4d85	6e		n
+	ld h,000h		;4d86	26 00		& .
+	add hl,hl		;4d88	29		)
+	add hl,hl		;4d89	29		)
+	add hl,hl		;4d8a	29		)
+	ld bc,0b800h		;4d8b	01 00 b8	. . .
+	add hl,bc		;4d8e	09		.
+	ret			;4d8f	c9		.
+
+; BLOCK 'unknown_1_blk' (start 0x4d90 end 0x4de7)
+unknown_1_blk_start:
+	defb 023h		;4d90	23		#
+	defb 040h		;4d91	40		@
+	defb 05bh		;4d92	5b		[
+	defb 05ch		;4d93	5c		\
+	defb 05dh		;4d94	5d		]
+	defb 05eh		;4d95	5e		^
+	defb 060h		;4d96	60		`
+	defb 07bh		;4d97	7b		{
+	defb 07ch		;4d98	7c		|
+	defb 07dh		;4d99	7d		}
+	defb 07eh		;4d9a	7e		~
+	defb 023h		;4d9b	23		#
+	defb 0eah		;4d9c	ea		.
+	defb 0a2h		;4d9d	a2		.
+	defb 0f5h		;4d9e	f5		.
+	defb 0a6h		;4d9f	a6		.
+	defb 05eh		;4da0	5e		^
+	defb 060h		;4da1	60		`
+	defb 0e1h		;4da2	e1		.
+	defb 0eeh		;4da3	ee		.
+	defb 0ebh		;4da4	eb		.
+	defb 0b2h		;4da5	b2		.
+	defb 023h		;4da6	23		#
+	defb 0a6h		;4da7	a6		.
+	defb 0d0h		;4da8	d0		.
+	defb 0d3h		;4da9	d3		.
+	defb 0d4h		;4daa	d4		.
+	defb 05eh		;4dab	5e		^
+	defb 060h		;4dac	60		`
+	defb 0f0h		;4dad	f0		.
+	defb 0f3h		;4dae	f3		.
+	defb 0f4h		;4daf	f4		.
+	defb 0bah		;4db0	ba		.
+	defb 0a3h		;4db1	a3		.
+	defb 040h		;4db2	40		@
+	defb 05bh		;4db3	5b		[
+	defb 05ch		;4db4	5c		\
+	defb 05dh		;4db5	5d		]
+	defb 05eh		;4db6	5e		^
+	defb 060h		;4db7	60		`
+	defb 07bh		;4db8	7b		{
+	defb 07ch		;4db9	7c		|
+	defb 07dh		;4dba	7d		}
+	defb 07eh		;4dbb	7e		~
+	defb 023h		;4dbc	23		#
+	defb 040h		;4dbd	40		@
+	defb 0d6h		;4dbe	d6		.
+	defb 0d8h		;4dbf	d8		.
+	defb 0d7h		;4dc0	d7		.
+	defb 05eh		;4dc1	5e		^
+	defb 060h		;4dc2	60		`
+	defb 0f6h		;4dc3	f6		.
+	defb 0f8h		;4dc4	f8		.
+	defb 0f7h		;4dc5	f7		.
+	defb 07eh		;4dc6	7e		~
+	defb 023h		;4dc7	23		#
+	defb 0c1h		;4dc8	c1		.
+	defb 0d0h		;4dc9	d0		.
+	defb 0d3h		;4dca	d3		.
+	defb 0d7h		;4dcb	d7		.
+	defb 0d4h		;4dcc	d4		.
+	defb 0e1h		;4dcd	e1		.
+	defb 0f0h		;4dce	f0		.
+	defb 0f3h		;4dcf	f3		.
+	defb 0f7h		;4dd0	f7		.
+	defb 0f4h		;4dd1	f4		.
+	defb 023h		;4dd2	23		#
+	defb 040h		;4dd3	40		@
+	defb 0a2h		;4dd4	a2		.
+	defb 05ch		;4dd5	5c		\
+	defb 0e1h		;4dd6	e1		.
+	defb 05eh		;4dd7	5e		^
+	defb 0eeh		;4dd8	ee		.
+	defb 0eah		;4dd9	ea		.
+	defb 0edh		;4dda	ed		.
+	defb 0ebh		;4ddb	eb		.
+	defb 0ech		;4ddc	ec		.
+	defb 0adh		;4ddd	ad		.
+	defb 040h		;4dde	40		@
+	defb 0afh		;4ddf	af		.
+	defb 0d9h		;4de0	d9		.
+	defb 0aeh		;4de1	ae		.
+	defb 05eh		;4de2	5e		^
+	defb 060h		;4de3	60		`
+	defb 0b2h		;4de4	b2		.
+	defb 0f9h		;4de5	f9		.
+	defb 07dh		;4de6	7d		}
+unknown_1_blk_end:
+	ld a,(hl)		;4de7	7e		~
 XBIOS_msg_sysmsg:
-	ld hl,0ba09h		;4de8
+	ld hl,0ba09h		;4de8	21 09 ba	! . .
 l4debh:
-	ld (05704h),hl		;4deb
+	ld (05704h),hl		;4deb	22 04 57	" . W
 sub_4deeh:
-	push bc			;4dee
-	and 07fh		;4def
-	ld b,a			;4df1
-	ld hl,0162eh		;4df2
-	cp h			;4df5
-	jr c,l4e02h		;4df6
-	cp l			;4df8
-	jr nc,l4e02h		;4df9
-	sub 021h		;4dfb
-	jr c,l4e01h		;4dfd
-	add a,h			;4dff
-	sub l			;4e00
+	push bc			;4dee	c5		.
+	and 07fh		;4def	e6 7f		. .
+	ld b,a			;4df1	47		G
+	ld hl,0162eh		;4df2	21 2e 16	! . .
+	cp h			;4df5	bc		.
+	jr c,l4e02h		;4df6	38 0a		8 .
+	cp l			;4df8	bd		.
+	jr nc,l4e02h		;4df9	30 07		0 .
+	sub 021h		;4dfb	d6 21		. !
+	jr c,l4e01h		;4dfd	38 02		8 .
+	add a,h			;4dff	84		.
+	sub l			;4e00	95		.
 l4e01h:
-	add a,l			;4e01
+	add a,l			;4e01	85		.
 l4e02h:
-	ld b,a			;4e02
-	ld hl,00242h		;4e03
-	inc b			;4e06
-	jr l4e0eh		;4e07
+	ld b,a			;4e02	47		G
+	ld hl,00242h		;4e03	21 42 02	! B .
+	inc b			;4e06	04		.
+	jr l4e0eh		;4e07	18 05		. .
 l4e09h:
-	ld a,(hl)		;4e09
-	inc hl			;4e0a
-	inc a			;4e0b
-	jr nz,l4e09h		;4e0c
+	ld a,(hl)		;4e09	7e		~
+	inc hl			;4e0a	23		#
+	inc a			;4e0b	3c		<
+	jr nz,l4e09h		;4e0c	20 fb		  .
 l4e0eh:
-	djnz l4e09h		;4e0e
-	pop bc			;4e10
+	djnz l4e09h		;4e0e	10 f9		. .
+	pop bc			;4e10	c1		.
 l4e11h:
-	ld a,(hl)		;4e11
-	inc hl			;4e12
-	cp 0ffh			;4e13
-	ret z			;4e15
-	or a			;4e16
-	jp p,l4e35h		;4e17
-	cp 0f0h			;4e1a
-	jr nz,l4e22h		;4e1c
-	ld a,(hl)		;4e1e
-	inc hl			;4e1f
-	jr l4e35h		;4e20
+	ld a,(hl)		;4e11	7e		~
+	inc hl			;4e12	23		#
+	cp 0ffh			;4e13	fe ff		. .
+	ret z			;4e15	c8		.
+	or a			;4e16	b7		.
+	jp p,l4e35h		;4e17	f2 35 4e	. 5 N
+	cp 0f0h			;4e1a	fe f0		. .
+	jr nz,l4e22h		;4e1c	20 04		  .
+	ld a,(hl)		;4e1e	7e		~
+	inc hl			;4e1f	23		#
+	jr l4e35h		;4e20	18 13		. .
 l4e22h:
-	cp 0f1h			;4e22
-	jr z,l4e3ah		;4e24
-	cp 0f3h			;4e26
-	jr z,l4e45h		;4e28
-	cp 0f2h			;4e2a
-	jr z,l4e45h		;4e2c
-	push hl			;4e2e
-	call sub_4e63h		;4e2f
-	pop hl			;4e32
-	jr l4e11h		;4e33
+	cp 0f1h			;4e22	fe f1		. .
+	jr z,l4e3ah		;4e24	28 14		( .
+	cp 0f3h			;4e26	fe f3		. .
+	jr z,l4e45h		;4e28	28 1b		( .
+	cp 0f2h			;4e2a	fe f2		. .
+	jr z,l4e45h		;4e2c	28 17		( .
+	push hl			;4e2e	e5		.
+	call sub_4e63h		;4e2f	cd 63 4e	. c N
+	pop hl			;4e32	e1		.
+	jr l4e11h		;4e33	18 dc		. .
 l4e35h:
-	call sub_4f32h		;4e35
-	jr l4e11h		;4e38
+	call XBIOS_write_char	;4e35	cd 32 4f	. 2 O
+	jr l4e11h		;4e38	18 d7		. .
 l4e3ah:
-	push bc			;4e3a
-	ld b,(hl)		;4e3b
-	inc hl			;4e3c
+	push bc			;4e3a	c5		.
+	ld b,(hl)		;4e3b	46		F
+	inc hl			;4e3c	23		#
 l4e3dh:
-	call sub_4f30h		;4e3d
-	djnz l4e3dh		;4e40
-	pop bc			;4e42
-	jr l4e11h		;4e43
+	call XBIOS_write_space	;4e3d	cd 30 4f	. 0 O
+	djnz l4e3dh		;4e40	10 fb		. .
+	pop bc			;4e42	c1		.
+	jr l4e11h		;4e43	18 cc		. .
 l4e45h:
-	push af			;4e45
-	push hl			;4e46
-	ld a,b			;4e47
-	rrc b			;4e48
-	rrc b			;4e4a
-	and 003h		;4e4c
-	add a,l			;4e4e
-	ld l,a			;4e4f
-	adc a,h			;4e50
-	sub l			;4e51
-	ld h,a			;4e52
-	ld a,(hl)		;4e53
-	call sub_4deeh		;4e54
-	pop hl			;4e57
-	pop af			;4e58
-	cp 0f2h			;4e59
-	jr nz,l4e5eh		;4e5b
-	inc hl			;4e5d
+	push af			;4e45	f5		.
+	push hl			;4e46	e5		.
+	ld a,b			;4e47	78		x
+	rrc b			;4e48	cb 08		. .
+	rrc b			;4e4a	cb 08		. .
+	and 003h		;4e4c	e6 03		. .
+	add a,l			;4e4e	85		.
+	ld l,a			;4e4f	6f		o
+	adc a,h			;4e50	8c		.
+	sub l			;4e51	95		.
+	ld h,a			;4e52	67		g
+	ld a,(hl)		;4e53	7e		~
+	call sub_4deeh		;4e54	cd ee 4d	. . M
+	pop hl			;4e57	e1		.
+	pop af			;4e58	f1		.
+	cp 0f2h			;4e59	fe f2		. .
+	jr nz,l4e5eh		;4e5b	20 01		  .
+	inc hl			;4e5d	23		#
 l4e5eh:
-	inc hl			;4e5e
-	inc hl			;4e5f
-	inc hl			;4e60
-	jr l4e11h		;4e61
+	inc hl			;4e5e	23		#
+	inc hl			;4e5f	23		#
+	inc hl			;4e60	23		#
+	jr l4e11h		;4e61	18 ae		. .
 sub_4e63h:
-	cp 0f5h			;4e63
-	jp z,l4f10h		;4e65
-	cp 0f4h			;4e68
-	jp z,l4f17h		;4e6a
-	cp 0feh			;4e6d
-	jp z,l4f20h		;4e6f
-	cp 0fdh			;4e72
-	jp z,l4f25h		;4e74
-	ld h,000h		;4e77
-	ld l,d			;4e79
-	cp 0fch			;4e7a
-	jr z,l4ea5h		;4e7c
-	ld l,e			;4e7e
-	cp 0fbh			;4e7f
-	jr z,l4ea5h		;4e81
-	push af			;4e83
-	ld a,(de)		;4e84
-	ld l,a			;4e85
-	pop af			;4e86
-	inc de			;4e87
-	cp 0f6h			;4e88
-	jr z,l4edch		;4e8a
-	cp 0f7h			;4e8c
-	jr z,l4ed2h		;4e8e
-	cp 0f8h			;4e90
-	jr z,l4ecah		;4e92
-	dec de			;4e94
-	ld l,e			;4e95
-	ld h,d			;4e96
-	cp 0f9h			;4e97
-	jr z,l4f02h		;4e99
-	cp 0efh			;4e9b
-	jp z,l4f40h		;4e9d
-	cp 0fah			;4ea0
-	jp nz,sub_4deeh		;4ea2
+	cp 0f5h			;4e63	fe f5		. .
+	jp z,l4f10h		;4e65	ca 10 4f	. . O
+	cp 0f4h			;4e68	fe f4		. .
+	jp z,l4f17h		;4e6a	ca 17 4f	. . O
+	cp 0feh			;4e6d	fe fe		. .
+	jp z,l4f20h		;4e6f	ca 20 4f	.   O
+	cp 0fdh			;4e72	fe fd		. .
+	jp z,l4f25h		;4e74	ca 25 4f	. % O
+	ld h,000h		;4e77	26 00		& .
+	ld l,d			;4e79	6a		j
+	cp 0fch			;4e7a	fe fc		. .
+	jr z,l4ea5h		;4e7c	28 27		( '
+	ld l,e			;4e7e	6b		k
+	cp 0fbh			;4e7f	fe fb		. .
+	jr z,l4ea5h		;4e81	28 22		( "
+	push af			;4e83	f5		.
+	ld a,(de)		;4e84	1a		.
+	ld l,a			;4e85	6f		o
+	pop af			;4e86	f1		.
+	inc de			;4e87	13		.
+	cp 0f6h			;4e88	fe f6		. .
+	jr z,l4edch		;4e8a	28 50		( P
+	cp 0f7h			;4e8c	fe f7		. .
+	jr z,l4ed2h		;4e8e	28 42		( B
+	cp 0f8h			;4e90	fe f8		. .
+	jr z,l4ecah		;4e92	28 36		( 6
+	dec de			;4e94	1b		.
+	ld l,e			;4e95	6b		k
+	ld h,d			;4e96	62		b
+	cp 0f9h			;4e97	fe f9		. .
+	jr z,l4f02h		;4e99	28 67		( g
+	cp 0efh			;4e9b	fe ef		. .
+	jp z,XBIOS_write_str_no_expansion	;4e9d	ca 40 4f	. @ O
+	cp 0fah			;4ea0	fe fa		. .
+	jp nz,sub_4deeh		;4ea2	c2 ee 4d	. . M
 l4ea5h:
-	push bc			;4ea5
-	push de			;4ea6
-	ld d,000h		;4ea7
-	ld bc,0d8f0h		;4ea9
-	call sub_4ef0h		;4eac
-	ld bc,0fc18h		;4eaf
-	call sub_4ef0h		;4eb2
+	push bc			;4ea5	c5		.
+	push de			;4ea6	d5		.
+	ld d,000h		;4ea7	16 00		. .
+	ld bc,0d8f0h		;4ea9	01 f0 d8	. . .
+	call sub_4ef0h		;4eac	cd f0 4e	. . N
+	ld bc,0fc18h		;4eaf	01 18 fc	. . .
+	call sub_4ef0h		;4eb2	cd f0 4e	. . N
 l4eb5h:
-	ld bc,0ff9ch		;4eb5
-	call sub_4ef0h		;4eb8
+	ld bc,0ff9ch		;4eb5	01 9c ff	. . .
+	call sub_4ef0h		;4eb8	cd f0 4e	. . N
 l4ebbh:
-	ld bc,0fff6h		;4ebb
-	call sub_4ef0h		;4ebe
+	ld bc,0fff6h		;4ebb	01 f6 ff	. . .
+	call sub_4ef0h		;4ebe	cd f0 4e	. . N
 l4ec1h:
-	ld a,l			;4ec1
-	add a,030h		;4ec2
-	call sub_4f32h		;4ec4
-	pop de			;4ec7
-	pop bc			;4ec8
-	ret			;4ec9
+	ld a,l			;4ec1	7d		}
+	add a,030h		;4ec2	c6 30		. 0
+	call XBIOS_write_char	;4ec4	cd 32 4f	. 2 O
+	pop de			;4ec7	d1		.
+	pop bc			;4ec8	c1		.
+	ret			;4ec9	c9		.
 l4ecah:
-	ld a,l			;4eca
-	inc a			;4ecb
-	jr z,l4eech		;4ecc
-	push bc			;4ece
-	push de			;4ecf
-	jr l4ec1h		;4ed0
+	ld a,l			;4eca	7d		}
+	inc a			;4ecb	3c		<
+	jr z,l4eech		;4ecc	28 1e		( .
+	push bc			;4ece	c5		.
+	push de			;4ecf	d5		.
+	jr l4ec1h		;4ed0	18 ef		. .
 l4ed2h:
-	ld a,l			;4ed2
-	inc a			;4ed3
-	jr z,l4ee9h		;4ed4
-	push bc			;4ed6
-	push de			;4ed7
-	ld d,020h		;4ed8
-	jr l4ebbh		;4eda
+	ld a,l			;4ed2	7d		}
+	inc a			;4ed3	3c		<
+	jr z,l4ee9h		;4ed4	28 13		( .
+	push bc			;4ed6	c5		.
+	push de			;4ed7	d5		.
+	ld d,020h		;4ed8	16 20		.  
+	jr l4ebbh		;4eda	18 df		. .
 l4edch:
-	push bc			;4edc
-	push de			;4edd
-	ld d,020h		;4ede
-	ld a,l			;4ee0
-	inc a			;4ee1
-	jr nz,l4eb5h		;4ee2
-	call sub_4f30h		;4ee4
-	pop de			;4ee7
-	pop bc			;4ee8
+	push bc			;4edc	c5		.
+	push de			;4edd	d5		.
+	ld d,020h		;4ede	16 20		.  
+	ld a,l			;4ee0	7d		}
+	inc a			;4ee1	3c		<
+	jr nz,l4eb5h		;4ee2	20 d1		  .
+	call XBIOS_write_space	;4ee4	cd 30 4f	. 0 O
+	pop de			;4ee7	d1		.
+	pop bc			;4ee8	c1		.
 l4ee9h:
-	call l4eech		;4ee9
+	call l4eech		;4ee9	cd ec 4e	. . N
 l4eech:
-	ld a,03fh		;4eec
-	jr sub_4f32h		;4eee
+	ld a,03fh		;4eec	3e 3f		> ?
+	jr XBIOS_write_char	;4eee	18 42		. B
 sub_4ef0h:
-	ld a,0ffh		;4ef0
+	ld a,0ffh		;4ef0	3e ff		> .
 l4ef2h:
-	inc a			;4ef2
-	add hl,bc		;4ef3
-	jr c,l4ef2h		;4ef4
-	sbc hl,bc		;4ef6
-	or d			;4ef8
-	cp d			;4ef9
-	jr z,l4efeh		;4efa
-	ld d,030h		;4efc
+	inc a			;4ef2	3c		<
+	add hl,bc		;4ef3	09		.
+	jr c,l4ef2h		;4ef4	38 fc		8 .
+	sbc hl,bc		;4ef6	ed 42		. B
+	or d			;4ef8	b2		.
+	cp d			;4ef9	ba		.
+	jr z,l4efeh		;4efa	28 02		( .
+	ld d,030h		;4efc	16 30		. 0
 l4efeh:
-	or d			;4efe
-	ret z			;4eff
-	jr sub_4f32h		;4f00
+	or d			;4efe	b2		.
+	ret z			;4eff	c8		.
+	jr XBIOS_write_char	;4f00	18 30		. 0
 l4f02h:
-	push bc			;4f02
-	ld b,006h		;4f03
+	push bc			;4f02	c5		.
+	ld b,006h		;4f03	06 06		. .
 l4f05h:
-	ld a,(hl)		;4f05
-	inc hl			;4f06
-	cp 020h			;4f07
-	call nz,sub_4f32h	;4f09
-	djnz l4f05h		;4f0c
-	pop bc			;4f0e
-	ret			;4f0f
+	ld a,(hl)		;4f05	7e		~
+	inc hl			;4f06	23		#
+	cp 020h			;4f07	fe 20		.  
+	call nz,XBIOS_write_char	;4f09	c4 32 4f	. 2 O
+	djnz l4f05h		;4f0c	10 f7		. .
+	pop bc			;4f0e	c1		.
+	ret			;4f0f	c9		.
 l4f10h:
-	rlc c			;4f10
-	ret nc			;4f12
+	rlc c			;4f10	cb 01		. .
+	ret nc			;4f12	d0		.
 sub_4f13h:
-	ld a,004h		;4f13
-	jr l4f18h		;4f15
+	ld a,004h		;4f13	3e 04		> .
+	jr l4f18h		;4f15	18 01		. .
 l4f17h:
-	xor a			;4f17
+	xor a			;4f17	af		.
 l4f18h:
-	push bc			;4f18
-	push de			;4f19
-	call sub_45d3h		;4f1a
-	pop de			;4f1d
-	pop bc			;4f1e
-	ret			;4f1f
+	push bc			;4f18	c5		.
+	push de			;4f19	d5		.
+	call sub_45d3h		;4f1a	cd d3 45	. . E
+	pop de			;4f1d	d1		.
+	pop bc			;4f1e	c1		.
+	ret			;4f1f	c9		.
 l4f20h:
-	ld a,(00042h)		;4f20
-	or a			;4f23
-	ret z			;4f24
+	ld a,(00042h)		;4f20	3a 42 00	: B .
+	or a			;4f23	b7		.
+	ret z			;4f24	c8		.
 l4f25h:
-	ld a,c			;4f25
-	add a,041h		;4f26
-	call sub_4f32h		;4f28
-	ld a,03ah		;4f2b
-	call sub_4f32h		;4f2d
-sub_4f30h:
-	ld a,020h		;4f30
-sub_4f32h:
-	push bc			;4f32
-	push de			;4f33
-	push hl			;4f34
-	ld c,a			;4f35
-	ld hl,(05704h)		;4f36
-	call 00007h		;4f39
-	pop hl			;4f3c
-	pop de			;4f3d
-	pop bc			;4f3e
-	ret			;4f3f
-l4f40h:
-	ld a,(hl)		;4f40
-	inc hl			;4f41
-	cp 0ffh			;4f42
-	ret z			;4f44
-	call sub_4f32h		;4f45
-	jr l4f40h		;4f48
+	ld a,c			;4f25	79		y
+	add a,041h		;4f26	c6 41		. A
+	call XBIOS_write_char	;4f28	cd 32 4f	. 2 O
+	ld a,03ah		;4f2b	3e 3a		> :
+	call XBIOS_write_char	;4f2d	cd 32 4f	. 2 O
+XBIOS_write_space:
+	ld a,020h		;4f30	3e 20		>  
+XBIOS_write_char:
+	push bc			;4f32	c5		.
+	push de			;4f33	d5		.
+	push hl			;4f34	e5		.
+	ld c,a			;4f35	4f		O
+	ld hl,(05704h)		;4f36	2a 04 57	* . W
+	call JB_jump_hl_addr	;4f39	cd 07 00	. . .
+	pop hl			;4f3c	e1		.
+	pop de			;4f3d	d1		.
+	pop bc			;4f3e	c1		.
+	ret			;4f3f	c9		.
+XBIOS_write_str_no_expansion:
+	ld a,(hl)		;4f40	7e		~
+	inc hl			;4f41	23		#
+	cp 0ffh			;4f42	fe ff		. .
+	ret z			;4f44	c8		.
+	call XBIOS_write_char	;4f45	cd 32 4f	. 2 O
+	jr XBIOS_write_str_no_expansion	;4f48	18 f6		. .
 sub_4f4ah:
-	ld hl,05706h		;4f4a
-	dec (hl)		;4f4d
-	ret			;4f4e
+	ld hl,05706h		;4f4a	21 06 57	! . W
+	dec (hl)		;4f4d	35		5
+	ret			;4f4e	c9		.
 sub_4f4fh:
-	ld a,(05706h)		;4f4f
-	rlca			;4f52
-	ret nc			;4f53
-	jp 0ba06h		;4f54
+	ld a,(05706h)		;4f4f	3a 06 57	: . W
+	rlca			;4f52	07		.
+	ret nc			;4f53	d0		.
+	jp 0ba06h		;4f54	c3 06 ba	. . .
 XBIOS_te_stl_ask:
-	ld a,(05706h)		;4f57
-	or a			;4f5a
-	ret			;4f5b
-	xor a			;4f5c
-	jr l4f61h		;4f5d
+	ld a,(05706h)		;4f57	3a 06 57	: . W
+	or a			;4f5a	b7		.
+	ret			;4f5b	c9		.
+	xor a			;4f5c	af		.
+	jr l4f61h		;4f5d	18 02		. .
 l4f5fh:
-	ld a,0ffh		;4f5f
+	ld a,0ffh		;4f5f	3e ff		> .
 l4f61h:
-	push af			;4f61
-	call sub_4fbch		;4f62
-	pop af			;4f65
-	ld (05706h),a		;4f66
-	jp l4b48h		;4f69
+	push af			;4f61	f5		.
+	call sub_4fbch		;4f62	cd bc 4f	. . O
+	pop af			;4f65	f1		.
+	ld (05706h),a		;4f66	32 06 57	2 . W
+	jp l4b48h		;4f69	c3 48 4b	. H K
 XBIOS_te_stl_on_off:
-	push af			;4f6c
-	call sub_4abdh		;4f6d
-	pop af			;4f70
-	call l4f61h		;4f71
-	jp l4aa9h		;4f74
+	push af			;4f6c	f5		.
+	call sub_4abdh		;4f6d	cd bd 4a	. . J
+	pop af			;4f70	f1		.
+	call l4f61h		;4f71	cd 61 4f	. a O
+	jp l4aa9h		;4f74	c3 a9 4a	. . J
 sub_4f77h:
-	call sub_4f4fh		;4f77
-	jr c,l4f87h		;4f7a
-	push bc			;4f7c
-	ld a,013h		;4f7d
-	call XBIOS_msg_sysmsg	;4f7f
-	pop bc			;4f82
-	ld a,b			;4f83
-	jp XBIOS_msg_sysmsg	;4f84
+	call sub_4f4fh		;4f77	cd 4f 4f	. O O
+	jr c,l4f87h		;4f7a	38 0b		8 .
+	push bc			;4f7c	c5		.
+	ld a,013h		;4f7d	3e 13		> .
+	call XBIOS_msg_sysmsg	;4f7f	cd e8 4d	. . M
+	pop bc			;4f82	c1		.
+	ld a,b			;4f83	78		x
+	jp XBIOS_msg_sysmsg	;4f84	c3 e8 4d	. . M
 l4f87h:
-	xor a			;4f87
-	call sub_4fcah		;4f88
+	xor a			;4f87	af		.
+	call sub_4fcah		;4f88	cd ca 4f	. . O
 sub_4f8bh:
-	call sub_4f4fh		;4f8b
-	ld c,007h		;4f8e
-	jp nc,0ba09h		;4f90
-	call sub_4bcdh		;4f93
-	ret			;4f96
+	call sub_4f4fh		;4f8b	cd 4f 4f	. O O
+	ld c,007h		;4f8e	0e 07		. .
+	jp nc,0ba09h		;4f90	d2 09 ba	. . .
+	call sub_4bcdh		;4f93	cd cd 4b	. . K
+	ret			;4f96	c9		.
 sub_4f97h:
-	call sub_4f4fh		;4f97
-	ld a,013h		;4f9a
-	jp nc,XBIOS_msg_sysmsg	;4f9c
-	call sub_4fffh		;4f9f
+	call sub_4f4fh		;4f97	cd 4f 4f	. O O
+	ld a,013h		;4f9a	3e 13		> .
+	jp nc,XBIOS_msg_sysmsg	;4f9c	d2 e8 4d	. . M
+	call sub_4fffh		;4f9f	cd ff 4f	. . O
 l4fa2h:
-	call sub_4f4fh		;4fa2
-	ret nc			;4fa5
-	ld a,(00042h)		;4fa6
-	or a			;4fa9
-	jr nz,sub_4fbch		;4faa
-	ld a,(05707h)		;4fac
-	ld c,a			;4faf
-	ld b,014h		;4fb0
-	ld a,(05823h)		;4fb2
-	sub 019h		;4fb5
-	call sub_4fcah		;4fb7
-	jr sub_4fffh		;4fba
+	call sub_4f4fh		;4fa2	cd 4f 4f	. O O
+	ret nc			;4fa5	d0		.
+	ld a,(00042h)		;4fa6	3a 42 00	: B .
+	or a			;4fa9	b7		.
+	jr nz,sub_4fbch		;4faa	20 10		  .
+	ld a,(05707h)		;4fac	3a 07 57	: . W
+	ld c,a			;4faf	4f		O
+	ld b,014h		;4fb0	06 14		. .
+	ld a,(05823h)		;4fb2	3a 23 58	: # X
+	sub 019h		;4fb5	d6 19		. .
+	call sub_4fcah		;4fb7	cd ca 4f	. . O
+	jr sub_4fffh		;4fba	18 43		. C
 sub_4fbch:
-	call sub_4f4fh		;4fbc
-	ret nc			;4fbf
-	call sub_4fedh		;4fc0
-	jr sub_4fffh		;4fc3
+	call sub_4f4fh		;4fbc	cd 4f 4f	. O O
+	ret nc			;4fbf	d0		.
+	call sub_4fedh		;4fc0	cd ed 4f	. . O
+	jr sub_4fffh		;4fc3	18 3a		. :
 sub_4fc5h:
-	ld a,c			;4fc5
-	ld (05707h),a		;4fc6
-	ret			;4fc9
+	ld a,c			;4fc5	79		y
+	ld (05707h),a		;4fc6	32 07 57	2 . W
+	ret			;4fc9	c9		.
 sub_4fcah:
-	ld (05708h),a		;4fca
-	push bc			;4fcd
-	push de			;4fce
-	call sub_4fedh		;4fcf
-	pop de			;4fd2
-	pop bc			;4fd3
-	ld a,b			;4fd4
-	ld hl,l4fdbh		;4fd5
-	jp l4debh		;4fd8
+	ld (05708h),a		;4fca	32 08 57	2 . W
+	push bc			;4fcd	c5		.
+	push de			;4fce	d5		.
+	call sub_4fedh		;4fcf	cd ed 4f	. . O
+	pop de			;4fd2	d1		.
+	pop bc			;4fd3	c1		.
+	ld a,b			;4fd4	78		x
+	ld hl,l4fdbh		;4fd5	21 db 4f	! . O
+	jp l4debh		;4fd8	c3 eb 4d	. . M
 l4fdbh:
-	ld hl,(05823h)		;4fdb
-	ld a,(05708h)		;4fde
-	inc l			;4fe1
-	cp l			;4fe2
-	ret nc			;4fe3
-	ld d,h			;4fe4
-	ld e,a			;4fe5
-	inc a			;4fe6
-	ld (05708h),a		;4fe7
-	jp sub_45beh		;4fea
+	ld hl,(05823h)		;4fdb	2a 23 58	* # X
+	ld a,(05708h)		;4fde	3a 08 57	: . W
+	inc l			;4fe1	2c		,
+	cp l			;4fe2	bd		.
+	ret nc			;4fe3	d0		.
+	ld d,h			;4fe4	54		T
+	ld e,a			;4fe5	5f		_
+	inc a			;4fe6	3c		<
+	ld (05708h),a		;4fe7	32 08 57	2 . W
+	jp sub_45beh		;4fea	c3 be 45	. . E
 sub_4fedh:
-	call sub_4abdh		;4fed
-	xor a			;4ff0
-	call sub_45d3h		;4ff1
-	ld hl,(05823h)		;4ff4
-	ld d,h			;4ff7
-	ld e,000h		;4ff8
-	ld a,l			;4ffa
-	inc a			;4ffb
-	jp l4533h		;4ffc
+	call sub_4abdh		;4fed	cd bd 4a	. . J
+	xor a			;4ff0	af		.
+	call sub_45d3h		;4ff1	cd d3 45	. . E
+	ld hl,(05823h)		;4ff4	2a 23 58	* # X
+	ld d,h			;4ff7	54		T
+	ld e,000h		;4ff8	1e 00		. .
+	ld a,l			;4ffa	7d		}
+	inc a			;4ffb	3c		<
+	jp l4533h		;4ffc	c3 33 45	. 3 E
 sub_4fffh:
-	ld a,(0582ch)		;4fff
-	call sub_45d3h		;5002
-	jp l4aa9h		;5005
-	jp sub_4bcdh		;5008
-	ld a,00ch		;500b
-	out (0f8h),a		;500d
-	call sub_4ae1h		;500f
-	xor a			;5012
-	call sub_45d3h		;5013
-	ld d,a			;5016
-	push de			;5017
-	call sub_44efh		;5018
-	pop de			;501b
-	ret			;501c
-	ld hl,05709h		;501d
-	ld (hl),000h		;5020
-	push af			;5022
-	call sub_4f13h		;5023
-	pop af			;5026
-	ld hl,l502dh		;5027
-	jp l4debh		;502a
+	ld a,(0582ch)		;4fff	3a 2c 58	: , X
+	call sub_45d3h		;5002	cd d3 45	. . E
+	jp l4aa9h		;5005	c3 a9 4a	. . J
+	jp sub_4bcdh		;5008	c3 cd 4b	. . K
+	ld a,00ch		;500b	3e 0c		> .
+	out (0f8h),a		;500d	d3 f8		. .
+	call sub_4ae1h		;500f	cd e1 4a	. . J
+	xor a			;5012	af		.
+	call sub_45d3h		;5013	cd d3 45	. . E
+	ld d,a			;5016	57		W
+	push de			;5017	d5		.
+	call sub_44efh		;5018	cd ef 44	. . D
+	pop de			;501b	d1		.
+	ret			;501c	c9		.
+	ld hl,05709h		;501d	21 09 57	! . W
+	ld (hl),000h		;5020	36 00		6 .
+	push af			;5022	f5		.
+	call sub_4f13h		;5023	cd 13 4f	. . O
+	pop af			;5026	f1		.
+	ld hl,l502dh		;5027	21 2d 50	! - P
+	jp l4debh		;502a	c3 eb 4d	. . M
 l502dh:
-	ld hl,(05823h)		;502d
-	ld a,(05709h)		;5030
-	ld d,h			;5033
-	ld e,a			;5034
-	inc a			;5035
-	ld (05709h),a		;5036
-	jp sub_45beh		;5039
-	push de			;503c
-	call sub_44efh		;503d
-	pop de			;5040
-	push de			;5041
-	ld a,d			;5042
-	call sub_45d3h		;5043
-	pop de			;5046
-	jp l4aech		;5047
+	ld hl,(05823h)		;502d	2a 23 58	* # X
+	ld a,(05709h)		;5030	3a 09 57	: . W
+	ld d,h			;5033	54		T
+	ld e,a			;5034	5f		_
+	inc a			;5035	3c		<
+	ld (05709h),a		;5036	32 09 57	2 . W
+	jp sub_45beh		;5039	c3 be 45	. . E
+	push de			;503c	d5		.
+	call sub_44efh		;503d	cd ef 44	. . D
+	pop de			;5040	d1		.
+	push de			;5041	d5		.
+	ld a,d			;5042	7a		z
+	call sub_45d3h		;5043	cd d3 45	. . E
+	pop de			;5046	d1		.
+	jp l4aech		;5047	c3 ec 4a	. . J
 sub_504ah:
-	ld a,(ix+019h)		;504a
-	and 040h		;504d
-	or 00dh			;504f
-	call sub_50a8h		;5051
-	ld l,(ix+00fh)		;5054
-	ld h,(ix+013h)		;5057
-	ld (05836h),hl		;505a
-	ld h,e			;505d
-	ld l,(ix+018h)		;505e
-	ld (05838h),hl		;5061
-	ld a,006h		;5064
-	ld (05833h),a		;5066
-	ret			;5069
+	ld a,(ix+019h)		;504a	dd 7e 19	. ~ .
+	and 040h		;504d	e6 40		. @
+	or 00dh			;504f	f6 0d		. .
+	call sub_50a8h		;5051	cd a8 50	. . P
+	ld l,(ix+00fh)		;5054	dd 6e 0f	. n .
+	ld h,(ix+013h)		;5057	dd 66 13	. f .
+	ld (05836h),hl		;505a	22 36 58	" 6 X
+	ld h,e			;505d	63		c
+	ld l,(ix+018h)		;505e	dd 6e 18	. n .
+	ld (05838h),hl		;5061	22 38 58	" 8 X
+	ld a,006h		;5064	3e 06		> .
+	ld (05833h),a		;5066	32 33 58	2 3 X
+	ret			;5069	c9		.
 sub_506ah:
-	ld a,011h		;506a
-	call sub_5074h		;506c
-	ld (hl),001h		;506f
-	ret			;5071
+	ld a,011h		;506a	3e 11		> .
+	call sub_5074h		;506c	cd 74 50	. t P
+	ld (hl),001h		;506f	36 01		6 .
+	ret			;5071	c9		.
 sub_5072h:
-	ld a,006h		;5072
+	ld a,006h		;5072	3e 06		> .
 sub_5074h:
-	or (ix+019h)		;5074
-	jr l5080h		;5077
+	or (ix+019h)		;5074	dd b6 19	. . .
+	jr l5080h		;5077	18 07		. .
 sub_5079h:
-	ld a,(ix+019h)		;5079
-	and 0c0h		;507c
-	or 005h			;507e
+	ld a,(ix+019h)		;5079	dd 7e 19	. ~ .
+	and 0c0h		;507c	e6 c0		. .
+	or 005h			;507e	f6 05		. .
 l5080h:
-	call sub_50a8h		;5080
-	ld a,e			;5083
-	add a,(ix+014h)		;5084
-	ld e,a			;5087
-	ld (05838h),a		;5088
-	ld l,(ix+00fh)		;508b
-	ld h,e			;508e
-	ld (05839h),hl		;508f
-	ld a,(ix+017h)		;5092
-	ld (0583bh),a		;5095
-	ld h,b			;5098
-	ld l,d			;5099
-	ld (05836h),hl		;509a
-	ld a,009h		;509d
-	ld (05833h),a		;509f
-	ld hl,0583ch		;50a2
-	ld (hl),0ffh		;50a5
-	ret			;50a7
+	call sub_50a8h		;5080	cd a8 50	. . P
+	ld a,e			;5083	7b		{
+	add a,(ix+014h)		;5084	dd 86 14	. . .
+	ld e,a			;5087	5f		_
+	ld (05838h),a		;5088	32 38 58	2 8 X
+	ld l,(ix+00fh)		;508b	dd 6e 0f	. n .
+	ld h,e			;508e	63		c
+	ld (05839h),hl		;508f	22 39 58	" 9 X
+	ld a,(ix+017h)		;5092	dd 7e 17	. ~ .
+	ld (0583bh),a		;5095	32 3b 58	2 ; X
+	ld h,b			;5098	60		`
+	ld l,d			;5099	6a		j
+	ld (05836h),hl		;509a	22 36 58	" 6 X
+	ld a,009h		;509d	3e 09		> .
+	ld (05833h),a		;509f	32 33 58	2 3 X
+	ld hl,0583ch		;50a2	21 3c 58	! < X
+	ld (hl),0ffh		;50a5	36 ff		6 .
+	ret			;50a7	c9		.
 sub_50a8h:
-	ld (0582fh),hl		;50a8
-	ld l,a			;50ab
-	ld a,b			;50ac
-	ld (0582eh),a		;50ad
-	call sub_50c1h		;50b0
-	ld h,c			;50b3
-	ld (05834h),hl		;50b4
-	ld l,(ix+015h)		;50b7
-	ld h,(ix+016h)		;50ba
-	ld (05831h),hl		;50bd
-	ret			;50c0
+	ld (0582fh),hl		;50a8	22 2f 58	" / X
+	ld l,a			;50ab	6f		o
+	ld a,b			;50ac	78		x
+	ld (0582eh),a		;50ad	32 2e 58	2 . X
+	call sub_50c1h		;50b0	cd c1 50	. . P
+	ld h,c			;50b3	61		a
+	ld (05834h),hl		;50b4	22 34 58	" 4 X
+	ld l,(ix+015h)		;50b7	dd 6e 15	. n .
+	ld h,(ix+016h)		;50ba	dd 66 16	. f .
+	ld (05831h),hl		;50bd	22 31 58	" 1 X
+	ret			;50c0	c9		.
 sub_50c1h:
-	ld a,(ix+011h)		;50c1
-	and 07fh		;50c4
-	ld b,000h		;50c6
-	ret z			;50c8
-	dec a			;50c9
-	jr nz,l50d4h		;50ca
-	ld a,d			;50cc
-	rra			;50cd
-	ld d,a			;50ce
-	ld a,b			;50cf
-	rla			;50d0
-	ld b,a			;50d1
-	jr l50e0h		;50d2
+	ld a,(ix+011h)		;50c1	dd 7e 11	. ~ .
+	and 07fh		;50c4	e6 7f		. .
+	ld b,000h		;50c6	06 00		. .
+	ret z			;50c8	c8		.
+	dec a			;50c9	3d		=
+	jr nz,l50d4h		;50ca	20 08		  .
+	ld a,d			;50cc	7a		z
+	rra			;50cd	1f		.
+	ld d,a			;50ce	57		W
+	ld a,b			;50cf	78		x
+	rla			;50d0	17		.
+	ld b,a			;50d1	47		G
+	jr l50e0h		;50d2	18 0c		. .
 l50d4h:
-	ld a,d			;50d4
-	sub (ix+012h)		;50d5
-	jr c,l50e0h		;50d8
-	sub (ix+012h)		;50da
-	cpl			;50dd
-	ld d,a			;50de
-	inc b			;50df
+	ld a,d			;50d4	7a		z
+	sub (ix+012h)		;50d5	dd 96 12	. . .
+	jr c,l50e0h		;50d8	38 06		8 .
+	sub (ix+012h)		;50da	dd 96 12	. . .
+	cpl			;50dd	2f		/
+	ld d,a			;50de	57		W
+	inc b			;50df	04		.
 l50e0h:
-	ld a,b			;50e0
-	add a,a			;50e1
-	add a,a			;50e2
-	or c			;50e3
-	ld c,a			;50e4
-	ret			;50e5
+	ld a,b			;50e0	78		x
+	add a,a			;50e1	87		.
+	add a,a			;50e2	87		.
+	or c			;50e3	b1		.
+	ld c,a			;50e4	4f		O
+	ret			;50e5	c9		.
 sub_50e6h:
-	push af			;50e6
-	call sub_5072h		;50e7
-	pop af			;50ea
-	ld l,a			;50eb
-	ld h,000h		;50ec
-	ld (05831h),hl		;50ee
-	ld hl,XBIOS_dd_l_read	;50f1
-	jr l5117h		;50f4
-	push hl			;50f6
-	ld a,083h		;50f7
-	call 00c74h		;50f9
-	call 0fc42h		;50fc
-	ld e,(hl)		;50ff
-	inc hl			;5100
-	ld d,(hl)		;5101
-	ld hl,0000ch		;5102
-	add hl,de		;5105
-	ld e,(hl)		;5106
-	inc hl			;5107
-	ld d,(hl)		;5108
-	push de			;5109
-	pop ix			;510a
-	pop hl			;510c
-	ld de,00000h		;510d
-	ld c,d			;5110
+	push af			;50e6	f5		.
+	call sub_5072h		;50e7	cd 72 50	. r P
+	pop af			;50ea	f1		.
+	ld l,a			;50eb	6f		o
+	ld h,000h		;50ec	26 00		& .
+	ld (05831h),hl		;50ee	22 31 58	" 1 X
+	ld hl,XBIOS_dd_l_read	;50f1	21 17 56	! . V
+	jr l5117h		;50f4	18 21		. !
+	push hl			;50f6	e5		.
+	ld a,083h		;50f7	3e 83		> .
+	call 00c74h		;50f9	cd 74 0c	. t .
+	call 0fc42h		;50fc	cd 42 fc	. B .
+	ld e,(hl)		;50ff	5e		^
+	inc hl			;5100	23		#
+	ld d,(hl)		;5101	56		V
+	ld hl,0000ch		;5102	21 0c 00	! . .
+	add hl,de		;5105	19		.
+	ld e,(hl)		;5106	5e		^
+	inc hl			;5107	23		#
+	ld d,(hl)		;5108	56		V
+	push de			;5109	d5		.
+	pop ix			;510a	dd e1		. .
+	pop hl			;510c	e1		.
+	ld de,JB_jump_bank2_env	;510d	11 00 00	. . .
+	ld c,d			;5110	4a		J
 XBIOS_dd_read_sector:
-	call sub_5072h		;5111
-	ld hl,XBIOS_dd_l_read	;5114
+	call sub_5072h		;5111	cd 72 50	. r P
+	ld hl,XBIOS_dd_l_read	;5114	21 17 56	! . V
 l5117h:
-	ld b,0ffh		;5117
-	call sub_5163h		;5119
-	ret c			;511c
-	push af			;511d
-	cp 003h			;511e
-	call nz,005d7h		;5120
-	pop af			;5123
-	ret			;5124
+	ld b,0ffh		;5117	06 ff		. .
+	call sub_5163h		;5119	cd 63 51	. c Q
+	ret c			;511c	d8		.
+	push af			;511d	f5		.
+	cp 003h			;511e	fe 03		. .
+	call nz,005d7h		;5120	c4 d7 05	. . .
+	pop af			;5123	f1		.
+	ret			;5124	c9		.
 XBIOS_dd_read_id:
-	call sub_50c1h		;5125
-	ld hl,l5138h		;5128
-	ld b,000h		;512b
-	call sub_5163h		;512d
-	ld hl,0ffe0h		;5130
-	ret nc			;5133
-	ld a,(0ffe6h)		;5134
-	ret			;5137
+	call sub_50c1h		;5125	cd c1 50	. . P
+	ld hl,l5138h		;5128	21 38 51	! 8 Q
+	ld b,000h		;512b	06 00		. .
+	call sub_5163h		;512d	cd 63 51	. c Q
+	ld hl,0ffe0h		;5130	21 e0 ff	! . .
+	ret nc			;5133	d0		.
+	ld a,(0ffe6h)		;5134	3a e6 ff	: . .
+	ret			;5137	c9		.
 l5138h:
-	ld a,(ix+019h)		;5138
-	jp l5669h		;513b
+	ld a,(ix+019h)		;5138	dd 7e 19	. ~ .
+	jp l5669h		;513b	c3 69 56	. i V
 XBIOS_dd_write_sector:
-	call sub_5359h		;513e
-	ret nc			;5141
-	call sub_5079h		;5142
-	ld b,0ffh		;5145
-	jr l5160h		;5147
+	call sub_5359h		;513e	cd 59 53	. Y S
+	ret nc			;5141	d0		.
+	call sub_5079h		;5142	cd 79 50	. y P
+	ld b,0ffh		;5145	06 ff		. .
+	jr l5160h		;5147	18 17		. .
 XBIOS_dd_check_sector:
-	call sub_506ah		;5149
-	call sub_515eh		;514c
-	ret nc			;514f
-	ld a,(0ffe3h)		;5150
-	cp 008h			;5153
-	scf			;5155
-	ret			;5156
+	call sub_506ah		;5149	cd 6a 50	. j P
+	call sub_515eh		;514c	cd 5e 51	. ^ Q
+	ret nc			;514f	d0		.
+	ld a,(0ffe3h)		;5150	3a e3 ff	: . .
+	cp 008h			;5153	fe 08		. .
+	scf			;5155	37		7
+	ret			;5156	c9		.
 XBIOS_dd_format:
-	call sub_5359h		;5157
-	ret nc			;515a
-	call sub_504ah		;515b
+	call sub_5359h		;5157	cd 59 53	. Y S
+	ret nc			;515a	d0		.
+	call sub_504ah		;515b	cd 4a 50	. J P
 sub_515eh:
-	ld b,000h		;515e
+	ld b,000h		;515e	06 00		. .
 l5160h:
-	ld hl,XBIOS_dd_l_write	;5160
+	ld hl,XBIOS_dd_l_write	;5160	21 20 56	!   V
 sub_5163h:
-	call sub_54efh		;5163
-	call 00622h		;5166
-	call XBIOS_dd_l_on_motor	;5169
-	call sub_5370h		;516c
-	call XBIOS_dd_l_t_off_motor	;516f
-	jp 00639h		;5172
+	call sub_54efh		;5163	cd ef 54	. . T
+	call 00622h		;5166	cd 22 06	. " .
+	call XBIOS_dd_l_on_motor	;5169	cd be 56	. . V
+	call sub_5370h		;516c	cd 70 53	. p S
+	call XBIOS_dd_l_t_off_motor	;516f	cd d6 56	. . V
+	jp 00639h		;5172	c3 39 06	. 9 .
 l5175h:
-	nop			;5175
-	nop			;5176
-	jr z,$+11		;5177
-	ld (bc),a		;5179
-	ld bc,00203h		;517a
-	ld hl,(00152h)		;517d
-	nop			;5180
-	jr z,$+11		;5181
-	ld (bc),a		;5183
-	ld (bc),a		;5184
-	inc bc			;5185
-	ld (bc),a		;5186
-	ld hl,(00252h)		;5187
-	nop			;518a
-	jr z,l5196h		;518b
-	ld (bc),a		;518d
-	nop			;518e
-	inc bc			;518f
-	ld (bc),a		;5190
-	ld hl,(00352h)		;5191
-	add a,c			;5194
-	ld d,b			;5195
+	nop			;5175	00		.
+	nop			;5176	00		.
+	jr z,$+11		;5177	28 09		( .
+	ld (bc),a		;5179	02		.
+	ld bc,00203h		;517a	01 03 02	. . .
+	ld hl,(00152h)		;517d	2a 52 01	* R .
+	nop			;5180	00		.
+	jr z,$+11		;5181	28 09		( .
+	ld (bc),a		;5183	02		.
+	ld (bc),a		;5184	02		.
+	inc bc			;5185	03		.
+	ld (bc),a		;5186	02		.
+	ld hl,(00252h)		;5187	2a 52 02	* R .
+	nop			;518a	00		.
+	jr z,l5196h		;518b	28 09		( .
+	ld (bc),a		;518d	02		.
+	nop			;518e	00		.
+	inc bc			;518f	03		.
+	ld (bc),a		;5190	02		.
+	ld hl,(00352h)		;5191	2a 52 03	* R .
+	add a,c			;5194	81		.
+	ld d,b			;5195	50		P
 l5196h:
-	add hl,bc		;5196
-	ld (bc),a		;5197
-	ld bc,00404h		;5198
-	ld hl,(0af52h)		;519b
-	call XBIOS_dd_sel_format	;519e
-	ld d,000h		;51a1
-	push bc			;51a3
-	call c,XBIOS_dd_read_id	;51a4
-	pop bc			;51a7
-	ret nc			;51a8
-	and 0c0h		;51a9
-	ld e,001h		;51ab
-	cp 040h			;51ad
-	jr z,l51b6h		;51af
-	inc e			;51b1
-	cp 0c0h			;51b2
-	jr nz,l51bch		;51b4
+	add hl,bc		;5196	09		.
+	ld (bc),a		;5197	02		.
+	ld bc,00404h		;5198	01 04 04	. . .
+	ld hl,(0af52h)		;519b	2a 52 af	* R .
+	call XBIOS_dd_sel_format	;519e	cd f6 51	. . Q
+	ld d,000h		;51a1	16 00		. .
+	push bc			;51a3	c5		.
+	call c,XBIOS_dd_read_id	;51a4	dc 25 51	. % Q
+	pop bc			;51a7	c1		.
+	ret nc			;51a8	d0		.
+	and 0c0h		;51a9	e6 c0		. .
+	ld e,001h		;51ab	1e 01		. .
+	cp 040h			;51ad	fe 40		. @
+	jr z,l51b6h		;51af	28 05		( .
+	inc e			;51b1	1c		.
+	cp 0c0h			;51b2	fe c0		. .
+	jr nz,l51bch		;51b4	20 06		  .
 l51b6h:
-	ld a,e			;51b6
-	call XBIOS_dd_sel_format	;51b7
-	jr l51eeh		;51ba
+	ld a,e			;51b6	7b		{
+	call XBIOS_dd_sel_format	;51b7	cd f6 51	. . Q
+	jr l51eeh		;51ba	18 32		. 2
 l51bch:
-	push bc			;51bc
-	ld hl,0583dh		;51bd
-	ld de,00000h		;51c0
-	ld b,d			;51c3
-	ld a,00ah		;51c4
-	push hl			;51c6
-	call sub_50e6h		;51c7
-	pop hl			;51ca
-	jr c,l51d6h		;51cb
-	pop bc			;51cd
-	cp 008h			;51ce
-	scf			;51d0
-	ccf			;51d1
-	ret nz			;51d2
-	ld a,006h		;51d3
-	ret			;51d5
+	push bc			;51bc	c5		.
+	ld hl,0583dh		;51bd	21 3d 58	! = X
+	ld de,JB_jump_bank2_env	;51c0	11 00 00	. . .
+	ld b,d			;51c3	42		B
+	ld a,00ah		;51c4	3e 0a		> .
+	push hl			;51c6	e5		.
+	call sub_50e6h		;51c7	cd e6 50	. . P
+	pop hl			;51ca	e1		.
+	jr c,l51d6h		;51cb	38 09		8 .
+	pop bc			;51cd	c1		.
+	cp 008h			;51ce	fe 08		. .
+	scf			;51d0	37		7
+	ccf			;51d1	3f		?
+	ret nz			;51d2	c0		.
+	ld a,006h		;51d3	3e 06		> .
+	ret			;51d5	c9		.
 l51d6h:
-	ld d,h			;51d6
-	ld e,l			;51d7
-	ld c,(hl)		;51d8
-	ld b,00ah		;51d9
+	ld d,h			;51d6	54		T
+	ld e,l			;51d7	5d		]
+	ld c,(hl)		;51d8	4e		N
+	ld b,00ah		;51d9	06 0a		. .
 l51dbh:
-	ld a,(de)		;51db
-	inc de			;51dc
-	cp c			;51dd
-	jr nz,l51e5h		;51de
-	djnz l51dbh		;51e0
-	ld hl,l5175h		;51e2
+	ld a,(de)		;51db	1a		.
+	inc de			;51dc	13		.
+	cp c			;51dd	b9		.
+	jr nz,l51e5h		;51de	20 05		  .
+	djnz l51dbh		;51e0	10 f9		. .
+	ld hl,l5175h		;51e2	21 75 51	! u Q
 l51e5h:
-	pop bc			;51e5
-	ld a,(hl)		;51e6
-	cp 004h			;51e7
-	ld a,006h		;51e9
-	call c,XBIOS_dd_l_xdpb	;51eb
+	pop bc			;51e5	c1		.
+	ld a,(hl)		;51e6	7e		~
+	cp 004h			;51e7	fe 04		. .
+	ld a,006h		;51e9	3e 06		> .
+	call c,XBIOS_dd_l_xdpb	;51eb	dc 08 52	. . R
 l51eeh:
-	push hl			;51ee
-	push bc			;51ef
-	call c,sub_5305h	;51f0
-	pop bc			;51f3
-	pop hl			;51f4
-	ret			;51f5
+	push hl			;51ee	e5		.
+	push bc			;51ef	c5		.
+	call c,sub_5305h	;51f0	dc 05 53	. . S
+	pop bc			;51f3	c1		.
+	pop hl			;51f4	e1		.
+	ret			;51f5	c9		.
 XBIOS_dd_sel_format:
-	ld e,a			;51f6
-	cp 004h			;51f7
-	ld a,006h		;51f9
-	ret nc			;51fb
-	ld a,e			;51fc
-	add a,a			;51fd
-	add a,a			;51fe
-	add a,e			;51ff
-	add a,a			;5200
-	ld e,a			;5201
-	ld d,000h		;5202
-	ld hl,l5175h		;5204
-	add hl,de		;5207
+	ld e,a			;51f6	5f		_
+	cp 004h			;51f7	fe 04		. .
+	ld a,006h		;51f9	3e 06		> .
+	ret nc			;51fb	d0		.
+	ld a,e			;51fc	7b		{
+	add a,a			;51fd	87		.
+	add a,a			;51fe	87		.
+	add a,e			;51ff	83		.
+	add a,a			;5200	87		.
+	ld e,a			;5201	5f		_
+	ld d,000h		;5202	16 00		. .
+	ld hl,l5175h		;5204	21 75 51	! u Q
+	add hl,de		;5207	19		.
 XBIOS_dd_l_xdpb:
-	push hl			;5208
-	push bc			;5209
-	ld a,(hl)		;520a
-	ld b,041h		;520b
-	dec a			;520d
-	jr z,l5217h		;520e
-	ld b,0c1h		;5210
-	dec a			;5212
-	jr z,l5217h		;5213
-	ld b,001h		;5215
+	push hl			;5208	e5		.
+	push bc			;5209	c5		.
+	ld a,(hl)		;520a	7e		~
+	ld b,041h		;520b	06 41		. A
+	dec a			;520d	3d		=
+	jr z,l5217h		;520e	28 07		( .
+	ld b,0c1h		;5210	06 c1		. .
+	dec a			;5212	3d		=
+	jr z,l5217h		;5213	28 02		( .
+	ld b,001h		;5215	06 01		. .
 l5217h:
-	ld (ix+014h),b		;5217
-	inc hl			;521a
-	ld a,(hl)		;521b
-	ld (ix+011h),a		;521c
-	inc hl			;521f
-	ld a,(hl)		;5220
-	ld (ix+012h),a		;5221
-	inc hl			;5224
-	ld a,(hl)		;5225
-	ld (ix+013h),a		;5226
-	inc hl			;5229
-	ld b,(hl)		;522a
-	inc hl			;522b
-	inc hl			;522c
-	inc hl			;522d
-	inc hl			;522e
-	ld a,(hl)		;522f
-	ld (ix+017h),a		;5230
-	inc hl			;5233
-	ld a,(hl)		;5234
-	ld (ix+018h),a		;5235
-	ld hl,dd_init		;5238
-	call sub_53f1h		;523b
-	ld (ix+015h),l		;523e
-	ld (ix+016h),h		;5241
-	ld (ix+019h),060h	;5244
-	pop bc			;5248
-	pop hl			;5249
+	ld (ix+014h),b		;5217	dd 70 14	. p .
+	inc hl			;521a	23		#
+	ld a,(hl)		;521b	7e		~
+	ld (ix+011h),a		;521c	dd 77 11	. w .
+	inc hl			;521f	23		#
+	ld a,(hl)		;5220	7e		~
+	ld (ix+012h),a		;5221	dd 77 12	. w .
+	inc hl			;5224	23		#
+	ld a,(hl)		;5225	7e		~
+	ld (ix+013h),a		;5226	dd 77 13	. w .
+	inc hl			;5229	23		#
+	ld b,(hl)		;522a	46		F
+	inc hl			;522b	23		#
+	inc hl			;522c	23		#
+	inc hl			;522d	23		#
+	inc hl			;522e	23		#
+	ld a,(hl)		;522f	7e		~
+	ld (ix+017h),a		;5230	dd 77 17	. w .
+	inc hl			;5233	23		#
+	ld a,(hl)		;5234	7e		~
+	ld (ix+018h),a		;5235	dd 77 18	. w .
+	ld hl,dd_init		;5238	21 80 00	! . .
+	call sub_53f1h		;523b	cd f1 53	. . S
+	ld (ix+015h),l		;523e	dd 75 15	. u .
+	ld (ix+016h),h		;5241	dd 74 16	. t .
+	ld (ix+019h),060h	;5244	dd 36 19 60	. 6 . `
+	pop bc			;5248	c1		.
+	pop hl			;5249	e1		.
 XBIOS_dd_l_dpb:
-	push bc			;524a
-	push hl			;524b
-	ex de,hl		;524c
-	ld hl,00004h		;524d
-	add hl,de		;5250
-	ld c,(hl)		;5251
-	ld (ix+00fh),c		;5252
-	ld a,c			;5255
-	call sub_53e7h		;5256
-	ld (ix+010h),a		;5259
-	dec hl			;525c
-	ld l,(hl)		;525d
-	ld h,b			;525e
-	ld b,c			;525f
-	call sub_53f1h		;5260
-	ld (ix+000h),l		;5263
-	ld (ix+001h),h		;5266
-	ld hl,00006h		;5269
-	add hl,de		;526c
-	ld c,(hl)		;526d
-	ld (ix+002h),c		;526e
-	push hl			;5271
-	ld a,c			;5272
-	call sub_53e7h		;5273
-	ld (ix+003h),a		;5276
-	dec hl			;5279
-	ld e,(hl)		;527a
-	ld (ix+00dh),e		;527b
-	ld (ix+00eh),b		;527e
-	dec hl			;5281
-	dec hl			;5282
-	ld b,(hl)		;5283
-	dec hl			;5284
-	ld d,(hl)		;5285
-	dec hl			;5286
-	ld a,(hl)		;5287
-	ld l,d			;5288
-	ld h,000h		;5289
-	ld d,h			;528b
-	and 07fh		;528c
-	jr z,l5291h		;528e
-	add hl,hl		;5290
+	push bc			;524a	c5		.
+	push hl			;524b	e5		.
+	ex de,hl		;524c	eb		.
+	ld hl,00004h		;524d	21 04 00	! . .
+	add hl,de		;5250	19		.
+	ld c,(hl)		;5251	4e		N
+	ld (ix+00fh),c		;5252	dd 71 0f	. q .
+	ld a,c			;5255	79		y
+	call sub_53e7h		;5256	cd e7 53	. . S
+	ld (ix+010h),a		;5259	dd 77 10	. w .
+	dec hl			;525c	2b		+
+	ld l,(hl)		;525d	6e		n
+	ld h,b			;525e	60		`
+	ld b,c			;525f	41		A
+	call sub_53f1h		;5260	cd f1 53	. . S
+	ld (ix+000h),l		;5263	dd 75 00	. u .
+	ld (ix+001h),h		;5266	dd 74 01	. t .
+	ld hl,00006h		;5269	21 06 00	! . .
+	add hl,de		;526c	19		.
+	ld c,(hl)		;526d	4e		N
+	ld (ix+002h),c		;526e	dd 71 02	. q .
+	push hl			;5271	e5		.
+	ld a,c			;5272	79		y
+	call sub_53e7h		;5273	cd e7 53	. . S
+	ld (ix+003h),a		;5276	dd 77 03	. w .
+	dec hl			;5279	2b		+
+	ld e,(hl)		;527a	5e		^
+	ld (ix+00dh),e		;527b	dd 73 0d	. s .
+	ld (ix+00eh),b		;527e	dd 70 0e	. p .
+	dec hl			;5281	2b		+
+	dec hl			;5282	2b		+
+	ld b,(hl)		;5283	46		F
+	dec hl			;5284	2b		+
+	ld d,(hl)		;5285	56		V
+	dec hl			;5286	2b		+
+	ld a,(hl)		;5287	7e		~
+	ld l,d			;5288	6a		j
+	ld h,000h		;5289	26 00		& .
+	ld d,h			;528b	54		T
+	and 07fh		;528c	e6 7f		. .
+	jr z,l5291h		;528e	28 01		( .
+	add hl,hl		;5290	29		)
 l5291h:
-	sbc hl,de		;5291
-	ex de,hl		;5293
-	ld hl,00000h		;5294
+	sbc hl,de		;5291	ed 52		. R
+	ex de,hl		;5293	eb		.
+	ld hl,JB_jump_bank2_env	;5294	21 00 00	! . .
 l5297h:
-	add hl,de		;5297
-	djnz l5297h		;5298
-	ld a,c			;529a
-	sub (ix+00fh)		;529b
-	ld b,a			;529e
-	call sub_53f8h		;529f
-	dec hl			;52a2
-	ld (ix+005h),l		;52a3
-	ld (ix+006h),h		;52a6
-	ld b,003h		;52a9
-	ld a,h			;52ab
-	or a			;52ac
-	jr z,l52b0h		;52ad
-	inc b			;52af
+	add hl,de		;5297	19		.
+	djnz l5297h		;5298	10 fd		. .
+	ld a,c			;529a	79		y
+	sub (ix+00fh)		;529b	dd 96 0f	. . .
+	ld b,a			;529e	47		G
+	call sub_53f8h		;529f	cd f8 53	. . S
+	dec hl			;52a2	2b		+
+	ld (ix+005h),l		;52a3	dd 75 05	. u .
+	ld (ix+006h),h		;52a6	dd 74 06	. t .
+	ld b,003h		;52a9	06 03		. .
+	ld a,h			;52ab	7c		|
+	or a			;52ac	b7		.
+	jr z,l52b0h		;52ad	28 01		( .
+	inc b			;52af	04		.
 l52b0h:
-	ld a,c			;52b0
-	sub b			;52b1
-	call sub_53e7h		;52b2
-	ld (ix+004h),a		;52b5
-	pop de			;52b8
-	push hl			;52b9
-	ld b,002h		;52ba
-	call sub_53f8h		;52bc
-	inc hl			;52bf
-	inc hl			;52c0
-	ex (sp),hl		;52c1
-	inc de			;52c2
-	ld a,(de)		;52c3
-	or a			;52c4
-	jr nz,l52cfh		;52c5
-	add hl,hl		;52c7
-	ld a,h			;52c8
-	inc a			;52c9
-	cp 002h			;52ca
-	jr nc,l52cfh		;52cc
-	inc a			;52ce
+	ld a,c			;52b0	79		y
+	sub b			;52b1	90		.
+	call sub_53e7h		;52b2	cd e7 53	. . S
+	ld (ix+004h),a		;52b5	dd 77 04	. w .
+	pop de			;52b8	d1		.
+	push hl			;52b9	e5		.
+	ld b,002h		;52ba	06 02		. .
+	call sub_53f8h		;52bc	cd f8 53	. . S
+	inc hl			;52bf	23		#
+	inc hl			;52c0	23		#
+	ex (sp),hl		;52c1	e3		.
+	inc de			;52c2	13		.
+	ld a,(de)		;52c3	1a		.
+	or a			;52c4	b7		.
+	jr nz,l52cfh		;52c5	20 08		  .
+	add hl,hl		;52c7	29		)
+	ld a,h			;52c8	7c		|
+	inc a			;52c9	3c		<
+	cp 002h			;52ca	fe 02		. .
+	jr nc,l52cfh		;52cc	30 01		0 .
+	inc a			;52ce	3c		<
 l52cfh:
-	ld b,a			;52cf
-	ld hl,00000h		;52d0
+	ld b,a			;52cf	47		G
+	ld hl,JB_jump_bank2_env	;52d0	21 00 00	! . .
 l52d3h:
-	scf			;52d3
-	rr h			;52d4
-	rr l			;52d6
-	djnz l52d3h		;52d8
-	ld (ix+009h),h		;52da
-	ld (ix+00ah),l		;52dd
-	ld h,b			;52e0
-	ld l,a			;52e1
-	ld b,c			;52e2
-	inc b			;52e3
-	inc b			;52e4
-	call sub_53f1h		;52e5
-	push hl			;52e8
-	dec hl			;52e9
-	ld (ix+007h),l		;52ea
-	ld (ix+008h),h		;52ed
-	ld b,002h		;52f0
-	call sub_53f8h		;52f2
-	inc hl			;52f5
-	ld (ix+00bh),l		;52f6
-	ld (ix+00ch),h		;52f9
-	pop hl			;52fc
-	add hl,hl		;52fd
-	add hl,hl		;52fe
-	pop de			;52ff
-	pop bc			;5300
-	ld a,(bc)		;5301
-	scf			;5302
-	pop bc			;5303
-	ret			;5304
+	scf			;52d3	37		7
+	rr h			;52d4	cb 1c		. .
+	rr l			;52d6	cb 1d		. .
+	djnz l52d3h		;52d8	10 f9		. .
+	ld (ix+009h),h		;52da	dd 74 09	. t .
+	ld (ix+00ah),l		;52dd	dd 75 0a	. u .
+	ld h,b			;52e0	60		`
+	ld l,a			;52e1	6f		o
+	ld b,c			;52e2	41		A
+	inc b			;52e3	04		.
+	inc b			;52e4	04		.
+	call sub_53f1h		;52e5	cd f1 53	. . S
+	push hl			;52e8	e5		.
+	dec hl			;52e9	2b		+
+	ld (ix+007h),l		;52ea	dd 75 07	. u .
+	ld (ix+008h),h		;52ed	dd 74 08	. t .
+	ld b,002h		;52f0	06 02		. .
+	call sub_53f8h		;52f2	cd f8 53	. . S
+	inc hl			;52f5	23		#
+	ld (ix+00bh),l		;52f6	dd 75 0b	. u .
+	ld (ix+00ch),h		;52f9	dd 74 0c	. t .
+	pop hl			;52fc	e1		.
+	add hl,hl		;52fd	29		)
+	add hl,hl		;52fe	29		)
+	pop de			;52ff	d1		.
+	pop bc			;5300	c1		.
+	ld a,(bc)		;5301	0a		.
+	scf			;5302	37		7
+	pop bc			;5303	c1		.
+	ret			;5304	c9		.
 sub_5305h:
-	ld b,a			;5305
-	push de			;5306
-	push bc			;5307
-	call sub_531ch		;5308
-	pop bc			;530b
-	pop de			;530c
-	ret nc			;530d
-	ld a,b			;530e
-	scf			;530f
-	bit 7,(ix+011h)		;5310
-	ret z			;5314
-	bit 3,(hl)		;5315
-	ret nz			;5317
-	ld a,009h		;5318
-	or a			;531a
-	ret			;531b
+	ld b,a			;5305	47		G
+	push de			;5306	d5		.
+	push bc			;5307	c5		.
+	call sub_531ch		;5308	cd 1c 53	. . S
+	pop bc			;530b	c1		.
+	pop de			;530c	d1		.
+	ret nc			;530d	d0		.
+	ld a,b			;530e	78		x
+	scf			;530f	37		7
+	bit 7,(ix+011h)		;5310	dd cb 11 7e	. . . ~
+	ret z			;5314	c8		.
+	bit 3,(hl)		;5315	cb 5e		. ^
+	ret nz			;5317	c0		.
+	ld a,009h		;5318	3e 09		> .
+	or a			;531a	b7		.
+	ret			;531b	c9		.
 sub_531ch:
-	call sub_54feh		;531c
-	ld a,(hl)		;531f
-	and 00ch		;5320
-	scf			;5322
-	ret nz			;5323
-	ld a,(ix+011h)		;5324
-	and 003h		;5327
-	ld d,002h		;5329
-	jr z,l5339h		;532b
-	dec a			;532d
-	ld d,005h		;532e
-	jr z,l5339h		;5330
-	ld a,(ix+012h)		;5332
-	add a,a			;5335
-	sub 003h		;5336
-	ld d,a			;5338
+	call sub_54feh		;531c	cd fe 54	. . T
+	ld a,(hl)		;531f	7e		~
+	and 00ch		;5320	e6 0c		. .
+	scf			;5322	37		7
+	ret nz			;5323	c0		.
+	ld a,(ix+011h)		;5324	dd 7e 11	. ~ .
+	and 003h		;5327	e6 03		. .
+	ld d,002h		;5329	16 02		. .
+	jr z,l5339h		;532b	28 0c		( .
+	dec a			;532d	3d		=
+	ld d,005h		;532e	16 05		. .
+	jr z,l5339h		;5330	28 07		( .
+	ld a,(ix+012h)		;5332	dd 7e 12	. ~ .
+	add a,a			;5335	87		.
+	sub 003h		;5336	d6 03		. .
+	ld d,a			;5338	57		W
 l5339h:
-	push hl			;5339
-	call XBIOS_dd_read_id	;533a
-	pop hl			;533d
-	ret nc			;533e
-	ld de,(0ffe4h)		;533f
-	ld a,(ix+011h)		;5343
-	dec e			;5346
-	dec e			;5347
-	jr z,l534bh		;5348
-	cpl			;534a
+	push hl			;5339	e5		.
+	call XBIOS_dd_read_id	;533a	cd 25 51	. % Q
+	pop hl			;533d	e1		.
+	ret nc			;533e	d0		.
+	ld de,(0ffe4h)		;533f	ed 5b e4 ff	. [ . .
+	ld a,(ix+011h)		;5343	dd 7e 11	. ~ .
+	dec e			;5346	1d		.
+	dec e			;5347	1d		.
+	jr z,l534bh		;5348	28 01		( .
+	cpl			;534a	2f		/
 l534bh:
-	rla			;534b
-	jr nc,l5353h		;534c
-	set 3,(hl)		;534e
-	set 1,(hl)		;5350
-	ret			;5352
+	rla			;534b	17		.
+	jr nc,l5353h		;534c	30 05		0 .
+	set 3,(hl)		;534e	cb de		. .
+	set 1,(hl)		;5350	cb ce		. .
+	ret			;5352	c9		.
 l5353h:
-	set 2,(hl)		;5353
-	set 0,(hl)		;5355
-	scf			;5357
-	ret			;5358
+	set 2,(hl)		;5353	cb d6		. .
+	set 0,(hl)		;5355	cb c6		. .
+	scf			;5357	37		7
+	ret			;5358	c9		.
 sub_5359h:
-	push hl			;5359
-	call sub_54feh		;535a
-	bit 3,(hl)		;535d
-	pop hl			;535f
-	scf			;5360
-	ret z			;5361
-	ld a,(ix+011h)		;5362
-	rla			;5365
-	ld a,009h		;5366
-	ret			;5368
-	call sub_54feh		;5369
-	ld a,(hl)		;536c
-	and 02fh		;536d
-	ret			;536f
+	push hl			;5359	e5		.
+	call sub_54feh		;535a	cd fe 54	. . T
+	bit 3,(hl)		;535d	cb 5e		. ^
+	pop hl			;535f	e1		.
+	scf			;5360	37		7
+	ret z			;5361	c8		.
+	ld a,(ix+011h)		;5362	dd 7e 11	. ~ .
+	rla			;5365	17		.
+	ld a,009h		;5366	3e 09		> .
+	ret			;5368	c9		.
+	call sub_54feh		;5369	cd fe 54	. . T
+	ld a,(hl)		;536c	7e		~
+	and 02fh		;536d	e6 2f		. /
+	ret			;536f	c9		.
 sub_5370h:
-	push bc			;5370
-	ld b,00fh		;5371
+	push bc			;5370	c5		.
+	ld b,00fh		;5371	06 0f		. .
 l5373h:
-	push bc			;5373
-	call sub_53a4h		;5374
-	pop bc			;5377
-	jr z,l537ch		;5378
-	djnz l5373h		;537a
+	push bc			;5373	c5		.
+	call sub_53a4h		;5374	cd a4 53	. . S
+	pop bc			;5377	c1		.
+	jr z,l537ch		;5378	28 02		( .
+	djnz l5373h		;537a	10 f7		. .
 l537ch:
-	pop bc			;537c
-	ret z			;537d
-	inc b			;537e
-	ret nz			;537f
-	push af			;5380
-	res 2,c			;5381
-	ld d,002h		;5383
-	ld hl,l5138h		;5385
-	call sub_53c0h		;5388
-	pop bc			;538b
-	ret nc			;538c
-	ld a,(0ffe6h)		;538d
-	xor (ix+014h)		;5390
-	and 0c0h		;5393
-	jr nz,l53a0h		;5395
-	ld a,(0ffe4h)		;5397
-	xor d			;539a
-	jr nz,l53a0h		;539b
-	inc a			;539d
-	ld a,b			;539e
-	ret			;539f
+	pop bc			;537c	c1		.
+	ret z			;537d	c8		.
+	inc b			;537e	04		.
+	ret nz			;537f	c0		.
+	push af			;5380	f5		.
+	res 2,c			;5381	cb 91		. .
+	ld d,002h		;5383	16 02		. .
+	ld hl,l5138h		;5385	21 38 51	! 8 Q
+	call sub_53c0h		;5388	cd c0 53	. . S
+	pop bc			;538b	c1		.
+	ret nc			;538c	d0		.
+	ld a,(0ffe6h)		;538d	3a e6 ff	: . .
+	xor (ix+014h)		;5390	dd ae 14	. . .
+	and 0c0h		;5393	e6 c0		. .
+	jr nz,l53a0h		;5395	20 09		  .
+	ld a,(0ffe4h)		;5397	3a e4 ff	: . .
+	xor d			;539a	aa		.
+	jr nz,l53a0h		;539b	20 03		  .
+	inc a			;539d	3c		<
+	ld a,b			;539e	78		x
+	ret			;539f	c9		.
 l53a0h:
-	cp a			;53a0
-	ld a,008h		;53a1
-	ret			;53a3
+	cp a			;53a0	bf		.
+	ld a,008h		;53a1	3e 08		> .
+	ret			;53a3	c9		.
 sub_53a4h:
-	ld a,b			;53a4
-	and 007h		;53a5
-	jr z,l53b6h		;53a7
-	and 003h		;53a9
-	jr nz,sub_53c0h		;53ab
-	push hl			;53ad
-	call sub_54feh		;53ae
-	res 6,(hl)		;53b1
-	pop hl			;53b3
-	jr sub_53c0h		;53b4
+	ld a,b			;53a4	78		x
+	and 007h		;53a5	e6 07		. .
+	jr z,l53b6h		;53a7	28 0d		( .
+	and 003h		;53a9	e6 03		. .
+	jr nz,sub_53c0h		;53ab	20 13		  .
+	push hl			;53ad	e5		.
+	call sub_54feh		;53ae	cd fe 54	. . T
+	res 6,(hl)		;53b1	cb b6		. .
+	pop hl			;53b3	e1		.
+	jr sub_53c0h		;53b4	18 0a		. .
 l53b6h:
-	push de			;53b6
-	ld d,(ix+012h)		;53b7
-	dec d			;53ba
-	call XBIOS_dd_l_seek	;53bb
-	pop de			;53be
-	ret nc			;53bf
+	push de			;53b6	d5		.
+	ld d,(ix+012h)		;53b7	dd 56 12	. V .
+	dec d			;53ba	15		.
+	call XBIOS_dd_l_seek	;53bb	cd 0e 55	. . U
+	pop de			;53be	d1		.
+	ret nc			;53bf	d0		.
 sub_53c0h:
-	call XBIOS_dd_l_seek	;53c0
-	ret nc			;53c3
-	push hl			;53c4
-	push de			;53c5
-	push bc			;53c6
-	call sub_53d1h		;53c7
-	pop bc			;53ca
-	pop de			;53cb
-	call sub_55a2h		;53cc
-	pop hl			;53cf
-	ret			;53d0
+	call XBIOS_dd_l_seek	;53c0	cd 0e 55	. . U
+	ret nc			;53c3	d0		.
+	push hl			;53c4	e5		.
+	push de			;53c5	d5		.
+	push bc			;53c6	c5		.
+	call sub_53d1h		;53c7	cd d1 53	. . S
+	pop bc			;53ca	c1		.
+	pop de			;53cb	d1		.
+	call sub_55a2h		;53cc	cd a2 55	. . U
+	pop hl			;53cf	e1		.
+	ret			;53d0	c9		.
 sub_53d1h:
-	push hl			;53d1
-	ld hl,0582eh		;53d2
-	ret			;53d5
-	ld a,(0584eh)		;53d6
-	and 00fh		;53d9
-	ret z			;53db
-	scf			;53dc
-	ret			;53dd
+	push hl			;53d1	e5		.
+	ld hl,0582eh		;53d2	21 2e 58	! . X
+	ret			;53d5	c9		.
+	ld a,(0584eh)		;53d6	3a 4e 58	: N X
+	and 00fh		;53d9	e6 0f		. .
+	ret z			;53db	c8		.
+	scf			;53dc	37		7
+	ret			;53dd	c9		.
 XBIOS_dd_drive_status:
-	call XBIOS_dd_l_on_motor	;53de
-	call sub_55e9h		;53e1
-	jp XBIOS_dd_l_t_off_motor	;53e4
+	call XBIOS_dd_l_on_motor	;53de	cd be 56	. . V
+	call sub_55e9h		;53e1	cd e9 55	. . U
+	jp XBIOS_dd_l_t_off_motor	;53e4	c3 d6 56	. . V
 sub_53e7h:
-	ld b,a			;53e7
-	or a			;53e8
-	ret z			;53e9
-	ld a,001h		;53ea
+	ld b,a			;53e7	47		G
+	or a			;53e8	b7		.
+	ret z			;53e9	c8		.
+	ld a,001h		;53ea	3e 01		> .
 l53ech:
-	add a,a			;53ec
-	djnz l53ech		;53ed
-	dec a			;53ef
-	ret			;53f0
+	add a,a			;53ec	87		.
+	djnz l53ech		;53ed	10 fd		. .
+	dec a			;53ef	3d		=
+	ret			;53f0	c9		.
 sub_53f1h:
-	ld a,b			;53f1
-	or a			;53f2
-	ret z			;53f3
+	ld a,b			;53f1	78		x
+	or a			;53f2	b7		.
+	ret z			;53f3	c8		.
 l53f4h:
-	add hl,hl		;53f4
-	djnz l53f4h		;53f5
-	ret			;53f7
+	add hl,hl		;53f4	29		)
+	djnz l53f4h		;53f5	10 fd		. .
+	ret			;53f7	c9		.
 sub_53f8h:
-	ld a,b			;53f8
-	or a			;53f9
-	ret z			;53fa
+	ld a,b			;53f8	78		x
+	or a			;53f9	b7		.
+	ret z			;53fa	c8		.
 l53fbh:
-	srl h			;53fb
-	rr l			;53fd
-	djnz l53fbh		;53ff
-	ret			;5401
+	srl h			;53fb	cb 3c		. <
+	rr l			;53fd	cb 1d		. .
+	djnz l53fbh		;53ff	10 fa		. .
+	ret			;5401	c9		.
 l5402h:
-	ld a,(bc)		;5402
-	ld (00fafh),a		;5403
-	inc c			;5406
-	rrca			;5407
-	inc bc			;5408
+	ld a,(bc)		;5402	0a		.
+	ld (00fafh),a		;5403	32 af 0f	2 . .
+	inc c			;5406	0c		.
+	rrca			;5407	0f		.
+	inc bc			;5408	03		.
 l5409h:
-	ld a,(bc)		;5409
-	ld (00f78h),a		;540a
-	inc bc			;540d
-	rrca			;540e
-	inc bc			;540f
+	ld a,(bc)		;5409	0a		.
+	ld (00f78h),a		;540a	32 78 0f	2 x .
+	inc bc			;540d	03		.
+	rrca			;540e	0f		.
+	inc bc			;540f	03		.
 XBIOS_dd_init:
-	ld a,00ah		;5410
-	ld (0584eh),a		;5412
-	nop			;5415
-	nop			;5416
-	nop			;5417
-	ld a,003h		;5418
-	out (0f8h),a		;541a
-	call sub_5422h		;541c
-	jp XBIOS_dd_l_t_off_motor	;541f
+	ld a,00ah		;5410	3e 0a		> .
+	ld (0584eh),a		;5412	32 4e 58	2 N X
+	nop			;5415	00		.
+	nop			;5416	00		.
+	nop			;5417	00		.
+	ld a,003h		;5418	3e 03		> .
+	out (0f8h),a		;541a	d3 f8		. .
+	call sub_5422h		;541c	cd 22 54	. " T
+	jp XBIOS_dd_l_t_off_motor	;541f	c3 d6 56	. . V
 sub_5422h:
-	ld hl,l5402h		;5422
-	call XBIOS_dd_setup	;5425
-	call XBIOS_dd_l_off_motor	;5428
-	ld c,b			;542b
+	ld hl,l5402h		;5422	21 02 54	! . T
+	call XBIOS_dd_setup	;5425	cd 6d 54	. m T
+	call XBIOS_dd_l_off_motor	;5428	cd ea 56	. . V
+	ld c,b			;542b	48		H
 l542ch:
-	call sub_55e9h		;542c
-	and 020h		;542f
-	jr nz,l542ch		;5431
-	ld c,002h		;5433
-	call sub_55e9h		;5435
-	call XBIOS_dd_l_on_motor	;5438
-	and 020h		;543b
-	jr nz,l544bh		;543d
+	call sub_55e9h		;542c	cd e9 55	. . U
+	and 020h		;542f	e6 20		.  
+	jr nz,l542ch		;5431	20 f9		  .
+	ld c,002h		;5433	0e 02		. .
+	call sub_55e9h		;5435	cd e9 55	. . U
+	call XBIOS_dd_l_on_motor	;5438	cd be 56	. . V
+	and 020h		;543b	e6 20		.  
+	jr nz,l544bh		;543d	20 0c		  .
 l543fh:
-	dec c			;543f
-	call sub_55e9h		;5440
-	and 060h		;5443
-	ret nz			;5445
+	dec c			;543f	0d		.
+	call sub_55e9h		;5440	cd e9 55	. . U
+	and 060h		;5443	e6 60		. `
+	ret nz			;5445	c0		.
 l5446h:
-	xor a			;5446
-	ld (0584eh),a		;5447
-	ret			;544a
+	xor a			;5446	af		.
+	ld (0584eh),a		;5447	32 4e 58	2 N X
+	ret			;544a	c9		.
 l544bh:
-	ld hl,00040h		;544b
-	set 0,(hl)		;544e
-	ld c,000h		;5450
-	call sub_54cdh		;5452
-	jr c,l5459h		;5455
-	and 040h		;5457
+	ld hl,00040h		;544b	21 40 00	! @ .
+	set 0,(hl)		;544e	cb c6		. .
+	ld c,000h		;5450	0e 00		. .
+	call sub_54cdh		;5452	cd cd 54	. . T
+	jr c,l5459h		;5455	38 02		8 .
+	and 040h		;5457	e6 40		. @
 l5459h:
-	call z,sub_5466h	;5459
-	ld c,002h		;545c
-	call sub_54cdh		;545e
-	jr nc,l5446h		;5461
-	jr nz,l543fh		;5463
-	dec c			;5465
+	call z,sub_5466h	;5459	cc 66 54	. f T
+	ld c,002h		;545c	0e 02		. .
+	call sub_54cdh		;545e	cd cd 54	. . T
+	jr nc,l5446h		;5461	30 e3		0 .
+	jr nz,l543fh		;5463	20 da		  .
+	dec c			;5465	0d		.
 sub_5466h:
-	ld b,02ah		;5466
-	ld de,l5409h		;5468
-	jr l5480h		;546b
+	ld b,02ah		;5466	06 2a		. *
+	ld de,l5409h		;5468	11 09 54	. . T
+	jr l5480h		;546b	18 13		. .
 XBIOS_dd_setup:
-	ld a,h			;546d
-	or l			;546e
-	jr z,l5480h		;546f
-	ex de,hl		;5471
-	ld bc,00003h		;5472
+	ld a,h			;546d	7c		|
+	or l			;546e	b5		.
+	jr z,l5480h		;546f	28 0f		( .
+	ex de,hl		;5471	eb		.
+	ld bc,JB_jump_bc_addr	;5472	01 03 00	. . .
 l5475h:
-	push de			;5475
-	push bc			;5476
-	call l5480h		;5477
-	pop bc			;547a
-	pop de			;547b
-	dec c			;547c
-	ret m			;547d
-	jr l5475h		;547e
+	push de			;5475	d5		.
+	push bc			;5476	c5		.
+	call l5480h		;5477	cd 80 54	. . T
+	pop bc			;547a	c1		.
+	pop de			;547b	d1		.
+	dec c			;547c	0d		.
+	ret m			;547d	f8		.
+	jr l5475h		;547e	18 f5		. .
 l5480h:
-	ld a,(de)		;5480
-	inc de			;5481
-	ld l,a			;5482
-	ld a,(de)		;5483
-	inc de			;5484
-	ld h,a			;5485
-	ld (05863h),hl		;5486
-	call sub_54feh		;5489
-	push hl			;548c
-	ld a,b			;548d
-	or a			;548e
-	jr z,l5496h		;548f
-	ld a,(hl)		;5491
-	and 0c0h		;5492
-	or b			;5494
-	ld (hl),a		;5495
+	ld a,(de)		;5480	1a		.
+	inc de			;5481	13		.
+	ld l,a			;5482	6f		o
+	ld a,(de)		;5483	1a		.
+	inc de			;5484	13		.
+	ld h,a			;5485	67		g
+	ld (05863h),hl		;5486	22 63 58	" c X
+	call sub_54feh		;5489	cd fe 54	. . T
+	push hl			;548c	e5		.
+	ld a,b			;548d	78		x
+	or a			;548e	b7		.
+	jr z,l5496h		;548f	28 05		( .
+	ld a,(hl)		;5491	7e		~
+	and 0c0h		;5492	e6 c0		. .
+	or b			;5494	b0		.
+	ld (hl),a		;5495	77		w
 l5496h:
-	inc hl			;5496
-	inc hl			;5497
-	ld bc,00005h		;5498
-	ex de,hl		;549b
-	ldir			;549c
-	pop hl			;549e
+	inc hl			;5496	23		#
+	inc hl			;5497	23		#
+	ld bc,JB_jump_de_addr	;5498	01 05 00	. . .
+	ex de,hl		;549b	eb		.
+	ldir			;549c	ed b0		. .
+	pop hl			;549e	e1		.
 sub_549fh:
-	ld de,00004h		;549f
-	add hl,de		;54a2
-	ld a,(hl)		;54a3
-	dec a			;54a4
-	rlca			;54a5
-	rlca			;54a6
-	rlca			;54a7
-	cpl			;54a8
-	and 0f0h		;54a9
-	inc hl			;54ab
-	or (hl)			;54ac
-	inc hl			;54ad
-	ld d,(hl)		;54ae
-	ld e,a			;54af
-	ld hl,(05865h)		;54b0
-	sbc hl,de		;54b3
-	ret z			;54b5
-	ex de,hl		;54b6
+	ld de,00004h		;549f	11 04 00	. . .
+	add hl,de		;54a2	19		.
+	ld a,(hl)		;54a3	7e		~
+	dec a			;54a4	3d		=
+	rlca			;54a5	07		.
+	rlca			;54a6	07		.
+	rlca			;54a7	07		.
+	cpl			;54a8	2f		/
+	and 0f0h		;54a9	e6 f0		. .
+	inc hl			;54ab	23		#
+	or (hl)			;54ac	b6		.
+	inc hl			;54ad	23		#
+	ld d,(hl)		;54ae	56		V
+	ld e,a			;54af	5f		_
+	ld hl,(05865h)		;54b0	2a 65 58	* e X
+	sbc hl,de		;54b3	ed 52		. R
+	ret z			;54b5	c8		.
+	ex de,hl		;54b6	eb		.
 l54b7h:
-	call sub_55c9h		;54b7
-	ld a,003h		;54ba
-	call sub_56ach		;54bc
-	ld a,l			;54bf
-	call c,sub_56ach	;54c0
-	ld a,h			;54c3
-	call c,sub_56ach	;54c4
-	jr nc,l54b7h		;54c7
-	ld (05865h),hl		;54c9
-	ret			;54cc
+	call sub_55c9h		;54b7	cd c9 55	. . U
+	ld a,003h		;54ba	3e 03		> .
+	call sub_56ach		;54bc	cd ac 56	. . V
+	ld a,l			;54bf	7d		}
+	call c,sub_56ach	;54c0	dc ac 56	. . V
+	ld a,h			;54c3	7c		|
+	call c,sub_56ach	;54c4	dc ac 56	. . V
+	jr nc,l54b7h		;54c7	30 ee		0 .
+	ld (05865h),hl		;54c9	22 65 58	" e X
+	ret			;54cc	c9		.
 sub_54cdh:
-	call sub_554ah		;54cd
-	ld b,032h		;54d0
-	call sub_55e6h		;54d2
-	or a			;54d5
-	bit 4,a			;54d6
-	ret z			;54d8
-	call XBIOS_dd_l_off_motor	;54d9
-	ld b,004h		;54dc
-	call sub_55e6h		;54de
-	ld hl,05863h		;54e1
-	ld b,(hl)		;54e4
-	ld (hl),005h		;54e5
-	call XBIOS_dd_l_on_motor	;54e7
-	ld (hl),b		;54ea
-	and 010h		;54eb
-	scf			;54ed
-	ret			;54ee
+	call sub_554ah		;54cd	cd 4a 55	. J U
+	ld b,032h		;54d0	06 32		. 2
+	call sub_55e6h		;54d2	cd e6 55	. . U
+	or a			;54d5	b7		.
+	bit 4,a			;54d6	cb 67		. g
+	ret z			;54d8	c8		.
+	call XBIOS_dd_l_off_motor	;54d9	cd ea 56	. . V
+	ld b,004h		;54dc	06 04		. .
+	call sub_55e6h		;54de	cd e6 55	. . U
+	ld hl,05863h		;54e1	21 63 58	! c X
+	ld b,(hl)		;54e4	46		F
+	ld (hl),005h		;54e5	36 05		6 .
+	call XBIOS_dd_l_on_motor	;54e7	cd be 56	. . V
+	ld (hl),b		;54ea	70		p
+	and 010h		;54eb	e6 10		. .
+	scf			;54ed	37		7
+	ret			;54ee	c9		.
 sub_54efh:
-	push hl			;54ef
-	push de			;54f0
-	push bc			;54f1
-	push af			;54f2
-	call sub_54feh		;54f3
-	call sub_549fh		;54f6
-	pop af			;54f9
-	pop bc			;54fa
-	pop de			;54fb
-	pop hl			;54fc
-	ret			;54fd
+	push hl			;54ef	e5		.
+	push de			;54f0	d5		.
+	push bc			;54f1	c5		.
+	push af			;54f2	f5		.
+	call sub_54feh		;54f3	cd fe 54	. . T
+	call sub_549fh		;54f6	cd 9f 54	. . T
+	pop af			;54f9	f1		.
+	pop bc			;54fa	c1		.
+	pop de			;54fb	d1		.
+	pop hl			;54fc	e1		.
+	ret			;54fd	c9		.
 sub_54feh:
-	ld a,c			;54fe
-	and 003h		;54ff
-	ld l,a			;5501
-	add a,a			;5502
-	add a,a			;5503
-	add a,a			;5504
-	sub l			;5505
-	add a,047h		;5506
-	ld l,a			;5508
-	adc a,058h		;5509
-	sub l			;550b
-	ld h,a			;550c
-	ret			;550d
+	ld a,c			;54fe	79		y
+	and 003h		;54ff	e6 03		. .
+	ld l,a			;5501	6f		o
+	add a,a			;5502	87		.
+	add a,a			;5503	87		.
+	add a,a			;5504	87		.
+	sub l			;5505	95		.
+	add a,047h		;5506	c6 47		. G
+	ld l,a			;5508	6f		o
+	adc a,058h		;5509	ce 58		. X
+	sub l			;550b	95		.
+	ld h,a			;550c	67		g
+	ret			;550d	c9		.
 XBIOS_dd_l_seek:
-	push hl			;550e
-	call sub_54feh		;550f
-	call sub_5517h		;5512
-	pop hl			;5515
-	ret			;5516
+	push hl			;550e	e5		.
+	call sub_54feh		;550f	cd fe 54	. . T
+	call sub_5517h		;5512	cd 17 55	. . U
+	pop hl			;5515	e1		.
+	ret			;5516	c9		.
 sub_5517h:
-	ld b,00fh		;5517
+	ld b,00fh		;5517	06 0f		. .
 l5519h:
-	bit 6,(hl)		;5519
-	jr nz,l5528h		;551b
-	inc hl			;551d
-	ld (hl),000h		;551e
-	dec hl			;5520
-	call sub_554dh		;5521
-	jr nc,l553eh		;5524
+	bit 6,(hl)		;5519	cb 76		. v
+	jr nz,l5528h		;551b	20 0b		  .
+	inc hl			;551d	23		#
+	ld (hl),000h		;551e	36 00		6 .
+	dec hl			;5520	2b		+
+	call sub_554dh		;5521	cd 4d 55	. M U
+	jr nc,l553eh		;5524	30 18		0 .
 l5526h:
-	set 6,(hl)		;5526
+	set 6,(hl)		;5526	cb f6		. .
 l5528h:
-	ld a,d			;5528
-	inc hl			;5529
-	cp (hl)			;552a
-	dec hl			;552b
-	scf			;552c
-	ret z			;552d
-	or a			;552e
-	jr nz,l5536h		;552f
-	call sub_554dh		;5531
-	jr l5539h		;5534
+	ld a,d			;5528	7a		z
+	inc hl			;5529	23		#
+	cp (hl)			;552a	be		.
+	dec hl			;552b	2b		+
+	scf			;552c	37		7
+	ret z			;552d	c8		.
+	or a			;552e	b7		.
+	jr nz,l5536h		;552f	20 05		  .
+	call sub_554dh		;5531	cd 4d 55	. M U
+	jr l5539h		;5534	18 03		. .
 l5536h:
-	call sub_555fh		;5536
+	call sub_555fh		;5536	cd 5f 55	. _ U
 l5539h:
-	jr nc,l5543h		;5539
-	inc hl			;553b
-	ld (hl),d		;553c
-	ret			;553d
+	jr nc,l5543h		;5539	30 08		0 .
+	inc hl			;553b	23		#
+	ld (hl),d		;553c	72		r
+	ret			;553d	c9		.
 l553eh:
-	push de			;553e
-	call nz,sub_555bh	;553f
-	pop de			;5542
+	push de			;553e	d5		.
+	call nz,sub_555bh	;553f	c4 5b 55	. [ U
+	pop de			;5542	d1		.
 l5543h:
-	res 6,(hl)		;5543
-	ret z			;5545
-	djnz l5519h		;5546
-	cp a			;5548
-	ret			;5549
+	res 6,(hl)		;5543	cb b6		. .
+	ret z			;5545	c8		.
+	djnz l5519h		;5546	10 d1		. .
+	cp a			;5548	bf		.
+	ret			;5549	c9		.
 sub_554ah:
-	call sub_54feh		;554a
+	call sub_54feh		;554a	cd fe 54	. . T
 sub_554dh:
-	call sub_5551h		;554d
-	ret z			;5550
+	call sub_5551h		;554d	cd 51 55	. Q U
+	ret z			;5550	c8		.
 sub_5551h:
-	ld a,007h		;5551
-	call sub_56ach		;5553
-	ld a,c			;5556
-	and 003h		;5557
-	jr l5574h		;5559
+	ld a,007h		;5551	3e 07		> .
+	call sub_56ach		;5553	cd ac 56	. . V
+	ld a,c			;5556	79		y
+	and 003h		;5557	e6 03		. .
+	jr l5574h		;5559	18 19		. .
 sub_555bh:
-	ld d,(ix+012h)		;555b
-	dec d			;555e
+	ld d,(ix+012h)		;555b	dd 56 12	. V .
+	dec d			;555e	15		.
 sub_555fh:
-	ld a,00fh		;555f
-	call sub_56ach		;5561
-	ld a,c			;5564
-	call sub_56ach		;5565
-	ld a,d			;5568
-	bit 7,(ix+011h)		;5569
-	jr nz,l5574h		;556d
-	bit 3,(hl)		;556f
-	jr z,l5574h		;5571
-	add a,a			;5573
+	ld a,00fh		;555f	3e 0f		> .
+	call sub_56ach		;5561	cd ac 56	. . V
+	ld a,c			;5564	79		y
+	call sub_56ach		;5565	cd ac 56	. . V
+	ld a,d			;5568	7a		z
+	bit 7,(ix+011h)		;5569	dd cb 11 7e	. . . ~
+	jr nz,l5574h		;556d	20 05		  .
+	bit 3,(hl)		;556f	cb 5e		. ^
+	jr z,l5574h		;5571	28 01		( .
+	add a,a			;5573	87		.
 l5574h:
-	push hl			;5574
-	push bc			;5575
-	ld bc,00003h		;5576
-	add hl,bc		;5579
-	ld b,(hl)		;557a
-	call sub_5653h		;557b
-	call sub_5587h		;557e
-	pop bc			;5581
-	call sub_558fh		;5582
-	pop hl			;5585
-	ret			;5586
+	push hl			;5574	e5		.
+	push bc			;5575	c5		.
+	ld bc,JB_jump_bc_addr	;5576	01 03 00	. . .
+	add hl,bc		;5579	09		.
+	ld b,(hl)		;557a	46		F
+	call sub_5653h		;557b	cd 53 56	. S V
+	call sub_5587h		;557e	cd 87 55	. . U
+	pop bc			;5581	c1		.
+	call sub_558fh		;5582	cd 8f 55	. . U
+	pop hl			;5585	e1		.
+	ret			;5586	c9		.
 sub_5587h:
-	ld a,0f9h		;5587
+	ld a,0f9h		;5587	3e f9		> .
 l5589h:
-	dec a			;5589
-	jr nz,l5589h		;558a
-	djnz sub_5587h		;558c
-	ret			;558e
+	dec a			;5589	3d		=
+	jr nz,l5589h		;558a	20 fd		  .
+	djnz sub_5587h		;558c	10 f9		. .
+	ret			;558e	c9		.
 sub_558fh:
-	ld a,c			;558f
-	or 020h			;5590
-	inc hl			;5592
-	xor (hl)		;5593
-	and 0fbh		;5594
-	scf			;5596
-	ret z			;5597
-	ld a,(hl)		;5598
-	and 008h		;5599
-	xor 008h		;559b
-	ret z			;559d
-	ld a,002h		;559e
-	or a			;55a0
-	ret			;55a1
+	ld a,c			;558f	79		y
+	or 020h			;5590	f6 20		.  
+	inc hl			;5592	23		#
+	xor (hl)		;5593	ae		.
+	and 0fbh		;5594	e6 fb		. .
+	scf			;5596	37		7
+	ret z			;5597	c8		.
+	ld a,(hl)		;5598	7e		~
+	and 008h		;5599	e6 08		. .
+	xor 008h		;559b	ee 08		. .
+	ret z			;559d	c8		.
+	ld a,002h		;559e	3e 02		> .
+	or a			;55a0	b7		.
+	ret			;55a1	c9		.
 sub_55a2h:
-	ld a,(hl)		;55a2
-	cp 007h			;55a3
-	jr nz,l55c5h		;55a5
-	inc hl			;55a7
-	ld a,(hl)		;55a8
-	xor c			;55a9
-	scf			;55aa
-	ret z			;55ab
-	and 008h		;55ac
-	xor 008h		;55ae
-	ret z			;55b0
-	inc hl			;55b1
-	ld a,(hl)		;55b2
-	xor 002h		;55b3
-	ld a,001h		;55b5
-	ret z			;55b7
-	ld a,003h		;55b8
-	bit 5,(hl)		;55ba
-	ret nz			;55bc
-	inc a			;55bd
-	bit 2,(hl)		;55be
-	ret nz			;55c0
-	inc a			;55c1
-	bit 0,(hl)		;55c2
-	ret nz			;55c4
+	ld a,(hl)		;55a2	7e		~
+	cp 007h			;55a3	fe 07		. .
+	jr nz,l55c5h		;55a5	20 1e		  .
+	inc hl			;55a7	23		#
+	ld a,(hl)		;55a8	7e		~
+	xor c			;55a9	a9		.
+	scf			;55aa	37		7
+	ret z			;55ab	c8		.
+	and 008h		;55ac	e6 08		. .
+	xor 008h		;55ae	ee 08		. .
+	ret z			;55b0	c8		.
+	inc hl			;55b1	23		#
+	ld a,(hl)		;55b2	7e		~
+	xor 002h		;55b3	ee 02		. .
+	ld a,001h		;55b5	3e 01		> .
+	ret z			;55b7	c8		.
+	ld a,003h		;55b8	3e 03		> .
+	bit 5,(hl)		;55ba	cb 6e		. n
+	ret nz			;55bc	c0		.
+	inc a			;55bd	3c		<
+	bit 2,(hl)		;55be	cb 56		. V
+	ret nz			;55c0	c0		.
+	inc a			;55c1	3c		<
+	bit 0,(hl)		;55c2	cb 46		. F
+	ret nz			;55c4	c0		.
 l55c5h:
-	ld a,007h		;55c5
-	or a			;55c7
-	ret			;55c8
+	ld a,007h		;55c5	3e 07		> .
+	or a			;55c7	b7		.
+	ret			;55c8	c9		.
 sub_55c9h:
-	push hl			;55c9
-	push af			;55ca
+	push hl			;55c9	e5		.
+	push af			;55ca	f5		.
 l55cbh:
-	ld hl,0ffe0h		;55cb
-	call sub_55dfh		;55ce
-	dec (hl)		;55d1
-	jr nz,l55cbh		;55d2
-	inc hl			;55d4
-	ld a,(hl)		;55d5
-	and 0c0h		;55d6
-	cp 080h			;55d8
-	jr nz,l55cbh		;55da
-	pop af			;55dc
-	pop hl			;55dd
-	ret			;55de
+	ld hl,0ffe0h		;55cb	21 e0 ff	! . .
+	call sub_55dfh		;55ce	cd df 55	. . U
+	dec (hl)		;55d1	35		5
+	jr nz,l55cbh		;55d2	20 f7		  .
+	inc hl			;55d4	23		#
+	ld a,(hl)		;55d5	7e		~
+	and 0c0h		;55d6	e6 c0		. .
+	cp 080h			;55d8	fe 80		. .
+	jr nz,l55cbh		;55da	20 ef		  .
+	pop af			;55dc	f1		.
+	pop hl			;55dd	e1		.
+	ret			;55de	c9		.
 sub_55dfh:
-	ld a,008h		;55df
-	call sub_56ach		;55e1
-	jr l55fch		;55e4
+	ld a,008h		;55df	3e 08		> .
+	call sub_56ach		;55e1	cd ac 56	. . V
+	jr l55fch		;55e4	18 16		. .
 sub_55e6h:
-	call sub_5587h		;55e6
+	call sub_5587h		;55e6	cd 87 55	. . U
 sub_55e9h:
-	ld a,004h		;55e9
-	call sub_56ach		;55eb
-	ld a,c			;55ee
-	call sub_56ach		;55ef
-	call sub_55f9h		;55f2
-	inc hl			;55f5
-	ld a,(hl)		;55f6
-	dec hl			;55f7
-	ret			;55f8
+	ld a,004h		;55e9	3e 04		> .
+	call sub_56ach		;55eb	cd ac 56	. . V
+	ld a,c			;55ee	79		y
+	call sub_56ach		;55ef	cd ac 56	. . V
+	call sub_55f9h		;55f2	cd f9 55	. . U
+	inc hl			;55f5	23		#
+	ld a,(hl)		;55f6	7e		~
+	dec hl			;55f7	2b		+
+	ret			;55f8	c9		.
 sub_55f9h:
-	ld hl,0ffe0h		;55f9
+	ld hl,0ffe0h		;55f9	21 e0 ff	! . .
 l55fch:
-	push bc			;55fc
-	push hl			;55fd
-	ld b,000h		;55fe
+	push bc			;55fc	c5		.
+	push hl			;55fd	e5		.
+	ld b,000h		;55fe	06 00		. .
 l5600h:
-	in a,(000h)		;5600
-	add a,a			;5602
-	jr nc,l5600h		;5603
-	jp p,l5613h		;5605
-	in a,(001h)		;5608
-	inc hl			;560a
-	ld (hl),a		;560b
-	inc b			;560c
-	ex (sp),hl		;560d
-	ex (sp),hl		;560e
-	ex (sp),hl		;560f
-	ex (sp),hl		;5610
-	jr l5600h		;5611
+	in a,(000h)		;5600	db 00		. .
+	add a,a			;5602	87		.
+	jr nc,l5600h		;5603	30 fb		0 .
+	jp p,l5613h		;5605	f2 13 56	. . V
+	in a,(001h)		;5608	db 01		. .
+	inc hl			;560a	23		#
+	ld (hl),a		;560b	77		w
+	inc b			;560c	04		.
+	ex (sp),hl		;560d	e3		.
+	ex (sp),hl		;560e	e3		.
+	ex (sp),hl		;560f	e3		.
+	ex (sp),hl		;5610	e3		.
+	jr l5600h		;5611	18 ed		. .
 l5613h:
-	pop hl			;5613
-	ld (hl),b		;5614
-	pop bc			;5615
-	ret			;5616
+	pop hl			;5613	e1		.
+	ld (hl),b		;5614	70		p
+	pop bc			;5615	c1		.
+	ret			;5616	c9		.
 XBIOS_dd_l_read:
-	call 00662h		;5617
-	call sub_5640h		;561a
-	jp 00633h		;561d
+	call 00662h		;5617	cd 62 06	. b .
+	call sub_5640h		;561a	cd 40 56	. @ V
+	jp 00633h		;561d	c3 33 06	. 3 .
 XBIOS_dd_l_write:
-	ex de,hl		;5620
-	ld hl,00007h		;5621
-	add hl,de		;5624
-	ld c,(hl)		;5625
-	call sub_54feh		;5626
-	ld bc,00002h		;5629
-	add hl,bc		;562c
-	ld a,(hl)		;562d
-	ex de,hl		;562e
-	push af			;562f
-	call 00647h		;5630
-	call sub_5640h		;5633
-	pop af			;5636
+	ex de,hl		;5620	eb		.
+	ld hl,JB_jump_hl_addr	;5621	21 07 00	! . .
+	add hl,de		;5624	19		.
+	ld c,(hl)		;5625	4e		N
+	call sub_54feh		;5626	cd fe 54	. . T
+	ld bc,00002h		;5629	01 02 00	. . .
+	add hl,bc		;562c	09		.
+	ld a,(hl)		;562d	7e		~
+	ex de,hl		;562e	eb		.
+	push af			;562f	f5		.
+	call 00647h		;5630	cd 47 06	. G .
+	call sub_5640h		;5633	cd 40 56	. @ V
+	pop af			;5636	f1		.
 l5637h:
-	dec a			;5637
-	inc bc			;5638
-	inc bc			;5639
-	inc bc			;563a
-	jr nz,l5637h		;563b
-	jp 00639h		;563d
+	dec a			;5637	3d		=
+	inc bc			;5638	03		.
+	inc bc			;5639	03		.
+	inc bc			;563a	03		.
+	jr nz,l5637h		;563b	20 fa		  .
+	jp 00639h		;563d	c3 39 06	. 9 .
 sub_5640h:
-	ld a,006h		;5640
-	out (0f8h),a		;5642
-	ld b,(hl)		;5644
-	inc hl			;5645
-	dec b			;5646
+	ld a,006h		;5640	3e 06		> .
+	out (0f8h),a		;5642	d3 f8		. .
+	ld b,(hl)		;5644	46		F
+	inc hl			;5645	23		#
+	dec b			;5646	05		.
 l5647h:
-	ld a,(hl)		;5647
-	inc hl			;5648
-	call sub_56ach		;5649
-	djnz l5647h		;564c
-	ld a,002h		;564e
-	out (0f8h),a		;5650
-	ld a,(hl)		;5652
+	ld a,(hl)		;5647	7e		~
+	inc hl			;5648	23		#
+	call sub_56ach		;5649	cd ac 56	. . V
+	djnz l5647h		;564c	10 f9		. .
+	ld a,002h		;564e	3e 02		> .
+	out (0f8h),a		;5650	d3 f8		. .
+	ld a,(hl)		;5652	7e		~
 sub_5653h:
-	ld hl,(01123h)		;5653
-	ld (hl),000h		;5656
-	di			;5658
-	call sub_56ach		;5659
-	jr nc,l5665h		;565c
-	call 00a8dh		;565e
-	ld hl,0ffe0h		;5661
-	ret			;5664
+	ld hl,(01123h)		;5653	2a 23 11	* # .
+	ld (hl),000h		;5656	36 00		6 .
+	di			;5658	f3		.
+	call sub_56ach		;5659	cd ac 56	. . V
+	jr nc,l5665h		;565c	30 07		0 .
+	call 00a8dh		;565e	cd 8d 0a	. . .
+	ld hl,0ffe0h		;5661	21 e0 ff	! . .
+	ret			;5664	c9		.
 l5665h:
-	ei			;5665
-	jp sub_55f9h		;5666
+	ei			;5665	fb		.
+	jp sub_55f9h		;5666	c3 f9 55	. . U
 l5669h:
-	and 040h		;5669
-	or 00ah			;566b
-	call sub_56ach		;566d
-	ld a,c			;5670
-	jr sub_5653h		;5671
-	ld de,(01123h)		;5673
-	ld a,(de)		;5677
-	or a			;5678
-	ld hl,05868h		;5679
-	jr z,l5689h		;567c
-	ld hl,0ffe0h		;567e
-	call l5689h		;5681
-	ret nc			;5684
-	ex de,hl		;5685
-	jp 00a6dh		;5686
+	and 040h		;5669	e6 40		. @
+	or 00ah			;566b	f6 0a		. .
+	call sub_56ach		;566d	cd ac 56	. . V
+	ld a,c			;5670	79		y
+	jr sub_5653h		;5671	18 e0		. .
+	ld de,(01123h)		;5673	ed 5b 23 11	. [ # .
+	ld a,(de)		;5677	1a		.
+	or a			;5678	b7		.
+	ld hl,05868h		;5679	21 68 58	! h X
+	jr z,l5689h		;567c	28 0b		( .
+	ld hl,0ffe0h		;567e	21 e0 ff	! . .
+	call l5689h		;5681	cd 89 56	. . V
+	ret nc			;5684	d0		.
+	ex de,hl		;5685	eb		.
+	jp 00a6dh		;5686	c3 6d 0a	. m .
 l5689h:
-	in a,(000h)		;5689
-	and 030h		;568b
-	jr z,l5695h		;568d
-	cp 030h			;568f
-	ret z			;5691
-	jp l55fch		;5692
+	in a,(000h)		;5689	db 00		. .
+	and 030h		;568b	e6 30		. 0
+	jr z,l5695h		;568d	28 06		( .
+	cp 030h			;568f	fe 30		. 0
+	ret z			;5691	c8		.
+	jp l55fch		;5692	c3 fc 55	. . U
 l5695h:
-	ld b,a			;5695
+	ld b,a			;5695	47		G
 l5696h:
-	call sub_55dfh		;5696
-	ld a,(hl)		;5699
-	cp 002h			;569a
-	ld a,b			;569c
-	rla			;569d
-	ret nz			;569e
-	inc hl			;569f
-	ld a,(hl)		;56a0
-	and 020h		;56a1
-	jr z,l5696h		;56a3
-	ld b,0ffh		;56a5
-	ld hl,05868h		;56a7
-	jr l5696h		;56aa
+	call sub_55dfh		;5696	cd df 55	. . U
+	ld a,(hl)		;5699	7e		~
+	cp 002h			;569a	fe 02		. .
+	ld a,b			;569c	78		x
+	rla			;569d	17		.
+	ret nz			;569e	c0		.
+	inc hl			;569f	23		#
+	ld a,(hl)		;56a0	7e		~
+	and 020h		;56a1	e6 20		.  
+	jr z,l5696h		;56a3	28 f1		( .
+	ld b,0ffh		;56a5	06 ff		. .
+	ld hl,05868h		;56a7	21 68 58	! h X
+	jr l5696h		;56aa	18 ea		. .
 sub_56ach:
-	push bc			;56ac
-	ld b,a			;56ad
+	push bc			;56ac	c5		.
+	ld b,a			;56ad	47		G
 l56aeh:
-	in a,(000h)		;56ae
-	add a,a			;56b0
-	jr nc,l56aeh		;56b1
-	add a,a			;56b3
-	jr c,l56bbh		;56b4
-	ld a,b			;56b6
-	out (001h),a		;56b7
-	ex (sp),hl		;56b9
-	ex (sp),hl		;56ba
+	in a,(000h)		;56ae	db 00		. .
+	add a,a			;56b0	87		.
+	jr nc,l56aeh		;56b1	30 fb		0 .
+	add a,a			;56b3	87		.
+	jr c,l56bbh		;56b4	38 05		8 .
+	ld a,b			;56b6	78		x
+	out (001h),a		;56b7	d3 01		. .
+	ex (sp),hl		;56b9	e3		.
+	ex (sp),hl		;56ba	e3		.
 l56bbh:
-	pop bc			;56bb
-	ccf			;56bc
-	ret			;56bd
+	pop bc			;56bb	c1		.
+	ccf			;56bc	3f		?
+	ret			;56bd	c9		.
 XBIOS_dd_l_on_motor:
-	push af			;56be
-	call sub_56f6h		;56bf
-	jr nz,l56d4h		;56c2
-	ld a,009h		;56c4
-	out (0f8h),a		;56c6
-	ld a,(05863h)		;56c8
-	call sub_56f7h		;56cb
+	push af			;56be	f5		.
+	call sub_56f6h		;56bf	cd f6 56	. . V
+	jr nz,l56d4h		;56c2	20 10		  .
+	ld a,009h		;56c4	3e 09		> .
+	out (0f8h),a		;56c6	d3 f8		. .
+	ld a,(05863h)		;56c8	3a 63 58	: c X
+	call sub_56f7h		;56cb	cd f7 56	. . V
 l56ceh:
-	ld a,(05867h)		;56ce
-	or a			;56d1
-	jr z,l56ceh		;56d2
+	ld a,(05867h)		;56ce	3a 67 58	: g X
+	or a			;56d1	b7		.
+	jr z,l56ceh		;56d2	28 fa		( .
 l56d4h:
-	pop af			;56d4
-	ret			;56d5
+	pop af			;56d4	f1		.
+	ret			;56d5	c9		.
 XBIOS_dd_l_t_off_motor:
-	push af			;56d6
-	call sub_56f6h		;56d7
-	ld a,(05864h)		;56da
-	call nz,sub_56f7h	;56dd
-	pop af			;56e0
-	ret			;56e1
-	ld hl,05867h		;56e2
-	ld a,(hl)		;56e5
-	cpl			;56e6
-	ld (hl),a		;56e7
-	or a			;56e8
-	ret nz			;56e9
+	push af			;56d6	f5		.
+	call sub_56f6h		;56d7	cd f6 56	. . V
+	ld a,(05864h)		;56da	3a 64 58	: d X
+	call nz,sub_56f7h	;56dd	c4 f7 56	. . V
+	pop af			;56e0	f1		.
+	ret			;56e1	c9		.
+	ld hl,05867h		;56e2	21 67 58	! g X
+	ld a,(hl)		;56e5	7e		~
+	cpl			;56e6	2f		/
+	ld (hl),a		;56e7	77		w
+	or a			;56e8	b7		.
+	ret nz			;56e9	c0		.
 XBIOS_dd_l_off_motor:
-	call sub_56f6h		;56ea
-	ld a,00ah		;56ed
-	out (0f8h),a		;56ef
-	xor a			;56f1
-	ld (05867h),a		;56f2
-	ret			;56f5
+	call sub_56f6h		;56ea	cd f6 56	. . V
+	ld a,00ah		;56ed	3e 0a		> .
+	out (0f8h),a		;56ef	d3 f8		. .
+	xor a			;56f1	af		.
+	ld (05867h),a		;56f2	32 67 58	2 g X
+	ret			;56f5	c9		.
 sub_56f6h:
-	xor a			;56f6
+	xor a			;56f6	af		.
 sub_56f7h:
-	push hl			;56f7
-	ld hl,(01121h)		;56f8
-	inc hl			;56fb
-	inc hl			;56fc
-	ld (hl),a		;56fd
-	pop hl			;56fe
-	ld a,(05867h)		;56ff
-	or a			;5702
-	ret			;5703
+	push hl			;56f7	e5		.
+	ld hl,(01121h)		;56f8	2a 21 11	* ! .
+	inc hl			;56fb	23		#
+	inc hl			;56fc	23		#
+	ld (hl),a		;56fd	77		w
+	pop hl			;56fe	e1		.
+	ld a,(05867h)		;56ff	3a 67 58	: g X
+	or a			;5702	b7		.
+	ret			;5703	c9		.

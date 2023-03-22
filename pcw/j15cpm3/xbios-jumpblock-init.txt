@@ -2,6 +2,18 @@
 ; command line: /home/adrian/local/bin/z80dasm -v -g 0x0080 -t -a -l -o xbios-jumpblock-init.txt -S xbios-jumpblock-init.sym -b xbios-jumpblock-init.blk xbios-jumpblock-init.bin
 
 	org 00080h
+JB_jump_bank2_env:	equ 0x0000
+JB_jump_bc_addr:	equ 0x0003
+JB_jump_de_addr:	equ 0x0005
+JB_jump_hl_addr:	equ 0x0007
+JB_cfg_memory_bank_0000:	equ 0x0060
+JB_cfg_memory_bank_4000:	equ 0x0061
+JB_cfg_memory_bank_8000:	equ 0x0062
+JB_cfg_memory_bank_c000:	equ 0x0063
+JB_cnt_flyback:	equ 0x0064
+JB_max_flyback:	equ 0x0065
+JB_NMI_handler:	equ 0x0066
+JB_num_banks:	equ 0x007f
 XBIOS_msg_retrymsg:	equ 0x3d1d
 XBIOS_msg_insert:	equ 0x3d44
 XBIOS_km_set_key:	equ 0x3d6d
@@ -160,7 +172,7 @@ XBIOS_cd_coldboot:
 	call sub_0b42h		;0132	cd 42 0b	. B .
 	call 04005h		;0135	cd 05 40	. . @
 	ld a,0ffh		;0138	3e ff		> .
-	ld de,00000h		;013a	11 00 00	. . .
+	ld de,JB_jump_bank2_env	;013a	11 00 00	. . .
 	ld hl,00808h		;013d	21 08 08	! . .
 	call XBIOS_ca_sa_init	;0140	cd bd 3e	. . >
 	sbc a,a			;0143	9f		.
@@ -194,7 +206,7 @@ XBIOS_cd_info:
 	inc c			;0181	0c		.
 	call 05369h		;0182	cd 69 53	. i S
 	ld d,a			;0185	57		W
-	ld a,(0007fh)		;0186	3a 7f 00	: . .
+	ld a,(JB_num_banks)	;0186	3a 7f 00	: . .
 	ld b,a			;0189	47		G
 	ld a,(01131h)		;018a	3a 31 11	: 1 .
 	rra			;018d	1f		.
@@ -225,7 +237,7 @@ sub_01a2h:
 	and 020h		;01c0	e6 20		.  
 	ld a,00eh		;01c2	3e 0e		> .
 	call nz,XBIOS_msg_sysmsg	;01c4	c4 e8 4d	. . M
-	ld a,(0007fh)		;01c7	3a 7f 00	: . .
+	ld a,(JB_num_banks)	;01c7	3a 7f 00	: . .
 	sub 009h		;01ca	d6 09		. .
 	ld l,a			;01cc	6f		o
 	ld h,000h		;01cd	26 00		& .
@@ -707,7 +719,7 @@ XBIOS_newline_str_start:
 XBIOS_newline_str_end:
 	rst 38h			;036a	ff		.
 
-; BLOCK 'XBIOS_unknown_4_str' (start 0x036b end 0x037b)
+; BLOCK 'XBIOS_unknown_4_str' (start 0x036b end 0x0375)
 XBIOS_unknown_4_str_start:
 	defb 0f1h		;036b	f1		.
 	defb 005h		;036c	05		.
@@ -719,49 +731,92 @@ XBIOS_unknown_4_str_start:
 	defb 0fdh		;0372	fd		.
 	defb 0f1h		;0373	f1		.
 	defb 003h		;0374	03		.
-	defb 0ffh		;0375	ff		.
+XBIOS_unknown_4_str_end:
+	rst 38h			;0375	ff		.
+
+; BLOCK 'XBIOS_unknown_6_str' (start 0x0376 end 0x0378)
+XBIOS_unknown_6_str_start:
 	defb 0efh		;0376	ef		.
 	defb 0aah		;0377	aa		.
-	defb 0ffh		;0378	ff		.
+XBIOS_unknown_6_str_end:
+	rst 38h			;0378	ff		.
+
+; BLOCK 'XBIOS_rive_str' (start 0x0379 end 0x037d)
+XBIOS_rive_str_start:
 	defb 072h		;0379	72		r
 	defb 069h		;037a	69		i
-XBIOS_unknown_4_str_end:
-	halt			;037b	76		v
-	ld h,l			;037c	65		e
+	defb 076h		;037b	76		v
+	defb 065h		;037c	65		e
+XBIOS_rive_str_end:
 	rst 38h			;037d	ff		.
-	cp 054h			;037e	fe 54		. T
-	ld (hl),d		;0380	72		r
-	ld h,c			;0381	61		a
-l0382h:
-	ld h,e			;0382	63		c
-	ld l,e			;0383	6b		k
-	jr nz,l0382h		;0384	20 fc		  .
+
+; BLOCK 'XBIOS_track_str' (start 0x037e end 0x0386)
+XBIOS_track_str_start:
+	defb 0feh		;037e	fe		.
+	defb 054h		;037f	54		T
+	defb 072h		;0380	72		r
+	defb 061h		;0381	61		a
+	defb 063h		;0382	63		c
+	defb 06bh		;0383	6b		k
+	defb 020h		;0384	20		 
+	defb 0fch		;0385	fc		.
+XBIOS_track_str_end:
 	rst 38h			;0386	ff		.
-	ld l,a			;0387	6f		o
-	ld (hl),d		;0388	72		r
+
+; BLOCK 'XBIOS_or_str' (start 0x0387 end 0x0389)
+XBIOS_or_str_start:
+	defb 06fh		;0387	6f		o
+	defb 072h		;0388	72		r
+XBIOS_or_str_end:
 	rst 38h			;0389	ff		.
-l038ah:
-	jr nz,l0400h		;038a	20 74		  t
-	ld l,b			;038c	68		h
-	ld h,l			;038d	65		e
+
+; BLOCK 'XBIOS_the_str' (start 0x038a end 0x038e)
+XBIOS_the_str_start:
+	defb 020h		;038a	20		 
+	defb 074h		;038b	74		t
+	defb 068h		;038c	68		h
+	defb 065h		;038d	65		e
+XBIOS_the_str_end:
 	rst 38h			;038e	ff		.
-l038fh:
-	ld (hl),d		;038f	72		r
-	ld h,l			;0390	65		e
-	ld (hl),e		;0391	73		s
-	ld (hl),e		;0392	73		s
-	jr nz,$+1		;0393	20 ff		  .
-	inc l			;0395	2c		,
-	jr nz,$+1		;0396	20 ff		  .
-	ld h,l			;0398	65		e
-	jr nz,$+1		;0399	20 ff		  .
-	ld l,c			;039b	69		i
-	ld (hl),e		;039c	73		s
+
+; BLOCK 'XBIOS_ress_str' (start 0x038f end 0x0394)
+XBIOS_ress_str_start:
+	defb 072h		;038f	72		r
+	defb 065h		;0390	65		e
+	defb 073h		;0391	73		s
+	defb 073h		;0392	73		s
+	defb 020h		;0393	20		 
+XBIOS_ress_str_end:
+	rst 38h			;0394	ff		.
+
+; BLOCK 'XBIOS_comma_space_str' (start 0x0395 end 0x0397)
+XBIOS_comma_space_str_start:
+	defb 02ch		;0395	2c		,
+	defb 020h		;0396	20		 
+XBIOS_comma_space_str_end:
+	rst 38h			;0397	ff		.
+
+; BLOCK 'XBIOS_e_space_str' (start 0x0398 end 0x039a)
+XBIOS_e_space_str_start:
+	defb 065h		;0398	65		e
+	defb 020h		;0399	20		 
+XBIOS_e_space_str_end:
+	rst 38h			;039a	ff		.
+
+; BLOCK 'XBIOS_is_str' (start 0x039b end 0x039d)
+XBIOS_is_str_start:
+	defb 069h		;039b	69		i
+	defb 073h		;039c	73		s
+XBIOS_is_str_end:
 	rst 38h			;039d	ff		.
-	ld h,h			;039e	64		d
-	ld h,c			;039f	61		a
-	ld (hl),h		;03a0	74		t
-	ld h,c			;03a1	61		a
+
+; BLOCK 'XBIOS_data_str' (start 0x039e end 0x03a2)
+XBIOS_data_str_start:
+	defb 064h		;039e	64		d
+	defb 061h		;039f	61		a
+	defb 074h		;03a0	74		t
+	defb 061h		;03a1	61		a
+XBIOS_data_str_end:
 	rst 38h			;03a2	ff		.
 
 ; BLOCK 'XBIOS_retry_ignore_cancel_str' (start 0x03a3 end 0x03ba)
@@ -791,49 +846,78 @@ XBIOS_retry_ignore_cancel_str_start:
 	defb 03fh		;03b9	3f		?
 XBIOS_retry_ignore_cancel_str_end:
 	rst 38h			;03ba	ff		.
-	and d			;03bb	a2		.
-	and (hl)		;03bc	a6		.
-	ld (hl),e		;03bd	73		s
-	ld h,l			;03be	65		e
-l03bfh:
-	ld h,e			;03bf	63		c
-	ld (hl),h		;03c0	74		t
-	and e			;03c1	a3		.
-	jr nz,l03bfh		;03c2	20 fb		  .
-	jr nz,$+1		;03c4	20 ff		  .
-	xor b			;03c6	a8		.
-	ld h,e			;03c7	63		c
-	jr nz,$+1		;03c8	20 ff		  .
-	jr nz,l0431h		;03ca	20 65		  e
-	ld (hl),d		;03cc	72		r
-	ld (hl),d		;03cd	72		r
-	and e			;03ce	a3		.
-	rst 38h			;03cf	ff		.
-	xor (hl)		;03d0	ae		.
-	ld b,c			;03d1	41		A
-	ld h,e			;03d2	63		c
-	ld (hl),h		;03d3	74		t
-	ld l,c			;03d4	69		i
-	halt			;03d5	76		v
-	ld h,l			;03d6	65		e
-	pop af			;03d7	f1		.
-	djnz l038ah		;03d8	10 b0		. .
-	rst 38h			;03da	ff		.
-	xor (hl)		;03db	ae		.
-	ld c,a			;03dc	4f		O
-	ld l,(hl)		;03dd	6e		n
-	jr nz,l038fh		;03de	20 af		  .
-	rst 38h			;03e0	ff		.
-	xor (hl)		;03e1	ae		.
-	ld c,a			;03e2	4f		O
-	ld h,(hl)		;03e3	66		f
-	ld h,(hl)		;03e4	66		f
-	xor a			;03e5	af		.
-	rst 38h			;03e6	ff		.
-	xor (hl)		;03e7	ae		.
 
-; BLOCK 'XBIOS_out_of_paper_str' (start 0x03e8 end 0x03f7)
+; BLOCK 'XBIOS_sector_error_str' (start 0x03bb end 0x03c5)
+XBIOS_sector_error_str_start:
+	defb 0a2h		;03bb	a2		.
+	defb 0a6h		;03bc	a6		.
+	defb 073h		;03bd	73		s
+	defb 065h		;03be	65		e
+	defb 063h		;03bf	63		c
+	defb 074h		;03c0	74		t
+	defb 0a3h		;03c1	a3		.
+	defb 020h		;03c2	20		 
+	defb 0fbh		;03c3	fb		.
+	defb 020h		;03c4	20		 
+XBIOS_sector_error_str_end:
+	rst 38h			;03c5	ff		.
+
+; BLOCK 'XBIOS_unknown_7_str' (start 0x03c6 end 0x03c9)
+XBIOS_unknown_7_str_start:
+	defb 0a8h		;03c6	a8		.
+	defb 063h		;03c7	63		c
+	defb 020h		;03c8	20		 
+XBIOS_unknown_7_str_end:
+	rst 38h			;03c9	ff		.
+
+; BLOCK 'XBIOS_unknown_8_str' (start 0x03ca end 0x03cf)
+XBIOS_unknown_8_str_start:
+	defb 020h		;03ca	20		 
+	defb 065h		;03cb	65		e
+	defb 072h		;03cc	72		r
+	defb 072h		;03cd	72		r
+	defb 0a3h		;03ce	a3		.
+XBIOS_unknown_8_str_end:
+	rst 38h			;03cf	ff		.
+
+; BLOCK 'XBIOS_active_str' (start 0x03d0 end 0x03da)
+XBIOS_active_str_start:
+	defb 0aeh		;03d0	ae		.
+	defb 041h		;03d1	41		A
+	defb 063h		;03d2	63		c
+	defb 074h		;03d3	74		t
+	defb 069h		;03d4	69		i
+	defb 076h		;03d5	76		v
+	defb 065h		;03d6	65		e
+	defb 0f1h		;03d7	f1		.
+	defb 010h		;03d8	10		.
+	defb 0b0h		;03d9	b0		.
+XBIOS_active_str_end:
+	rst 38h			;03da	ff		.
+
+; BLOCK 'XBIOS_on_str' (start 0x03db end 0x03e0)
+XBIOS_on_str_start:
+	defb 0aeh		;03db	ae		.
+	defb 04fh		;03dc	4f		O
+	defb 06eh		;03dd	6e		n
+	defb 020h		;03de	20		 
+	defb 0afh		;03df	af		.
+XBIOS_on_str_end:
+	rst 38h			;03e0	ff		.
+
+; BLOCK 'XBIOS_off_str' (start 0x03e1 end 0x03e6)
+XBIOS_off_str_start:
+	defb 0aeh		;03e1	ae		.
+	defb 04fh		;03e2	4f		O
+	defb 066h		;03e3	66		f
+	defb 066h		;03e4	66		f
+	defb 0afh		;03e5	af		.
+XBIOS_off_str_end:
+	rst 38h			;03e6	ff		.
+
+; BLOCK 'XBIOS_out_of_paper_str' (start 0x03e7 end 0x03f7)
 XBIOS_out_of_paper_str_start:
+	defb 0aeh		;03e7	ae		.
 	defb 04fh		;03e8	4f		O
 	defb 075h		;03e9	75		u
 	defb 074h		;03ea	74		t
@@ -862,7 +946,6 @@ XBIOS_waiting_for_paper_str_start:
 	defb 069h		;03fd	69		i
 	defb 06eh		;03fe	6e		n
 	defb 067h		;03ff	67		g
-l0400h:
 	defb 020h		;0400	20		 
 	defb 066h		;0401	66		f
 	defb 06fh		;0402	6f		o
@@ -924,7 +1007,6 @@ XBIOS_printer_ram_str_start:
 	defb 072h		;042e	72		r
 	defb 069h		;042f	69		i
 	defb 06eh		;0430	6e		n
-l0431h:
 	defb 074h		;0431	74		t
 	defb 065h		;0432	65		e
 	defb 072h		;0433	72		r
@@ -1035,12 +1117,11 @@ XBIOS_unknown_5_str_start:
 	defb 0b2h		;0488	b2		.
 	defb 020h		;0489	20		 
 	defb 020h		;048a	20		 
-l048bh:
 	defb 0b3h		;048b	b3		.
 XBIOS_unknown_5_str_end:
 	rst 38h			;048c	ff		.
 
-; BLOCK 'XBIOS_error_str' (start 0x048d end 0x0493)
+; BLOCK 'XBIOS_error_str' (start 0x048d end 0x0494)
 XBIOS_error_str_start:
 	defb 0aeh		;048d	ae		.
 	defb 045h		;048e	45		E
@@ -1048,12 +1129,19 @@ XBIOS_error_str_start:
 	defb 052h		;0490	52		R
 	defb 04fh		;0491	4f		O
 	defb 052h		;0492	52		R
+	defb 020h		;0493	20		 
 XBIOS_error_str_end:
-	jr nz,$+1		;0493	20 ff		  .
-	jr nz,l048bh		;0495	20 f4		  .
-	ld a,h			;0497	7c		|
-	push af			;0498	f5		.
-	jr nz,$+1		;0499	20 ff		  .
+	rst 38h			;0494	ff		.
+
+; BLOCK 'XBIOS_unknown_9_str' (start 0x0495 end 0x049a)
+XBIOS_unknown_9_str_start:
+	defb 020h		;0495	20		 
+	defb 0f4h		;0496	f4		.
+	defb 07ch		;0497	7c		|
+	defb 0f5h		;0498	f5		.
+	defb 020h		;0499	20		 
+XBIOS_unknown_9_str_end:
+	rst 38h			;049a	ff		.
 
 ; BLOCK 'XBIOS_error_RESET_str' (start 0x049b end 0x04b0)
 XBIOS_error_RESET_str_start:
@@ -1080,31 +1168,53 @@ XBIOS_error_RESET_str_start:
 	defb 054h		;04af	54		T
 XBIOS_error_RESET_str_end:
 	rst 38h			;04b0	ff		.
-	di			;04b1	f3		.
-	dec (hl)		;04b2	35		5
-	ld (hl),037h		;04b3	36 37		6 7
-	or d			;04b5	b2		.
+
+; BLOCK 'XBIOS_unknown_10_str' (start 0x04b1 end 0x04b6)
+XBIOS_unknown_10_str_start:
+	defb 0f3h		;04b1	f3		.
+	defb 035h		;04b2	35		5
+	defb 036h		;04b3	36		6
+	defb 037h		;04b4	37		7
+	defb 0b2h		;04b5	b2		.
+XBIOS_unknown_10_str_end:
 	rst 38h			;04b6	ff		.
 	rst 38h			;04b7	ff		.
-	ld h,c			;04b8	61		a
-	ld (hl),h		;04b9	74		t
-	jr nz,l0528h		;04ba	20 6c		  l
-	ld l,c			;04bc	69		i
-	ld l,(hl)		;04bd	6e		n
-	ld h,l			;04be	65		e
-	ld a,(0fff6h)		;04bf	3a f6 ff	: . .
-	ld d,h			;04c2	54		T
-	ld l,a			;04c3	6f		o
-	ld (hl),b		;04c4	70		p
-	jr nz,l0536h		;04c5	20 6f		  o
-	ld h,(hl)		;04c7	66		f
-	jr nz,l0510h		;04c8	20 46		  F
-	ld l,a			;04ca	6f		o
-	ld (hl),d		;04cb	72		r
-	ld l,l			;04cc	6d		m
+
+; BLOCK 'XBIOS_at_line_colon_str' (start 0x04b8 end 0x04c1)
+XBIOS_at_line_colon_str_start:
+	defb 061h		;04b8	61		a
+	defb 074h		;04b9	74		t
+	defb 020h		;04ba	20		 
+	defb 06ch		;04bb	6c		l
+	defb 069h		;04bc	69		i
+	defb 06eh		;04bd	6e		n
+	defb 065h		;04be	65		e
+	defb 03ah		;04bf	3a		:
+	defb 0f6h		;04c0	f6		.
+XBIOS_at_line_colon_str_end:
+	rst 38h			;04c1	ff		.
+
+; BLOCK 'XBIOS_top_of_form_str' (start 0x04c2 end 0x04cd)
+XBIOS_top_of_form_str_start:
+	defb 054h		;04c2	54		T
+	defb 06fh		;04c3	6f		o
+	defb 070h		;04c4	70		p
+	defb 020h		;04c5	20		 
+	defb 06fh		;04c6	6f		o
+	defb 066h		;04c7	66		f
+	defb 020h		;04c8	20		 
+	defb 046h		;04c9	46		F
+	defb 06fh		;04ca	6f		o
+	defb 072h		;04cb	72		r
+	defb 06dh		;04cc	6d		m
+XBIOS_top_of_form_str_end:
 	rst 38h			;04cd	ff		.
-	pop af			;04ce	f1		.
-	dec c			;04cf	0d		.
+
+; BLOCK 'XBIOS_unknown_12_str' (start 0x04ce end 0x04d0)
+XBIOS_unknown_12_str_start:
+	defb 0f1h		;04ce	f1		.
+	defb 00dh		;04cf	0d		.
+XBIOS_unknown_12_str_end:
 	rst 38h			;04d0	ff		.
 
 ; BLOCK 'XBIOS_draft_str' (start 0x04d1 end 0x04d7)
@@ -1128,41 +1238,79 @@ XBIOS_high_str_start:
 	defb 0c5h		;04dd	c5		.
 XBIOS_high_str_end:
 	rst 38h			;04de	ff		.
-	pop af			;04df	f1		.
-	dec c			;04e0	0d		.
-	rst 38h			;04e1	ff		.
-	jp 0ffc1h		;04e2	c3 c1 ff	. . .
-	jp 0ffc2h		;04e5	c3 c2 ff	. . .
-	pop af			;04e8	f1		.
-	rlca			;04e9	07		.
-	rst 38h			;04ea	ff		.
-	call nz,0ffc1h		;04eb	c4 c1 ff	. . .
-	call nz,0ffc2h		;04ee	c4 c2 ff	. . .
 
-; BLOCK 'XBIOS_off_str' (start 0x04f1 end 0x04f5)
-XBIOS_off_str_start:
+; BLOCK 'XBIOS_unknown_13_str' (start 0x04df end 0x04e1)
+XBIOS_unknown_13_str_start:
+	defb 0f1h		;04df	f1		.
+	defb 00dh		;04e0	0d		.
+XBIOS_unknown_13_str_end:
+	rst 38h			;04e1	ff		.
+
+; BLOCK 'XBIOS_unknown_14_str' (start 0x04e2 end 0x04e4)
+XBIOS_unknown_14_str_start:
+	defb 0c3h		;04e2	c3		.
+	defb 0c1h		;04e3	c1		.
+XBIOS_unknown_14_str_end:
+	rst 38h			;04e4	ff		.
+
+; BLOCK 'XBIOS_unknown_15_str' (start 0x04e5 end 0x04e7)
+XBIOS_unknown_15_str_start:
+	defb 0c3h		;04e5	c3		.
+	defb 0c2h		;04e6	c2		.
+XBIOS_unknown_15_str_end:
+	rst 38h			;04e7	ff		.
+
+; BLOCK 'XBIOS_unknown_16_str' (start 0x04e8 end 0x04ea)
+XBIOS_unknown_16_str_start:
+	defb 0f1h		;04e8	f1		.
+	defb 007h		;04e9	07		.
+XBIOS_unknown_16_str_end:
+	rst 38h			;04ea	ff		.
+
+; BLOCK 'XBIOS_unknown_17_str' (start 0x04eb end 0x04ed)
+XBIOS_unknown_17_str_start:
+	defb 0c4h		;04eb	c4		.
+	defb 0c1h		;04ec	c1		.
+XBIOS_unknown_17_str_end:
+	rst 38h			;04ed	ff		.
+
+; BLOCK 'XBIOS_unknown_18_str' (start 0x04ee end 0x04f0)
+XBIOS_unknown_18_str_start:
+	defb 0c4h		;04ee	c4		.
+	defb 0c2h		;04ef	c2		.
+XBIOS_unknown_18_str_end:
+	rst 38h			;04f0	ff		.
+
+; BLOCK 'XBIOS_colon_off_str' (start 0x04f1 end 0x04f5)
+XBIOS_colon_off_str_start:
 	defb 03ah		;04f1	3a		:
 	defb 04fh		;04f2	4f		O
 	defb 066h		;04f3	66		f
 	defb 066h		;04f4	66		f
-XBIOS_off_str_end:
+XBIOS_colon_off_str_end:
 	rst 38h			;04f5	ff		.
 
-; BLOCK 'XBIOS_on_str' (start 0x04f6 end 0x04f9)
-XBIOS_on_str_start:
+; BLOCK 'XBIOS_colon_on_str' (start 0x04f6 end 0x04fa)
+XBIOS_colon_on_str_start:
 	defb 03ah		;04f6	3a		:
 	defb 04fh		;04f7	4f		O
 	defb 06eh		;04f8	6e		n
-XBIOS_on_str_end:
-	jr nz,$+1		;04f9	20 ff		  .
-	ld d,b			;04fb	50		P
-	ld c,a			;04fc	4f		O
-	jr nz,l0563h		;04fd	20 64		  d
-	ld h,l			;04ff	65		e
-	ld h,(hl)		;0500	66		f
-	ld h,l			;0501	65		e
-	ld h,c			;0502	61		a
-	ld (hl),h		;0503	74		t
+	defb 020h		;04f9	20		 
+XBIOS_colon_on_str_end:
+	rst 38h			;04fa	ff		.
+
+; BLOCK 'XBIOS_po_defeat_str' (start 0x04fb end 0x0504)
+XBIOS_po_defeat_str_start:
+	defb 050h		;04fb	50		P
+	defb 04fh		;04fc	4f		O
+	defb 020h		;04fd	20		 
+	defb 064h		;04fe	64		d
+	defb 065h		;04ff	65		e
+	defb 066h		;0500	66		f
+	defb 065h		;0501	65		e
+	defb 061h		;0502	61		a
+	defb 074h		;0503	74		t
+XBIOS_po_defeat_str_end:
 	rst 38h			;0504	ff		.
 
 ; BLOCK 'XBIOS_hex_str' (start 0x0505 end 0x0508)
@@ -1182,155 +1330,159 @@ XBIOS_quality_str_start:
 	defb 06ch		;050d	6c		l
 	defb 069h		;050e	69		i
 	defb 074h		;050f	74		t
-l0510h:
 	defb 079h		;0510	79		y
 XBIOS_quality_str_end:
 	rst 38h			;0511	ff		.
-	nop			;0512	00		.
+
+; BLOCK 'XBIOS_unknown_19_str' (start 0x0512 end 0x051d)
+XBIOS_unknown_19_str_start:
+	defb 000h		;0512	00		.
 l0513h:
-	or b			;0513	b0		.
-	inc de			;0514	13		.
-	ret c			;0515	d8		.
-	nop			;0516	00		.
-	rst 38h			;0517	ff		.
-	rst 38h			;0518	ff		.
-	inc bc			;0519	03		.
-	ld b,e			;051a	43		C
-	ld c,c			;051b	49		I
-	ld d,d			;051c	52		R
+	defb 0b0h		;0513	b0		.
+	defb 013h		;0514	13		.
+	defb 0d8h		;0515	d8		.
+	defb 000h		;0516	00		.
+	defb 0ffh		;0517	ff		.
+	defb 0ffh		;0518	ff		.
+	defb 003h		;0519	03		.
+	defb 043h		;051a	43		C
+	defb 049h		;051b	49		I
+	defb 052h		;051c	52		R
+XBIOS_unknown_19_str_end:
 	rst 38h			;051d	ff		.
-	rst 38h			;051e	ff		.
-	rst 38h			;051f	ff		.
-	rst 38h			;0520	ff		.
-	rst 38h			;0521	ff		.
-	rst 38h			;0522	ff		.
-	rst 38h			;0523	ff		.
-	rst 38h			;0524	ff		.
-	rst 38h			;0525	ff		.
-	rst 38h			;0526	ff		.
-	rst 38h			;0527	ff		.
-l0528h:
-	rst 38h			;0528	ff		.
-	rst 38h			;0529	ff		.
-	rst 38h			;052a	ff		.
-	rst 38h			;052b	ff		.
-	rst 38h			;052c	ff		.
-	rst 38h			;052d	ff		.
-	rst 38h			;052e	ff		.
-	rst 38h			;052f	ff		.
-	rst 38h			;0530	ff		.
-	rst 38h			;0531	ff		.
-	rst 38h			;0532	ff		.
-	rst 38h			;0533	ff		.
-	rst 38h			;0534	ff		.
-	rst 38h			;0535	ff		.
-l0536h:
-	rst 38h			;0536	ff		.
-	rst 38h			;0537	ff		.
-	rst 38h			;0538	ff		.
-	rst 38h			;0539	ff		.
-	rst 38h			;053a	ff		.
-	rst 38h			;053b	ff		.
-	rst 38h			;053c	ff		.
-	rst 38h			;053d	ff		.
-	rst 38h			;053e	ff		.
-	rst 38h			;053f	ff		.
-	rst 38h			;0540	ff		.
-	rst 38h			;0541	ff		.
-	rst 38h			;0542	ff		.
-	rst 38h			;0543	ff		.
-	rst 38h			;0544	ff		.
-	rst 38h			;0545	ff		.
-	rst 38h			;0546	ff		.
-	rst 38h			;0547	ff		.
-	rst 38h			;0548	ff		.
-	rst 38h			;0549	ff		.
-	rst 38h			;054a	ff		.
-	rst 38h			;054b	ff		.
-	rst 38h			;054c	ff		.
-	rst 38h			;054d	ff		.
-	rst 38h			;054e	ff		.
-	rst 38h			;054f	ff		.
-	rst 38h			;0550	ff		.
-	rst 38h			;0551	ff		.
-	rst 38h			;0552	ff		.
-	rst 38h			;0553	ff		.
-	rst 38h			;0554	ff		.
-	rst 38h			;0555	ff		.
-	rst 38h			;0556	ff		.
-	rst 38h			;0557	ff		.
-	rst 38h			;0558	ff		.
-	rst 38h			;0559	ff		.
-	rst 38h			;055a	ff		.
-	rst 38h			;055b	ff		.
-	rst 38h			;055c	ff		.
-	rst 38h			;055d	ff		.
-	rst 38h			;055e	ff		.
-	rst 38h			;055f	ff		.
-	rst 38h			;0560	ff		.
-	rst 38h			;0561	ff		.
-	rst 38h			;0562	ff		.
-l0563h:
-	rst 38h			;0563	ff		.
-	rst 38h			;0564	ff		.
-	rst 38h			;0565	ff		.
-	rst 38h			;0566	ff		.
-	rst 38h			;0567	ff		.
-	rst 38h			;0568	ff		.
-	rst 38h			;0569	ff		.
-	rst 38h			;056a	ff		.
-	rst 38h			;056b	ff		.
-	rst 38h			;056c	ff		.
-	rst 38h			;056d	ff		.
-	rst 38h			;056e	ff		.
-	rst 38h			;056f	ff		.
-	rst 38h			;0570	ff		.
-	rst 38h			;0571	ff		.
-	rst 38h			;0572	ff		.
-	rst 38h			;0573	ff		.
-	rst 38h			;0574	ff		.
-	rst 38h			;0575	ff		.
-	rst 38h			;0576	ff		.
-	rst 38h			;0577	ff		.
-	rst 38h			;0578	ff		.
-	rst 38h			;0579	ff		.
-	rst 38h			;057a	ff		.
-	rst 38h			;057b	ff		.
-	rst 38h			;057c	ff		.
-	rst 38h			;057d	ff		.
-	rst 38h			;057e	ff		.
-	rst 38h			;057f	ff		.
-	rst 38h			;0580	ff		.
-	rst 38h			;0581	ff		.
-	rst 38h			;0582	ff		.
-	rst 38h			;0583	ff		.
-	rst 38h			;0584	ff		.
-	rst 38h			;0585	ff		.
-	rst 38h			;0586	ff		.
-	rst 38h			;0587	ff		.
-	rst 38h			;0588	ff		.
-	rst 38h			;0589	ff		.
-	rst 38h			;058a	ff		.
-	rst 38h			;058b	ff		.
-	rst 38h			;058c	ff		.
-	rst 38h			;058d	ff		.
-	rst 38h			;058e	ff		.
-	rst 38h			;058f	ff		.
-	rst 38h			;0590	ff		.
-	rst 38h			;0591	ff		.
+
+; BLOCK 'XBIOS_filler_2_ff' (start 0x051e end 0x0592)
+XBIOS_filler_2_ff_start:
+	defb 0ffh		;051e	ff		.
+	defb 0ffh		;051f	ff		.
+	defb 0ffh		;0520	ff		.
+	defb 0ffh		;0521	ff		.
+	defb 0ffh		;0522	ff		.
+	defb 0ffh		;0523	ff		.
+	defb 0ffh		;0524	ff		.
+	defb 0ffh		;0525	ff		.
+	defb 0ffh		;0526	ff		.
+	defb 0ffh		;0527	ff		.
+	defb 0ffh		;0528	ff		.
+	defb 0ffh		;0529	ff		.
+	defb 0ffh		;052a	ff		.
+	defb 0ffh		;052b	ff		.
+	defb 0ffh		;052c	ff		.
+	defb 0ffh		;052d	ff		.
+	defb 0ffh		;052e	ff		.
+	defb 0ffh		;052f	ff		.
+	defb 0ffh		;0530	ff		.
+	defb 0ffh		;0531	ff		.
+	defb 0ffh		;0532	ff		.
+	defb 0ffh		;0533	ff		.
+	defb 0ffh		;0534	ff		.
+	defb 0ffh		;0535	ff		.
+	defb 0ffh		;0536	ff		.
+	defb 0ffh		;0537	ff		.
+	defb 0ffh		;0538	ff		.
+	defb 0ffh		;0539	ff		.
+	defb 0ffh		;053a	ff		.
+	defb 0ffh		;053b	ff		.
+	defb 0ffh		;053c	ff		.
+	defb 0ffh		;053d	ff		.
+	defb 0ffh		;053e	ff		.
+	defb 0ffh		;053f	ff		.
+	defb 0ffh		;0540	ff		.
+	defb 0ffh		;0541	ff		.
+	defb 0ffh		;0542	ff		.
+	defb 0ffh		;0543	ff		.
+	defb 0ffh		;0544	ff		.
+	defb 0ffh		;0545	ff		.
+	defb 0ffh		;0546	ff		.
+	defb 0ffh		;0547	ff		.
+	defb 0ffh		;0548	ff		.
+	defb 0ffh		;0549	ff		.
+	defb 0ffh		;054a	ff		.
+	defb 0ffh		;054b	ff		.
+	defb 0ffh		;054c	ff		.
+	defb 0ffh		;054d	ff		.
+	defb 0ffh		;054e	ff		.
+	defb 0ffh		;054f	ff		.
+	defb 0ffh		;0550	ff		.
+	defb 0ffh		;0551	ff		.
+	defb 0ffh		;0552	ff		.
+	defb 0ffh		;0553	ff		.
+	defb 0ffh		;0554	ff		.
+	defb 0ffh		;0555	ff		.
+	defb 0ffh		;0556	ff		.
+	defb 0ffh		;0557	ff		.
+	defb 0ffh		;0558	ff		.
+	defb 0ffh		;0559	ff		.
+	defb 0ffh		;055a	ff		.
+	defb 0ffh		;055b	ff		.
+	defb 0ffh		;055c	ff		.
+	defb 0ffh		;055d	ff		.
+	defb 0ffh		;055e	ff		.
+	defb 0ffh		;055f	ff		.
+	defb 0ffh		;0560	ff		.
+	defb 0ffh		;0561	ff		.
+	defb 0ffh		;0562	ff		.
+	defb 0ffh		;0563	ff		.
+	defb 0ffh		;0564	ff		.
+	defb 0ffh		;0565	ff		.
+	defb 0ffh		;0566	ff		.
+	defb 0ffh		;0567	ff		.
+	defb 0ffh		;0568	ff		.
+	defb 0ffh		;0569	ff		.
+	defb 0ffh		;056a	ff		.
+	defb 0ffh		;056b	ff		.
+	defb 0ffh		;056c	ff		.
+	defb 0ffh		;056d	ff		.
+	defb 0ffh		;056e	ff		.
+	defb 0ffh		;056f	ff		.
+	defb 0ffh		;0570	ff		.
+	defb 0ffh		;0571	ff		.
+	defb 0ffh		;0572	ff		.
+	defb 0ffh		;0573	ff		.
+	defb 0ffh		;0574	ff		.
+	defb 0ffh		;0575	ff		.
+	defb 0ffh		;0576	ff		.
+	defb 0ffh		;0577	ff		.
+	defb 0ffh		;0578	ff		.
+	defb 0ffh		;0579	ff		.
+	defb 0ffh		;057a	ff		.
+	defb 0ffh		;057b	ff		.
+	defb 0ffh		;057c	ff		.
+	defb 0ffh		;057d	ff		.
+	defb 0ffh		;057e	ff		.
+	defb 0ffh		;057f	ff		.
+	defb 0ffh		;0580	ff		.
+	defb 0ffh		;0581	ff		.
+	defb 0ffh		;0582	ff		.
+	defb 0ffh		;0583	ff		.
+	defb 0ffh		;0584	ff		.
+	defb 0ffh		;0585	ff		.
+	defb 0ffh		;0586	ff		.
+	defb 0ffh		;0587	ff		.
+	defb 0ffh		;0588	ff		.
+	defb 0ffh		;0589	ff		.
+	defb 0ffh		;058a	ff		.
+	defb 0ffh		;058b	ff		.
+	defb 0ffh		;058c	ff		.
+	defb 0ffh		;058d	ff		.
+	defb 0ffh		;058e	ff		.
+	defb 0ffh		;058f	ff		.
+	defb 0ffh		;0590	ff		.
+	defb 0ffh		;0591	ff		.
+XBIOS_filler_2_ff_end:
 	rst 38h			;0592	ff		.
 sub_0593h:
 	ld a,004h		;0593	3e 04		> .
 	out (0f8h),a		;0595	d3 f8		. .
 	ld hl,l074dh		;0597	21 4d 07	! M .
-	ld de,00066h		;059a	11 66 00	. f .
+	ld de,JB_NMI_handler	;059a	11 66 00	. f .
 	ld bc,00011h		;059d	01 11 00	. . .
 	ldir			;05a0	ed b0		. .
 	ld hl,05673h		;05a2	21 73 56	! s V
 	ld (0007ah),hl		;05a5	22 7a 00	" z .
 	ld hl,08381h		;05a8	21 81 83	! . .
 	ld (0007ch),hl		;05ab	22 7c 00	" | .
-	ld hl,00003h		;05ae	21 03 00	! . .
+	ld hl,JB_jump_bc_addr	;05ae	21 03 00	! . .
 	call sub_0baah		;05b1	cd aa 0b	. . .
 	ld (01123h),hl		;05b4	22 23 11	" # .
 	ld hl,0000eh		;05b7	21 0e 00	! . .
@@ -1344,7 +1496,7 @@ sub_0593h:
 	ld a,002h		;05cb	3e 02		> .
 	call sub_09e4h		;05cd	cd e4 09	. . .
 	pop hl			;05d0	e1		.
-	ld bc,00000h		;05d1	01 00 00	. . .
+	ld bc,JB_jump_bank2_env	;05d1	01 00 00	. . .
 	jp sub_0b42h		;05d4	c3 42 0b	. B .
 	call sub_0608h		;05d7	cd 08 06	. . .
 	ld hl,(01125h)		;05da	2a 25 11	* % .
@@ -1372,7 +1524,7 @@ sub_05f3h:
 	jr c,l0601h		;05fe	38 01		8 .
 	ex de,hl		;0600	eb		.
 l0601h:
-	ld bc,00005h		;0601	01 05 00	. . .
+	ld bc,JB_jump_de_addr	;0601	01 05 00	. . .
 	lddr			;0604	ed b8		. .
 	pop hl			;0606	e1		.
 	ret			;0607	c9		.
@@ -1384,7 +1536,7 @@ sub_0608h:
 	ld a,(0112ah)		;0610	3a 2a 11	: * .
 	call sub_0c74h		;0613	cd 74 0c	. t .
 	push af			;0616	f5		.
-	call 00003h		;0617	cd 03 00	. . .
+	call JB_jump_bc_addr	;0617	cd 03 00	. . .
 	pop af			;061a	f1		.
 	call sub_0c74h		;061b	cd 74 0c	. t .
 	pop af			;061e	f1		.
@@ -1429,7 +1581,7 @@ sub_0622h:
 	ld a,0c3h		;0662	3e c3		> .
 	ld de,l06cch		;0664	11 cc 06	. . .
 sub_0667h:
-	ld (00066h),a		;0667	32 66 00	2 f .
+	ld (JB_NMI_handler),a	;0667	32 66 00	2 f .
 	ld (00067h),de		;066a	ed 53 67 00	. S g .
 	push hl			;066e	e5		.
 	call sub_0622h		;066f	cd 22 06	. " .
@@ -1448,7 +1600,7 @@ sub_0667h:
 	ld b,(hl)		;0685	46		F
 	inc hl			;0686	23		#
 	push hl			;0687	e5		.
-	ld hl,00005h		;0688	21 05 00	! . .
+	ld hl,JB_jump_de_addr	;0688	21 05 00	! . .
 	add hl,de		;068b	19		.
 	ld (01127h),hl		;068c	22 27 11	" ' .
 	ld hl,0fffbh		;068f	21 fb ff	! . .
@@ -1561,7 +1713,7 @@ l0726h:
 	ld a,005h		;0736	3e 05		> .
 	out (0f8h),a		;0738	d3 f8		. .
 l073ah:
-	ld hl,(00061h)		;073a	2a 61 00	* a .
+	ld hl,(JB_cfg_memory_bank_4000)	;073a	2a 61 00	* a .
 	ld a,l			;073d	7d		}
 	out (0f1h),a		;073e	d3 f1		. .
 	ld a,h			;0740	7c		|
@@ -1644,7 +1796,7 @@ l07abh:
 	ld a,005h		;07bb	3e 05		> .
 	out (0f8h),a		;07bd	d3 f8		. .
 l07bfh:
-	ld hl,(00061h)		;07bf	2a 61 00	* a .
+	ld hl,(JB_cfg_memory_bank_4000)	;07bf	2a 61 00	* a .
 	ld a,l			;07c2	7d		}
 	out (0f1h),a		;07c3	d3 f1		. .
 	ld a,h			;07c5	7c		|
@@ -1662,7 +1814,7 @@ l07cbh:
 	di			;07d3	f3		.
 	push hl			;07d4	e5		.
 	push af			;07d5	f5		.
-	ld hl,(00061h)		;07d6	2a 61 00	* a .
+	ld hl,(JB_cfg_memory_bank_4000)	;07d6	2a 61 00	* a .
 	push hl			;07d9	e5		.
 	push de			;07da	d5		.
 	push bc			;07db	c5		.
@@ -1683,7 +1835,7 @@ l07eeh:
 	xor a			;07f5	af		.
 	bit 6,c			;07f6	cb 71		. q
 	jr nz,l0803h		;07f8	20 09		  .
-	ld hl,(00064h)		;07fa	2a 64 00	* d .
+	ld hl,(JB_cnt_flyback)	;07fa	2a 64 00	* d .
 	ld a,l			;07fd	7d		}
 	add a,b			;07fe	80		.
 l07ffh:
@@ -1692,7 +1844,7 @@ l07ffh:
 	add a,h			;0802	84		.
 l0803h:
 	ld c,a			;0803	4f		O
-	ld (00064h),a		;0804	32 64 00	2 d .
+	ld (JB_cnt_flyback),a	;0804	32 64 00	2 d .
 	ld hl,(010fdh)		;0807	2a fd 10	* . .
 	ld a,h			;080a	7c		|
 	or a			;080b	b7		.
@@ -1727,7 +1879,7 @@ l0837h:
 	pop de			;0838	d1		.
 	pop hl			;0839	e1		.
 l083ah:
-	ld (00061h),hl		;083a	22 61 00	" a .
+	ld (JB_cfg_memory_bank_4000),hl	;083a	22 61 00	" a .
 	ld a,l			;083d	7d		}
 	out (0f1h),a		;083e	d3 f1		. .
 	ld a,h			;0840	7c		|
@@ -1803,7 +1955,7 @@ sub_0898h:
 	ex (sp),hl		;089c	e3		.
 	push af			;089d	f5		.
 	push hl			;089e	e5		.
-	ld hl,(00061h)		;089f	2a 61 00	* a .
+	ld hl,(JB_cfg_memory_bank_4000)	;089f	2a 61 00	* a .
 	ex (sp),hl		;08a2	e3		.
 	push de			;08a3	d5		.
 	push bc			;08a4	c5		.
@@ -1815,7 +1967,7 @@ sub_08b1h:
 	push hl			;08b1	e5		.
 	ld hl,01079h		;08b2	21 79 10	! y .
 	ld (hl),080h		;08b5	36 80		6 .
-	ld hl,00000h		;08b7	21 00 00	! . .
+	ld hl,JB_jump_bank2_env	;08b7	21 00 00	! . .
 	ei			;08ba	fb		.
 	ret			;08bb	c9		.
 l08bch:
@@ -1856,7 +2008,7 @@ l08e9h:
 	ld a,h			;08f7	7c		|
 	or a			;08f8	b7		.
 	jr z,l08c3h		;08f9	28 c8		( .
-	ld de,00007h		;08fb	11 07 00	. . .
+	ld de,JB_jump_hl_addr	;08fb	11 07 00	. . .
 	add hl,de		;08fe	19		.
 	ld a,(0107ah)		;08ff	3a 7a 10	: z .
 	cp (hl)			;0902	be		.
@@ -1873,7 +2025,7 @@ l08e9h:
 	ld (hl),a		;0911	77		w
 	inc hl			;0912	23		#
 	ld (hl),001h		;0913	36 01		6 .
-	ld hl,00000h		;0915	21 00 00	! . .
+	ld hl,JB_jump_bank2_env	;0915	21 00 00	! . .
 	add hl,sp		;0918	39		9
 	ex de,hl		;0919	eb		.
 	di			;091a	f3		.
@@ -1966,7 +2118,7 @@ l097fh:
 	ld e,(hl)		;0989	5e		^
 	inc hl			;098a	23		#
 	ld d,(hl)		;098b	56		V
-	ld hl,00000h		;098c	21 00 00	! . .
+	ld hl,JB_jump_bank2_env	;098c	21 00 00	! . .
 	add hl,sp		;098f	39		9
 	di			;0990	f3		.
 	ex de,hl		;0991	eb		.
@@ -2001,7 +2153,7 @@ l09a7h:
 sub_09bah:
 	ld c,l			;09ba	4d		M
 	ld b,h			;09bb	44		D
-	ld hl,00000h		;09bc	21 00 00	! . .
+	ld hl,JB_jump_bank2_env	;09bc	21 00 00	! . .
 	add hl,sp		;09bf	39		9
 	di			;09c0	f3		.
 	ld sp,(010fbh)		;09c1	ed 7b fb 10	. { . .
@@ -2015,7 +2167,7 @@ sub_09bah:
 	ex af,af'		;09ce	08		.
 	push af			;09cf	f5		.
 	ex de,hl		;09d0	eb		.
-	ld hl,00000h		;09d1	21 00 00	! . .
+	ld hl,JB_jump_bank2_env	;09d1	21 00 00	! . .
 	add hl,sp		;09d4	39		9
 	ex de,hl		;09d5	eb		.
 	ld sp,hl		;09d6	f9		.
@@ -2027,7 +2179,7 @@ sub_09bah:
 	ld (hl),d		;09de	72		r
 	ret			;09df	c9		.
 sub_09e0h:
-	ld bc,(00061h)		;09e0	ed 4b 61 00	. K a .
+	ld bc,(JB_cfg_memory_bank_4000)	;09e0	ed 4b 61 00	. K a .
 sub_09e4h:
 	push hl			;09e4	e5		.
 	push de			;09e5	d5		.
@@ -2096,11 +2248,11 @@ l0a31h:
 	ei			;0a31	fb		.
 	ret			;0a32	c9		.
 sub_0a33h:
-	ld de,(00061h)		;0a33	ed 5b 61 00	. [ a .
+	ld de,(JB_cfg_memory_bank_4000)	;0a33	ed 5b 61 00	. [ a .
 	push de			;0a37	d5		.
 	call sub_0c25h		;0a38	cd 25 0c	. % .
 	pop hl			;0a3b	e1		.
-	ld (00061h),hl		;0a3c	22 61 00	" a .
+	ld (JB_cfg_memory_bank_4000),hl	;0a3c	22 61 00	" a .
 	ld a,l			;0a3f	7d		}
 	out (0f1h),a		;0a40	d3 f1		. .
 	ld a,h			;0a42	7c		|
@@ -2344,7 +2496,7 @@ l0b5eh:
 	call sub_0b98h		;0b92	cd 98 0b	. . .
 	jp l0b5eh		;0b95	c3 5e 0b	. ^ .
 sub_0b98h:
-	ld de,(00065h)		;0b98	ed 5b 65 00	. [ e .
+	ld de,(JB_max_flyback)	;0b98	ed 5b 65 00	. [ e .
 	cp e			;0b9c	bb		.
 	jr c,l0ba1h		;0b9d	38 02		8 .
 	ld a,e			;0b9f	7b		{
@@ -2374,14 +2526,14 @@ sub_0baah:
 	rst 30h			;0bbe	f7		.
 	di			;0bbf	f3		.
 	ld (00c10h),hl		;0bc0	22 10 0c	" . .
-	ld hl,(00061h)		;0bc3	2a 61 00	* a .
+	ld hl,(JB_cfg_memory_bank_4000)	;0bc3	2a 61 00	* a .
 	ex (sp),hl		;0bc6	e3		.
 	push de			;0bc7	d5		.
 	ld de,08388h		;0bc8	11 88 83	. . .
 	jr l0bd9h		;0bcb	18 0c		. .
 	di			;0bcd	f3		.
 	ld (00c10h),hl		;0bce	22 10 0c	" . .
-	ld hl,(00061h)		;0bd1	2a 61 00	* a .
+	ld hl,(JB_cfg_memory_bank_4000)	;0bd1	2a 61 00	* a .
 	ex (sp),hl		;0bd4	e3		.
 	push de			;0bd5	d5		.
 	ld de,08281h		;0bd6	11 81 82	. . .
@@ -2407,7 +2559,7 @@ l0bd9h:
 l0bedh:
 	di			;0bed	f3		.
 	ld (00c10h),hl		;0bee	22 10 0c	" . .
-	ld hl,(00061h)		;0bf1	2a 61 00	* a .
+	ld hl,(JB_cfg_memory_bank_4000)	;0bf1	2a 61 00	* a .
 	ex (sp),hl		;0bf4	e3		.
 	push de			;0bf5	d5		.
 	ld e,(hl)		;0bf6	5e		^
@@ -2422,14 +2574,14 @@ l0bedh:
 	ex de,hl		;0bff	eb		.
 l0c00h:
 	ld (00c14h),hl		;0c00	22 14 0c	" . .
-	ld (00061h),de		;0c03	ed 53 61 00	. S a .
+	ld (JB_cfg_memory_bank_4000),de	;0c03	ed 53 61 00	. S a .
 	ld a,e			;0c07	7b		{
 	out (0f1h),a		;0c08	d3 f1		. .
 	ld a,d			;0c0a	7a		z
 	out (0f2h),a		;0c0b	d3 f2		. .
 	pop af			;0c0d	f1		.
 	pop de			;0c0e	d1		.
-	ld hl,00000h		;0c0f	21 00 00	! . .
+	ld hl,JB_jump_bank2_env	;0c0f	21 00 00	! . .
 	ei			;0c12	fb		.
 	call 00c14h		;0c13	cd 14 0c	. . .
 	ex (sp),hl		;0c16	e3		.
@@ -2442,7 +2594,7 @@ sub_0c1bh:
 	inc hl			;0c1e	23		#
 	ld a,(de)		;0c1f	1a		.
 	ld (hl),a		;0c20	77		w
-	ld hl,00005h		;0c21	21 05 00	! . .
+	ld hl,JB_jump_de_addr	;0c21	21 05 00	! . .
 	add hl,de		;0c24	19		.
 sub_0c25h:
 	ld e,(hl)		;0c25	5e		^
@@ -2451,11 +2603,11 @@ sub_0c25h:
 	inc hl			;0c28	23		#
 	ld a,(hl)		;0c29	7e		~
 	inc hl			;0c2a	23		#
-	ld (00061h),a		;0c2b	32 61 00	2 a .
+	ld (JB_cfg_memory_bank_4000),a	;0c2b	32 61 00	2 a .
 	out (0f1h),a		;0c2e	d3 f1		. .
 	ld a,(hl)		;0c30	7e		~
 	inc hl			;0c31	23		#
-	ld (00062h),a		;0c32	32 62 00	2 b .
+	ld (JB_cfg_memory_bank_8000),a	;0c32	32 62 00	2 b .
 	out (0f2h),a		;0c35	d3 f2		. .
 	ex de,hl		;0c37	eb		.
 	jp (hl)			;0c38	e9		.
@@ -2463,7 +2615,7 @@ sub_0c25h:
 	inc hl			;0c3a	23		#
 	ld (hl),d		;0c3b	72		r
 	inc hl			;0c3c	23		#
-	ld de,(00061h)		;0c3d	ed 5b 61 00	. [ a .
+	ld de,(JB_cfg_memory_bank_4000)	;0c3d	ed 5b 61 00	. [ a .
 	ld (hl),e		;0c41	73		s
 	inc hl			;0c42	23		#
 	ld (hl),d		;0c43	72		r
@@ -2474,36 +2626,36 @@ sub_0c25h:
 	bit 6,h			;0c4a	cb 74		. t
 	exx			;0c4c	d9		.
 	jr z,l0c54h		;0c4d	28 05		( .
-	ld hl,(00063h)		;0c4f	2a 63 00	* c .
+	ld hl,(JB_cfg_memory_bank_c000)	;0c4f	2a 63 00	* c .
 	exx			;0c52	d9		.
 	ret			;0c53	c9		.
 l0c54h:
-	ld hl,(00062h)		;0c54	2a 62 00	* b .
+	ld hl,(JB_cfg_memory_bank_8000)	;0c54	2a 62 00	* b .
 	exx			;0c57	d9		.
 	ret			;0c58	c9		.
 l0c59h:
 	bit 6,h			;0c59	cb 74		. t
 	exx			;0c5b	d9		.
 	jr z,l0c63h		;0c5c	28 05		( .
-	ld hl,(00061h)		;0c5e	2a 61 00	* a .
+	ld hl,(JB_cfg_memory_bank_4000)	;0c5e	2a 61 00	* a .
 	exx			;0c61	d9		.
 	ret			;0c62	c9		.
 l0c63h:
-	ld hl,(00060h)		;0c63	2a 60 00	* ` .
+	ld hl,(JB_cfg_memory_bank_0000)	;0c63	2a 60 00	* ` .
 	exx			;0c66	d9		.
 	ret			;0c67	c9		.
 sub_0c68h:
 	push hl			;0c68	e5		.
-	ld hl,(00061h)		;0c69	2a 61 00	* a .
-	ld (00061h),a		;0c6c	32 61 00	2 a .
+	ld hl,(JB_cfg_memory_bank_4000)	;0c69	2a 61 00	* a .
+	ld (JB_cfg_memory_bank_4000),a	;0c6c	32 61 00	2 a .
 	out (0f1h),a		;0c6f	d3 f1		. .
 	ld a,l			;0c71	7d		}
 	pop hl			;0c72	e1		.
 	ret			;0c73	c9		.
 sub_0c74h:
 	push hl			;0c74	e5		.
-	ld hl,(00062h)		;0c75	2a 62 00	* b .
-	ld (00062h),a		;0c78	32 62 00	2 b .
+	ld hl,(JB_cfg_memory_bank_8000)	;0c75	2a 62 00	* b .
+	ld (JB_cfg_memory_bank_8000),a	;0c78	32 62 00	2 b .
 	out (0f2h),a		;0c7b	d3 f2		. .
 	ld a,l			;0c7d	7d		}
 	pop hl			;0c7e	e1		.
@@ -2511,12 +2663,12 @@ sub_0c74h:
 XBIOS_kl_movemem:
 	exx			;0c80	d9		.
 	push bc			;0c81	c5		.
-	ld bc,(00061h)		;0c82	ed 4b 61 00	. K a .
+	ld bc,(JB_cfg_memory_bank_4000)	;0c82	ed 4b 61 00	. K a .
 	ld a,l			;0c86	7d		}
-	ld (00061h),a		;0c87	32 61 00	2 a .
+	ld (JB_cfg_memory_bank_4000),a	;0c87	32 61 00	2 a .
 	out (0f1h),a		;0c8a	d3 f1		. .
 	ld a,e			;0c8c	7b		{
-	ld (00062h),a		;0c8d	32 62 00	2 b .
+	ld (JB_cfg_memory_bank_8000),a	;0c8d	32 62 00	2 b .
 	out (0f2h),a		;0c90	d3 f2		. .
 	exx			;0c92	d9		.
 l0c93h:
@@ -2547,7 +2699,7 @@ l0c93h:
 	jr nz,l0cc1h		;0cb7	20 08		  .
 	exx			;0cb9	d9		.
 	ld a,d			;0cba	7a		z
-	ld (00062h),a		;0cbb	32 62 00	2 b .
+	ld (JB_cfg_memory_bank_8000),a	;0cbb	32 62 00	2 b .
 	out (0f2h),a		;0cbe	d3 f2		. .
 	exx			;0cc0	d9		.
 l0cc1h:
@@ -2557,13 +2709,13 @@ l0cc1h:
 	jr nz,l0c93h		;0cc5	20 cc		  .
 	exx			;0cc7	d9		.
 	ld a,h			;0cc8	7c		|
-	ld (00061h),a		;0cc9	32 61 00	2 a .
+	ld (JB_cfg_memory_bank_4000),a	;0cc9	32 61 00	2 a .
 	out (0f1h),a		;0ccc	d3 f1		. .
 	exx			;0cce	d9		.
 	jr l0c93h		;0ccf	18 c2		. .
 l0cd1h:
 	exx			;0cd1	d9		.
-	ld (00061h),bc		;0cd2	ed 43 61 00	. C a .
+	ld (JB_cfg_memory_bank_4000),bc	;0cd2	ed 43 61 00	. C a .
 	ld a,c			;0cd6	79		y
 	out (0f1h),a		;0cd7	d3 f1		. .
 	ld a,b			;0cd9	78		x
@@ -2599,7 +2751,7 @@ l0cfah:
 	call sub_0a8dh		;0cff	cd 8d 0a	. . .
 	ex de,hl		;0d02	eb		.
 	ld de,0111ch		;0d03	11 1c 11	. . .
-	call 00003h		;0d06	cd 03 00	. . .
+	call JB_jump_bc_addr	;0d06	cd 03 00	. . .
 	pop hl			;0d09	e1		.
 	jp l0a55h		;0d0a	c3 55 0a	. U .
 sub_0d0dh:
@@ -2695,15 +2847,15 @@ l0d78h:
 	nop			;0d79	00		.
 	nop			;0d7a	00		.
 sub_0d7bh:
-	ld (00060h),hl		;0d7b	22 60 00	" ` .
-	ld (00062h),de		;0d7e	ed 53 62 00	. S b .
+	ld (JB_cfg_memory_bank_0000),hl	;0d7b	22 60 00	" ` .
+	ld (JB_cfg_memory_bank_8000),de	;0d7e	ed 53 62 00	. S b .
 	in a,(0f8h)		;0d82	db f8		. .
 	and 010h		;0d84	e6 10		. .
 	ld a,006h		;0d86	3e 06		> .
 	jr nz,l0d8bh		;0d88	20 01		  .
 	dec a			;0d8a	3d		=
 l0d8bh:
-	ld (00065h),a		;0d8b	32 65 00	2 e .
+	ld (JB_max_flyback),a	;0d8b	32 65 00	2 e .
 	ld a,001h		;0d8e	3e 01		> .
 	ld (0111eh),a		;0d90	32 1e 11	2 . .
 	ld hl,00a09h		;0d93	21 09 0a	! . .
@@ -2718,7 +2870,7 @@ l0d8bh:
 	out (0f4h),a		;0daa	d3 f4		. .
 	call sub_0dc3h		;0dac	cd c3 0d	. . .
 l0dafh:
-	ld (0007fh),a		;0daf	32 7f 00	2 . .
+	ld (JB_num_banks),a	;0daf	32 7f 00	2 . .
 	ld hl,sub_0d7bh		;0db2	21 7b 0d	! { .
 	ld (0111ah),hl		;0db5	22 1a 11	" . .
 	ld de,sub_0d7bh+1	;0db8	11 7c 0d	. | .
@@ -2768,7 +2920,7 @@ l0de9h:
 	inc d			;0df8	14		.
 	jr nz,l0dc8h		;0df9	20 cd		  .
 l0dfbh:
-	ld a,(00061h)		;0dfb	3a 61 00	: a .
+	ld a,(JB_cfg_memory_bank_4000)	;0dfb	3a 61 00	: a .
 	out (0f1h),a		;0dfe	d3 f1		. .
 	ld a,d			;0e00	7a		z
 	xor 080h		;0e01	ee 80		. .

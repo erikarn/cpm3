@@ -1,4 +1,29 @@
 
+; PCW 1.15 lower jumpblock in bank 0
+
+JB_jump_bank2_env: equ 0x0
+JB_jump_bc_addr: equ 0x03
+JB_jump_de_addr: equ 0x05
+JB_jump_hl_addr: equ 0x07
+JB_jump_screen_env: equ 0x08
+JB_jump_ix_addr: equ 0x0b
+JB_jump_iy_addr: equ 0x0d
+JB_jump_bank_env_ptr: equ 0x20
+JB_jump_bank_env: equ 0x28
+JB_jump_bank_env_hl: equ 0x28
+JB_jump_kernel_panic: equ 0x030
+JB_str_ascii_BREAK: equ 0x33
+JB_rst_38_intr: equ 0x38
+JB_str_ascii_PATCH: equ 0x3b
+JB_cfg_memory_bank_0000: equ 0x60
+JB_cfg_memory_bank_4000: equ 0x61
+JB_cfg_memory_bank_8000: equ 0x62
+JB_cfg_memory_bank_c000: equ 0x63
+JB_cnt_flyback: equ 0x64
+JB_max_flyback: equ 0x65
+JB_NMI_handler: equ 0x66
+JB_num_banks: equ 0x7f
+
 ; PCW 1.15 XBIOS
 
 dd_init: equ 0x80
@@ -101,3 +126,61 @@ XBIOS_msg_insert: equ 0x3d44
 XBIOS_msg_sysmsg: equ 0x4de8
 XBIOS_kl_movemem: equ 0x0c80
 
+
+; xbios-4
+
+; functions
+
+XBIOS_internal_km_set_key: equ 0x447e
+XBIOS_internal_km_set_expand: equ 0x41ae
+XBIOS_internal_km_set_speed: equ 0x447a
+XBIOS_internal_km_kt_get: equ 0x42e5
+
+; sys msg related funcs to figure out
+; XBIOS_msg_sysmsg
+; 4e63
+; 45d3
+; 4f32
+; 4e11 - checks the str for ff, exits when hit
+; 4f40 - write str until ff, no expansion?
+
+; 4e45: is this loading some offset value and adding it to hl,
+; then doing some expansion?
+
+XBIOS_write_space: equ 0x4f30
+XBIOS_write_char: equ 0x4f32
+XBIOS_write_str_no_expansion: equ 0x4f40
+
+; XBIOS_msg_sysmsg:
+; stores 0xba09 -> 0x5704, and then uses this to write to
+; my guess is it's using 0x5704 as the "output function",
+; so callers to XBIOS_write_* above have to set said
+; output function first in 0x5704 and then it'll write
+; to that.
+
+; 0x0242 - 'drive not ready' string
+
+; 0x4d90 -> 0x4de7 - .. what's this? it doesn't look
+; like valid code?
+
+
+; variables
+
+
+; XBIOS_ca_sa_params state
+XBIOS_internal_ca_sa_stopbits: equ 0x5875
+XBIOS_internal_ca_sa_parity: equ 0x5874
+XBIOS_internal_ca_sa_tx_data_bits: equ 0x5876
+XBIOS_internal_ca_sa_rx_data_bits: equ 0x5877
+; unknown
+XBIOS_internal_ca_sa_reg_bc: equ 0x5870
+; unknown
+XBIOS_internal_ca_sa_reg_a: equ 0x5872
+
+
+XBIOS_te_viewport_left: equ 0x5825
+XBIOS_te_viewport_top: equ 0x5826
+XBIOS_te_viewport_width: equ 0x5821
+XBIOS_te_viewport_height: equ 0x5822
+XBIOS_te_viewport_cursor_col: equ 0x5828
+XBIOS_te_viewport_cursor_row: equ 0x5829
