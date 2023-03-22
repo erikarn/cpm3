@@ -19,35 +19,57 @@ XBIOS_unknown_3_str: start 0x0332 end 0x0334 type bytedata
 XBIOS_please_disk_drive_any_key_str: start 0x0335 end 0x035a type bytedata
 XBIOS_not_ready_str: start 0x035b end 0x0367 type bytedata
 XBIOS_newline_str: start 0x0368 end 0x036a type bytedata
-XBIOS_unknown_4_str: start 0x036b end 0x037b type bytedata
-
-; more stuff
-
+XBIOS_unknown_4_str: start 0x036b end 0x0375 type bytedata
+XBIOS_unknown_6_str: start 0x0376 end 0x0378 type bytedata
+XBIOS_rive_str: start 0x0379 end 0x037d type bytedata
+XBIOS_track_str: start 0x037e end 0x0386 type bytedata
+XBIOS_or_str: start 0x0387 end 0x0389 type bytedata
+XBIOS_the_str: start 0x038a end 0x038e type bytedata
+XBIOS_ress_str: start 0x038f end 0x0394 type bytedata
+XBIOS_comma_space_str: start 0x0395 end 0x0397 type bytedata
+XBIOS_e_space_str: start 0x0398 end 0x039a type bytedata
+XBIOS_is_str: start 0x039b end 0x039d type bytedata
+XBIOS_data_str: start 0x039e end 0x03a2 type bytedata
 XBIOS_retry_ignore_cancel_str: start 0x03a3 end 0x3ba type bytedata
-
-; more stuff
-
-XBIOS_out_of_paper_str: start 0x03e8 end 0x3f7 type bytedata
+XBIOS_sector_error_str: start 0x03bb end 0x03c5 type bytedata
+XBIOS_unknown_7_str: start 0x03c6 end 0x03c9 type bytedata
+XBIOS_unknown_8_str: start 0x03ca end 0x03cf type bytedata
+XBIOS_active_str: start 0x03d0 end 0x03da type bytedata
+XBIOS_on_str: start 0x03db end 0x03e0 type bytedata
+XBIOS_off_str: start 0x03e1 end 0x03e6 type bytedata
+XBIOS_out_of_paper_str: start 0x03e7 end 0x3f7 type bytedata
 XBIOS_waiting_for_paper_str: start 0x3f8 end 0x40d type bytedata
 XBIOS_bail_bar_out_str: start 0x040e end 0x41e type bytedata
 XBIOS_underrun_str: start 0x041f end 0x042b type bytedata
 XBIOS_printer_ram_str: start 0x042c end 0x043b type bytedata
-
 XBIOS_bad_command_str: start 0x043c end 0x044b type bytedata
 XBIOS_print_error_str: start 0x044c end 0x045b type bytedata
 XBIOS_no_printer_str: start 0x045c end 0x46a type bytedata
 XBIOS_printer_line_sel_str: start 0x046b end 0x483 type bytedata
 XBIOS_unknown_5_str: start 0x0484 end 0x048c type bytedata
-XBIOS_error_str: start 0x048d end 0x0493 type bytedata
-
+XBIOS_error_str: start 0x048d end 0x0494 type bytedata
+XBIOS_unknown_9_str: start 0x0495 end 0x049a type bytedata
 XBIOS_error_RESET_str: start 0x49b end 0x4b0 type bytedata
-
+XBIOS_unknown_10_str: start 0x04b1 end 0x04b6 type bytedata
+;XBIOS_unknown_11_str: start 0x04b7 end 0x04b7 type bytedata
+XBIOS_at_line_colon_str: start 0x04b8 end 0x04c1 type bytedata
+XBIOS_top_of_form_str: start 0x04c2 end 0x04cd type bytedata
+XBIOS_unknown_12_str: start 0x04ce end 0x04d0 type bytedata
 XBIOS_draft_str: start 0x04d1 end 0x04d7 type bytedata
 XBIOS_high_str: start 0x04d8 end 0x04de type bytedata
-
-XBIOS_off_str: start 0x04f1 end 0x04f5 type bytedata
-XBIOS_on_str: start 0x04f6 end 0x04f9 type bytedata
+XBIOS_unknown_13_str: start 0x04df end 0x04e1 type bytedata
+XBIOS_unknown_14_str: start 0x04e2 end 0x04e4 type bytedata
+XBIOS_unknown_15_str: start 0x04e5 end 0x04e7 type bytedata
+XBIOS_unknown_16_str: start 0x04e8 end 0x04ea type bytedata
+XBIOS_unknown_17_str: start 0x04eb end 0x04ed type bytedata
+XBIOS_unknown_18_str: start 0x04ee end 0x04f0 type bytedata
+XBIOS_colon_off_str: start 0x04f1 end 0x04f5 type bytedata
+XBIOS_colon_on_str: start 0x04f6 end 0x04fa type bytedata
+XBIOS_po_defeat_str: start 0x04fb end 0x0504 type bytedata
 XBIOS_hex_str: start 0x0505 end 0x0508 type bytedata
 XBIOS_quality_str: start 0x0509 end 0x511 type bytedata
+XBIOS_unknown_19_str: start 0x0512 end 0x051d type bytedata
 
+; not sure if this is filler or temporary space!
+XBIOS_filler_2_ff: start 0x051e end 0x0592 type bytedata
 ; strings seem to end at 0x0593
