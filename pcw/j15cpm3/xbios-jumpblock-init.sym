@@ -163,6 +163,18 @@ XBIOS_write_str_no_expansion: equ 0x4f40
 ; 0x4d90 -> 0x4de7 - .. what's this? it doesn't look
 ; like valid code?
 
+XBIOS_internal_standalone_cen_is_printer_ready: equ 0x3dc4
+XBIOS_internal_cps8256_cen_is_printer_ready: equ 0x3dc4
+
+XBIOS_internal_standalone_cen_write_byte: equ 0x3dae
+
+; 3d8c: looks like a UART init routine? See what it's
+; calling and what HL is pointing to
+
+; 3f2c: outputting h, l and h to an IO port, then
+; reading from it, and AND'ing 0xf8.  See what's calling it,
+; I wonder if it's a printer or UART. (eg 0x02, 0xa5, 0x02 sent
+; to the register as called from around 3f12.
 
 ; variables
 

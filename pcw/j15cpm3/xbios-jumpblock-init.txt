@@ -21,6 +21,7 @@ XBIOS_km_set_expand:	equ 0x3d70
 XBIOS_km_set_speed:	equ 0x3d73
 XBIOS_km_kt_get:	equ 0x3d76
 XBIOS_km_kt_put:	equ 0x3d79
+XBIOS_internal_standalone_cen_write_byte:	equ 0x3dae
 XBIOS_find_fid:	equ 0x3dcb
 XBIOS_svc_d_changed:	equ 0x3df0
 XBIOS_dd_calldriver:	equ 0x3e0a
@@ -179,7 +180,7 @@ XBIOS_cd_coldboot:
 	and 001h		;0144	e6 01		. .
 	ld (01131h),a		;0146	32 31 11	2 1 .
 	call nz,03d7ch		;0149	c4 7c 3d	. | =
-	call 03daeh		;014c	cd ae 3d	. . =
+	call XBIOS_internal_standalone_cen_write_byte	;014c	cd ae 3d	. . =
 	call XBIOS_dd_init	;014f	cd 10 54	. . T
 	call 053d6h		;0152	cd d6 53	. . S
 	sbc a,a			;0155	9f		.

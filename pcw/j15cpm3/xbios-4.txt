@@ -91,9 +91,9 @@ l3cf2h:
 	jp l3d1ch		;3cf2	c3 1c 3d	. . =
 	jp l3d1bh		;3cf5	c3 1b 3d	. . =
 	jp l3d1bh		;3cf8	c3 1b 3d	. . =
-	jp l3dc4h		;3cfb	c3 c4 3d	. . =
+	jp XBIOS_internal_standalone_cen_is_printer_ready	;3cfb	c3 c4 3d	. . =
 	jp l3db5h		;3cfe	c3 b5 3d	. . =
-	jp l3dc4h		;3d01	c3 c4 3d	. . =
+	jp XBIOS_internal_standalone_cen_is_printer_ready	;3d01	c3 c4 3d	. . =
 	jp l3db5h		;3d04	c3 b5 3d	. . =
 	jp l3d1ch		;3d07	c3 1c 3d	. . =
 	jp l3d1bh		;3d0a	c3 1b 3d	. . =
@@ -203,12 +203,13 @@ l3da3h:
 	ret z			;3dab	c8		.
 	scf			;3dac	37		7
 	ret			;3dad	c9		.
+XBIOS_internal_standalone_cen_write_byte:
 	out (087h),a		;3dae	d3 87		. .
 	out (084h),a		;3db0	d3 84		. .
 	out (087h),a		;3db2	d3 87		. .
 	ret			;3db4	c9		.
 l3db5h:
-	call l3dc4h		;3db5	cd c4 3d	. . =
+	call XBIOS_internal_standalone_cen_is_printer_ready	;3db5	cd c4 3d	. . =
 	jr nc,l3db5h		;3db8	30 fb		0 .
 	ld a,c			;3dba	79		y
 	out (087h),a		;3dbb	d3 87		. .
@@ -217,7 +218,8 @@ l3db5h:
 	out (087h),a		;3dc0	d3 87		. .
 	ei			;3dc2	fb		.
 	ret			;3dc3	c9		.
-l3dc4h:
+XBIOS_internal_standalone_cen_is_printer_ready:
+XBIOS_internal_cps8256_cen_is_printer_ready:
 	in a,(084h)		;3dc4	db 84		. .
 	and 001h		;3dc6	e6 01		. .
 	sub 001h		;3dc8	d6 01		. .
