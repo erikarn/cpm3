@@ -7,8 +7,13 @@ JB_jump_bc_addr:	equ 0x0003
 JB_jump_de_addr:	equ 0x0005
 JB_jump_hl_addr:	equ 0x0007
 JB_jump_screen_env:	equ 0x0008
+JB_hw_bitflags:	equ 0x0040
+JB_drive_B_present:	equ 0x0042
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
+; Used by XBIOS_write_char as a function pointer to
+; call for each character being writeen.
+XBIOS_write_char_out_func:	equ 0x5704
 XBIOS_te_viewport_width:	equ 0x5821
 XBIOS_te_viewport_height:	equ 0x5822
 XBIOS_te_viewport_left:	equ 0x5825
@@ -37,7 +42,7 @@ l3c68h:
 	pop af			;3c7c	f1		.
 	rra			;3c7d	1f		.
 	jr c,l3c88h		;3c7e	38 08		8 .
-	ld a,(00040h)		;3c80	3a 40 00	: @ .
+	ld a,(JB_hw_bitflags)	;3c80	3a 40 00	: @ .
 	and 020h		;3c83	e6 20		.  
 	jr nz,l3c98h		;3c85	20 11		  .
 	ret			;3c87	c9		.
@@ -45,7 +50,7 @@ l3c88h:
 	ld de,l3cc8h		;3c88	11 c8 3c	. . <
 	call 0f017h		;3c8b	cd 17 f0	. . .
 	ld de,l3cddh		;3c8e	11 dd 3c	. . <
-	ld a,(00040h)		;3c91	3a 40 00	: @ .
+	ld a,(JB_hw_bitflags)	;3c91	3a 40 00	: @ .
 	and 020h		;3c94	e6 20		.  
 	jr z,l3c9bh		;3c96	28 03		( .
 l3c98h:
@@ -83,18 +88,18 @@ l3cddh:
 	jp l3d1ch		;3cdd	c3 1c 3d	. . =
 	jp l3d1bh		;3ce0	c3 1b 3d	. . =
 	jp l3d1bh		;3ce3	c3 1b 3d	. . =
-	jp l3da3h		;3ce6	c3 a3 3d	. . =
+	jp XBIOS_internal_cps8256_cen_is_printer_ready	;3ce6	c3 a3 3d	. . =
 	jp l3d8ch		;3ce9	c3 8c 3d	. . =
-	jp l3da3h		;3cec	c3 a3 3d	. . =
+	jp XBIOS_internal_cps8256_cen_is_printer_ready	;3cec	c3 a3 3d	. . =
 	jp l3d8ch		;3cef	c3 8c 3d	. . =
 l3cf2h:
 	jp l3d1ch		;3cf2	c3 1c 3d	. . =
 	jp l3d1bh		;3cf5	c3 1b 3d	. . =
 	jp l3d1bh		;3cf8	c3 1b 3d	. . =
 	jp XBIOS_internal_standalone_cen_is_printer_ready	;3cfb	c3 c4 3d	. . =
-	jp l3db5h		;3cfe	c3 b5 3d	. . =
+	jp XBIOS_internal_standalone_cen_wait_write_byte	;3cfe	c3 b5 3d	. . =
 	jp XBIOS_internal_standalone_cen_is_printer_ready	;3d01	c3 c4 3d	. . =
-	jp l3db5h		;3d04	c3 b5 3d	. . =
+	jp XBIOS_internal_standalone_cen_wait_write_byte	;3d04	c3 b5 3d	. . =
 	jp l3d1ch		;3d07	c3 1c 3d	. . =
 	jp l3d1bh		;3d0a	c3 1b 3d	. . =
 	jp l3d1bh		;3d0d	c3 1b 3d	. . =
@@ -180,7 +185,7 @@ l3d85h:
 l3d8bh:
 	pop bc			;3d8b	c1		.
 l3d8ch:
-	call l3da3h		;3d8c	cd a3 3d	. . =
+	call XBIOS_internal_cps8256_cen_is_printer_ready	;3d8c	cd a3 3d	. . =
 	jr nc,l3d8ch		;3d8f	30 fb		0 .
 	ld a,c			;3d91	79		y
 	out (0e8h),a		;3d92	d3 e8		. .
@@ -195,7 +200,13 @@ l3d9fh:
 	ret pe			;3da0	e8		.
 	dec b			;3da1	05		.
 	ld l,b			;3da2	68		h
-l3da3h:
+;
+; Check if the CPS8256 printer port is ready.
+;
+; This returns C=true flag if the port is ready.
+; Corrupts: A.
+;
+XBIOS_internal_cps8256_cen_is_printer_ready:
 	ld a,010h		;3da3	3e 10		> .
 	out (0e3h),a		;3da5	d3 e3		. .
 	in a,(0e3h)		;3da7	db e3		. .
@@ -203,14 +214,30 @@ l3da3h:
 	ret z			;3dab	c8		.
 	scf			;3dac	37		7
 	ret			;3dad	c9		.
-XBIOS_internal_standalone_cen_write_byte:
+;
+; Write the given config byte to the standalone centronics printer port.
+; (XXX TODO?)
+;
+; This writes the byte in A to the standalone centronics
+; printer port config port (0x84), rather than the data port
+; (0x85.)
+;
+XBIOS_internal_standalone_cen_config:
 	out (087h),a		;3dae	d3 87		. .
 	out (084h),a		;3db0	d3 84		. .
 	out (087h),a		;3db2	d3 87		. .
 	ret			;3db4	c9		.
-l3db5h:
+;
+; Write the given byte to the standalone centronics port.
+;
+; This will wait until the port is ready, and then
+; send the byte in A.
+;
+; Corrupts: C.
+;
+XBIOS_internal_standalone_cen_wait_write_byte:
 	call XBIOS_internal_standalone_cen_is_printer_ready	;3db5	cd c4 3d	. . =
-	jr nc,l3db5h		;3db8	30 fb		0 .
+	jr nc,XBIOS_internal_standalone_cen_wait_write_byte	;3db8	30 fb		0 .
 	ld a,c			;3dba	79		y
 	out (087h),a		;3dbb	d3 87		. .
 	di			;3dbd	f3		.
@@ -218,8 +245,13 @@ l3db5h:
 	out (087h),a		;3dc0	d3 87		. .
 	ei			;3dc2	fb		.
 	ret			;3dc3	c9		.
+;
+; Check if the standalone printer port is ready.
+;
+; This returns Z=true if the port is ready, Z=false otherwise.
+; Corrupts: A.
+;
 XBIOS_internal_standalone_cen_is_printer_ready:
-XBIOS_internal_cps8256_cen_is_printer_ready:
 	in a,(084h)		;3dc4	db 84		. .
 	and 001h		;3dc6	e6 01		. .
 	sub 001h		;3dc8	d6 01		. .
@@ -3029,7 +3061,7 @@ unknown_1_blk_end:
 XBIOS_msg_sysmsg:
 	ld hl,0ba09h		;4de8	21 09 ba	! . .
 l4debh:
-	ld (05704h),hl		;4deb	22 04 57	" . W
+	ld (XBIOS_write_char_out_func),hl	;4deb	22 04 57	" . W
 sub_4deeh:
 	push bc			;4dee	c5		.
 	and 07fh		;4def	e6 7f		. .
@@ -3246,7 +3278,7 @@ l4f18h:
 	pop bc			;4f1e	c1		.
 	ret			;4f1f	c9		.
 l4f20h:
-	ld a,(00042h)		;4f20	3a 42 00	: B .
+	ld a,(JB_drive_B_present)	;4f20	3a 42 00	: B .
 	or a			;4f23	b7		.
 	ret z			;4f24	c8		.
 l4f25h:
@@ -3255,19 +3287,41 @@ l4f25h:
 	call XBIOS_write_char	;4f28	cd 32 4f	. 2 O
 	ld a,03ah		;4f2b	3e 3a		> :
 	call XBIOS_write_char	;4f2d	cd 32 4f	. 2 O
+;
+; Write the space character via XBIOS_write_char.
+;
+; Corrupts: A.
 XBIOS_write_space:
 	ld a,020h		;4f30	3e 20		>  
+;
+; Write the given character in A.
+;
+; It uses whatever function is in 0x5704 to do the work;
+; so callers need to initialise that address first with
+; a routine to actually output the character.
+;
+; Saves: BC, DE, HL.
+; Corrupts: AF.
+;
 XBIOS_write_char:
 	push bc			;4f32	c5		.
 	push de			;4f33	d5		.
 	push hl			;4f34	e5		.
 	ld c,a			;4f35	4f		O
-	ld hl,(05704h)		;4f36	2a 04 57	* . W
+	ld hl,(XBIOS_write_char_out_func)	;4f36	2a 04 57	* . W
 	call JB_jump_hl_addr	;4f39	cd 07 00	. . .
 	pop hl			;4f3c	e1		.
 	pop de			;4f3d	d1		.
 	pop bc			;4f3e	c1		.
 	ret			;4f3f	c9		.
+;
+; Write the given string pointed to at HL to the current
+; output device via XBIOS_write_char.
+;
+; The string isn't expanded with tokens, and is terminated.
+; with 0xff.
+; Corrupts: HL at least, likely AF, BC, DE too.
+;
 XBIOS_write_str_no_expansion:
 	ld a,(hl)		;4f40	7e		~
 	inc hl			;4f41	23		#
@@ -3330,7 +3384,7 @@ sub_4f97h:
 l4fa2h:
 	call sub_4f4fh		;4fa2	cd 4f 4f	. O O
 	ret nc			;4fa5	d0		.
-	ld a,(00042h)		;4fa6	3a 42 00	: B .
+	ld a,(JB_drive_B_present)	;4fa6	3a 42 00	: B .
 	or a			;4fa9	b7		.
 	jr nz,sub_4fbch		;4faa	20 10		  .
 	ld a,(05707h)		;4fac	3a 07 57	: . W
@@ -3862,7 +3916,7 @@ sub_5305h:
 	or a			;531a	b7		.
 	ret			;531b	c9		.
 sub_531ch:
-	call sub_54feh		;531c	cd fe 54	. . T
+	call XBIOS_internal_drive_get_info	;531c	cd fe 54	. . T
 	ld a,(hl)		;531f	7e		~
 	and 00ch		;5320	e6 0c		. .
 	scf			;5322	37		7
@@ -3902,7 +3956,7 @@ l5353h:
 	ret			;5358	c9		.
 sub_5359h:
 	push hl			;5359	e5		.
-	call sub_54feh		;535a	cd fe 54	. . T
+	call XBIOS_internal_drive_get_info	;535a	cd fe 54	. . T
 	bit 3,(hl)		;535d	cb 5e		. ^
 	pop hl			;535f	e1		.
 	scf			;5360	37		7
@@ -3911,7 +3965,13 @@ sub_5359h:
 	rla			;5365	17		.
 	ld a,009h		;5366	3e 09		> .
 	ret			;5368	c9		.
-	call sub_54feh		;5369	cd fe 54	. . T
+; Fetch the drive capability flags for Drive A or B.
+;
+; call: C=0 for drive A, C=1 for drive B
+; ret: drive HW flags in bits 0..3, 5 of A.
+;
+XBIOS_internal_drive_get_capabilities:
+	call XBIOS_internal_drive_get_info	;5369	cd fe 54	. . T
 	ld a,(hl)		;536c	7e		~
 	and 02fh		;536d	e6 2f		. /
 	ret			;536f	c9		.
@@ -3957,7 +4017,7 @@ sub_53a4h:
 	and 003h		;53a9	e6 03		. .
 	jr nz,sub_53c0h		;53ab	20 13		  .
 	push hl			;53ad	e5		.
-	call sub_54feh		;53ae	cd fe 54	. . T
+	call XBIOS_internal_drive_get_info	;53ae	cd fe 54	. . T
 	res 6,(hl)		;53b1	cb b6		. .
 	pop hl			;53b3	e1		.
 	jr sub_53c0h		;53b4	18 0a		. .
@@ -4066,7 +4126,7 @@ l5446h:
 	ld (0584eh),a		;5447	32 4e 58	2 N X
 	ret			;544a	c9		.
 l544bh:
-	ld hl,00040h		;544b	21 40 00	! @ .
+	ld hl,JB_hw_bitflags	;544b	21 40 00	! @ .
 	set 0,(hl)		;544e	cb c6		. .
 	ld c,000h		;5450	0e 00		. .
 	call sub_54cdh		;5452	cd cd 54	. . T
@@ -4106,7 +4166,7 @@ l5480h:
 	inc de			;5484	13		.
 	ld h,a			;5485	67		g
 	ld (05863h),hl		;5486	22 63 58	" c X
-	call sub_54feh		;5489	cd fe 54	. . T
+	call XBIOS_internal_drive_get_info	;5489	cd fe 54	. . T
 	push hl			;548c	e5		.
 	ld a,b			;548d	78		x
 	or a			;548e	b7		.
@@ -4175,14 +4235,26 @@ sub_54efh:
 	push de			;54f0	d5		.
 	push bc			;54f1	c5		.
 	push af			;54f2	f5		.
-	call sub_54feh		;54f3	cd fe 54	. . T
+	call XBIOS_internal_drive_get_info	;54f3	cd fe 54	. . T
 	call sub_549fh		;54f6	cd 9f 54	. . T
 	pop af			;54f9	f1		.
 	pop bc			;54fa	c1		.
 	pop de			;54fb	d1		.
 	pop hl			;54fc	e1		.
 	ret			;54fd	c9		.
-sub_54feh:
+;
+; Fetch the drive information table for the
+; given drive.
+; It only supports C=0..3 as it masks
+; it with 0x3 first before doing the table
+; lookup math.
+;
+; Note: it uses the table at 0x5847.
+;
+; call: C=0 .. 3 for drives A..D
+; return: drive information address in HL.
+;
+XBIOS_internal_drive_get_info:
 	ld a,c			;54fe	79		y
 	and 003h		;54ff	e6 03		. .
 	ld l,a			;5501	6f		o
@@ -4198,7 +4270,7 @@ sub_54feh:
 	ret			;550d	c9		.
 XBIOS_dd_l_seek:
 	push hl			;550e	e5		.
-	call sub_54feh		;550f	cd fe 54	. . T
+	call XBIOS_internal_drive_get_info	;550f	cd fe 54	. . T
 	call sub_5517h		;5512	cd 17 55	. . U
 	pop hl			;5515	e1		.
 	ret			;5516	c9		.
@@ -4243,7 +4315,7 @@ l5543h:
 	cp a			;5548	bf		.
 	ret			;5549	c9		.
 sub_554ah:
-	call sub_54feh		;554a	cd fe 54	. . T
+	call XBIOS_internal_drive_get_info	;554a	cd fe 54	. . T
 sub_554dh:
 	call sub_5551h		;554d	cd 51 55	. Q U
 	ret z			;5550	c8		.
@@ -4397,7 +4469,7 @@ XBIOS_dd_l_write:
 	ld hl,JB_jump_hl_addr	;5621	21 07 00	! . .
 	add hl,de		;5624	19		.
 	ld c,(hl)		;5625	4e		N
-	call sub_54feh		;5626	cd fe 54	. . T
+	call XBIOS_internal_drive_get_info	;5626	cd fe 54	. . T
 	ld bc,00002h		;5629	01 02 00	. . .
 	add hl,bc		;562c	09		.
 	ld a,(hl)		;562d	7e		~
@@ -4542,3 +4614,6 @@ sub_56f7h:
 	ld a,(05867h)		;56ff	3a 67 58	: g X
 	or a			;5702	b7		.
 	ret			;5703	c9		.
+; Used by XBIOS_write_char as a function pointer to
+; call for each character being writeen.
+XBIOS_write_char_out_func:

@@ -6,6 +6,8 @@ JB_jump_bank2_env:	equ 0x0000
 JB_jump_bc_addr:	equ 0x0003
 JB_jump_de_addr:	equ 0x0005
 JB_jump_hl_addr:	equ 0x0007
+JB_hw_bitflags:	equ 0x0040
+JB_drive_B_present:	equ 0x0042
 JB_cfg_memory_bank_0000:	equ 0x0060
 JB_cfg_memory_bank_4000:	equ 0x0061
 JB_cfg_memory_bank_8000:	equ 0x0062
@@ -14,6 +16,8 @@ JB_cnt_flyback:	equ 0x0064
 JB_max_flyback:	equ 0x0065
 JB_NMI_handler:	equ 0x0066
 JB_num_banks:	equ 0x007f
+; xbios jumpblock memory variables
+XBIOS_ca_sa_var_uart_present:	equ 0x1131
 XBIOS_msg_retrymsg:	equ 0x3d1d
 XBIOS_msg_insert:	equ 0x3d44
 XBIOS_km_set_key:	equ 0x3d6d
@@ -21,7 +25,15 @@ XBIOS_km_set_expand:	equ 0x3d70
 XBIOS_km_set_speed:	equ 0x3d73
 XBIOS_km_kt_get:	equ 0x3d76
 XBIOS_km_kt_put:	equ 0x3d79
-XBIOS_internal_standalone_cen_write_byte:	equ 0x3dae
+;
+; Write the given config byte to the standalone centronics printer port.
+; (XXX TODO?)
+;
+; This writes the byte in A to the standalone centronics
+; printer port config port (0x84), rather than the data port
+; (0x85.)
+;
+XBIOS_internal_standalone_cen_config:	equ 0x3dae
 XBIOS_find_fid:	equ 0x3dcb
 XBIOS_svc_d_changed:	equ 0x3df0
 XBIOS_dd_calldriver:	equ 0x3e0a
@@ -46,6 +58,12 @@ XBIOS_dd_login:	equ 0x519d
 XBIOS_dd_sel_format:	equ 0x51f6
 XBIOS_dd_l_xdpb:	equ 0x5208
 XBIOS_dd_l_dpb:	equ 0x524a
+; Fetch the drive capability flags for Drive A or B.
+;
+; call: C=0 for drive A, C=1 for drive B
+; ret: drive HW flags in bits 0..3, 5 of A.
+;
+XBIOS_internal_drive_get_capabilities:	equ 0x5369
 XBIOS_dd_drive_status:	equ 0x53de
 XBIOS_dd_init:	equ 0x5410
 XBIOS_dd_setup:	equ 0x546d
@@ -178,14 +196,14 @@ XBIOS_cd_coldboot:
 	call XBIOS_ca_sa_init	;0140	cd bd 3e	. . >
 	sbc a,a			;0143	9f		.
 	and 001h		;0144	e6 01		. .
-	ld (01131h),a		;0146	32 31 11	2 1 .
+	ld (XBIOS_ca_sa_var_uart_present),a	;0146	32 31 11	2 1 .
 	call nz,03d7ch		;0149	c4 7c 3d	. | =
-	call XBIOS_internal_standalone_cen_write_byte	;014c	cd ae 3d	. . =
+	call XBIOS_internal_standalone_cen_config	;014c	cd ae 3d	. . =
 	call XBIOS_dd_init	;014f	cd 10 54	. . T
 	call 053d6h		;0152	cd d6 53	. . S
 	sbc a,a			;0155	9f		.
-	ld (00042h),a		;0156	32 42 00	2 B .
-	ld a,(01131h)		;0159	3a 31 11	: 1 .
+	ld (JB_drive_B_present),a	;0156	32 42 00	2 B .
+	ld a,(XBIOS_ca_sa_var_uart_present)	;0159	3a 31 11	: 1 .
 	call 03c62h		;015c	cd 62 3c	. b <
 	call 0491eh		;015f	cd 1e 49	. . I
 	call sub_01a2h		;0162	cd a2 01	. . .
@@ -193,7 +211,7 @@ XBIOS_cd_coldboot:
 	call sub_0175h		;0168	cd 75 01	. u .
 	call 00178h		;016b	cd 78 01	. x .
 	call 04474h		;016e	cd 74 44	. t D
-	ld a,(01131h)		;0171	3a 31 11	: 1 .
+	ld a,(XBIOS_ca_sa_var_uart_present)	;0171	3a 31 11	: 1 .
 	ret			;0174	c9		.
 sub_0175h:
 	rst 0			;0175	c7		.
@@ -202,22 +220,22 @@ sub_0175h:
 	ld b,h			;017a	44		D
 XBIOS_cd_info:
 	ld c,000h		;017b	0e 00		. .
-	call 05369h		;017d	cd 69 53	. i S
+	call XBIOS_internal_drive_get_capabilities	;017d	cd 69 53	. i S
 	ld e,a			;0180	5f		_
 	inc c			;0181	0c		.
-	call 05369h		;0182	cd 69 53	. i S
+	call XBIOS_internal_drive_get_capabilities	;0182	cd 69 53	. i S
 	ld d,a			;0185	57		W
 	ld a,(JB_num_banks)	;0186	3a 7f 00	: . .
 	ld b,a			;0189	47		G
-	ld a,(01131h)		;018a	3a 31 11	: 1 .
+	ld a,(XBIOS_ca_sa_var_uart_present)	;018a	3a 31 11	: 1 .
 	rra			;018d	1f		.
 	sbc a,a			;018e	9f		.
 	ld c,a			;018f	4f		O
-	ld a,(00042h)		;0190	3a 42 00	: B .
+	ld a,(JB_drive_B_present)	;0190	3a 42 00	: B .
 	ld hl,0ffe8h		;0193	21 e8 ff	! . .
 	ret			;0196	c9		.
 XBIOS_cd_version:
-	ld hl,(00040h)		;0197	2a 40 00	* @ .
+	ld hl,(JB_hw_bitflags)	;0197	2a 40 00	* @ .
 	ld a,001h		;019a	3e 01		> .
 	ld h,000h		;019c	26 00		& .
 	ld bc,0010fh		;019e	01 0f 01	. . .
@@ -226,15 +244,15 @@ sub_01a2h:
 	ld de,0010fh		;01a2	11 0f 01	. . .
 	ld a,00ah		;01a5	3e 0a		> .
 	call XBIOS_msg_sysmsg	;01a7	cd e8 4d	. . M
-	ld a,(00042h)		;01aa	3a 42 00	: B .
+	ld a,(JB_drive_B_present)	;01aa	3a 42 00	: B .
 	and 001h		;01ad	e6 01		. .
 	add a,00bh		;01af	c6 0b		. .
 	call XBIOS_msg_sysmsg	;01b1	cd e8 4d	. . M
-	ld a,(01131h)		;01b4	3a 31 11	: 1 .
+	ld a,(XBIOS_ca_sa_var_uart_present)	;01b4	3a 31 11	: 1 .
 	rra			;01b7	1f		.
 	ld a,00dh		;01b8	3e 0d		> .
 	call c,XBIOS_msg_sysmsg	;01ba	dc e8 4d	. . M
-	ld a,(00040h)		;01bd	3a 40 00	: @ .
+	ld a,(JB_hw_bitflags)	;01bd	3a 40 00	: @ .
 	and 020h		;01c0	e6 20		.  
 	ld a,00eh		;01c2	3e 0e		> .
 	call nz,XBIOS_msg_sysmsg	;01c4	c4 e8 4d	. . M

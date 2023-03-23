@@ -1,6 +1,8 @@
 
 ; PCW 1.15 lower jumpblock in bank 0
-
+; Note: such small values definitely get picked up
+; as literal constants, sigh.
+;
 JB_jump_bank2_env: equ 0x0
 JB_jump_bc_addr: equ 0x03
 JB_jump_de_addr: equ 0x05
@@ -15,6 +17,8 @@ JB_jump_kernel_panic: equ 0x030
 JB_str_ascii_BREAK: equ 0x33
 JB_rst_38_intr: equ 0x38
 JB_str_ascii_PATCH: equ 0x3b
+JB_hw_bitflags: equ 0x0040
+JB_drive_B_present: equ 0x0042
 JB_cfg_memory_bank_0000: equ 0x60
 JB_cfg_memory_bank_4000: equ 0x61
 JB_cfg_memory_bank_8000: equ 0x62
@@ -73,6 +77,9 @@ msg_retrymsg: equ 0x00fb
 msg_insert: equ 0x00fe
 msg_sysmsg: equ 0x0101
 kl_movemem: equ 0x0104
+
+; xbios jumpblock memory variables
+XBIOS_ca_sa_var_uart_present: equ 0x1131
 
 ; internal labels - for disassembly
 
@@ -136,6 +143,27 @@ XBIOS_internal_km_set_expand: equ 0x41ae
 XBIOS_internal_km_set_speed: equ 0x447a
 XBIOS_internal_km_kt_get: equ 0x42e5
 
+; Fetch the drive capability flags for Drive A or B.
+;
+; call: C=0 for drive A, C=1 for drive B
+; ret: drive HW flags in bits 0..3, 5 of A.
+;
+XBIOS_internal_drive_get_capabilities: equ 0x5369
+
+;
+; Fetch the drive information table for the
+; given drive.
+; It only supports C=0..3 as it masks
+; it with 0x3 first before doing the table
+; lookup math.
+;
+; Note: it uses the table at 0x5847.
+;
+; call: C=0 .. 3 for drives A..D
+; return: drive information address in HL.
+;
+XBIOS_internal_drive_get_info: equ 0x54fe
+
 ; sys msg related funcs to figure out
 ; XBIOS_msg_sysmsg
 ; 4e63
@@ -147,8 +175,32 @@ XBIOS_internal_km_kt_get: equ 0x42e5
 ; 4e45: is this loading some offset value and adding it to hl,
 ; then doing some expansion?
 
+;
+; Write the space character via XBIOS_write_char.
+;
+; Corrupts: A.
 XBIOS_write_space: equ 0x4f30
+
+;
+; Write the given character in A.
+;
+; It uses whatever function is in 0x5704 to do the work;
+; so callers need to initialise that address first with
+; a routine to actually output the character.
+;
+; Saves: BC, DE, HL.
+; Corrupts: AF.
+;
 XBIOS_write_char: equ 0x4f32
+
+;
+; Write the given string pointed to at HL to the current
+; output device via XBIOS_write_char.
+;
+; The string isn't expanded with tokens, and is terminated.
+; with 0xff.
+; Corrupts: HL at least, likely AF, BC, DE too.
+;
 XBIOS_write_str_no_expansion: equ 0x4f40
 
 ; XBIOS_msg_sysmsg:
@@ -163,10 +215,41 @@ XBIOS_write_str_no_expansion: equ 0x4f40
 ; 0x4d90 -> 0x4de7 - .. what's this? it doesn't look
 ; like valid code?
 
+;
+; Check if the standalone printer port is ready.
+;
+; This returns Z=true if the port is ready, Z=false otherwise.
+; Corrupts: A.
+;
 XBIOS_internal_standalone_cen_is_printer_ready: equ 0x3dc4
-XBIOS_internal_cps8256_cen_is_printer_ready: equ 0x3dc4
 
-XBIOS_internal_standalone_cen_write_byte: equ 0x3dae
+;
+; Check if the CPS8256 printer port is ready.
+;
+; This returns C=true flag if the port is ready.
+; Corrupts: A.
+;
+XBIOS_internal_cps8256_cen_is_printer_ready: equ 0x3da3
+
+;
+; Write the given byte to the standalone centronics port.
+;
+; This will wait until the port is ready, and then
+; send the byte in A.
+;
+; Corrupts: C.
+;
+XBIOS_internal_standalone_cen_wait_write_byte: equ 0x3db5
+
+;
+; Write the given config byte to the standalone centronics printer port.
+; (XXX TODO?)
+;
+; This writes the byte in A to the standalone centronics
+; printer port config port (0x84), rather than the data port
+; (0x85.)
+;
+XBIOS_internal_standalone_cen_config: equ 0x3dae
 
 ; 3d8c: looks like a UART init routine? See what it's
 ; calling and what HL is pointing to
@@ -175,6 +258,9 @@ XBIOS_internal_standalone_cen_write_byte: equ 0x3dae
 ; reading from it, and AND'ing 0xf8.  See what's calling it,
 ; I wonder if it's a printer or UART. (eg 0x02, 0xa5, 0x02 sent
 ; to the register as called from around 3f12.
+
+; look at XBIOS_cd_info as it probes the drives, reads the
+; hw state flags, etc.  Annotate those.
 
 ; variables
 
@@ -196,3 +282,22 @@ XBIOS_te_viewport_width: equ 0x5821
 XBIOS_te_viewport_height: equ 0x5822
 XBIOS_te_viewport_cursor_col: equ 0x5828
 XBIOS_te_viewport_cursor_row: equ 0x5829
+
+
+; unknown memory addresses (not yet in the disassembly,
+; but referenced somewhere.)
+
+; Note: 0x5703 is currently the /end/ of the disassembly
+; of xbios-4.bin.  0x5704 (the first variable) starts
+; immediately there.
+
+; Used by XBIOS_write_char as a function pointer to
+; call for each character being written.  Two bytes.
+XBIOS_write_char_out_func: equ 0x5704
+
+; Drive table - used by XBIOS_internal_drive_get_info ;
+; not sure what the format is.
+XBIOS_drive_table: equ 0x5847
+
+
+
