@@ -2,6 +2,10 @@
 ; command line: /home/adrian/local/bin/z80dasm -v -g 0x0080 -t -a -l -o xbios-jumpblock-init.txt -S xbios-jumpblock-init.sym -b xbios-jumpblock-init.blk xbios-jumpblock-init.bin
 
 	org 00080h
+; PCW 1.15 lower jumpblock in bank 0
+; Note: such small values definitely get picked up
+; as literal constants, sigh.
+;
 JB_jump_bank2_env:	equ 0x0000
 JB_jump_bc_addr:	equ 0x0003
 JB_jump_de_addr:	equ 0x0005
@@ -1493,7 +1497,7 @@ XBIOS_filler_2_ff_end:
 sub_0593h:
 	ld a,004h		;0593	3e 04		> .
 	out (0f8h),a		;0595	d3 f8		. .
-	ld hl,l074dh		;0597	21 4d 07	! M .
+	ld hl,XBIOS_nmi_routine_orig	;0597	21 4d 07	! M .
 	ld de,JB_NMI_handler	;059a	11 66 00	. f .
 	ld bc,00011h		;059d	01 11 00	. . .
 	ldir			;05a0	ed b0		. .
@@ -1587,7 +1591,7 @@ sub_0622h:
 	pop af			;0644	f1		.
 	pop hl			;0645	e1		.
 	ret			;0646	c9		.
-	ld a,(l074dh)		;0647	3a 4d 07	: M .
+	ld a,(XBIOS_nmi_routine_orig)	;0647	3a 4d 07	: M .
 	ld de,(l074eh)		;064a	ed 5b 4e 07	. [ N .
 	call sub_0667h		;064e	cd 67 06	. g .
 	scf			;0651	37		7
@@ -1746,7 +1750,11 @@ l0746h:
 	out (0f8h),a		;0748	d3 f8		. .
 	pop af			;074a	f1		.
 	retn			;074b	ed 45		. E
-l074dh:
+;
+; These 0x11 bytes make up the original NMI
+; routine which is copied into 0x0066.
+;
+XBIOS_nmi_routine_orig:
 	push af			;074d	f5		.
 l074eh:
 	in a,(000h)		;074e	db 00		. .
@@ -1756,7 +1764,7 @@ l074eh:
 	out (001h),a		;0756	d3 01		. .
 	jp l075eh		;0758	c3 5e 07	. ^ .
 l075bh:
-	jp l07cbh		;075b	c3 cb 07	. . .
+	jp XBIOS_fdd_nmi_disconnect	;075b	c3 cb 07	. . .
 l075eh:
 	push bc			;075e	c5		.
 	push de			;075f	d5		.
@@ -1824,7 +1832,10 @@ l07bfh:
 l07c9h:
 	pop de			;07c9	d1		.
 	pop bc			;07ca	c1		.
-l07cbh:
+;
+; Disconnect the FDD from NMI, and return from NMI.
+;
+XBIOS_fdd_nmi_disconnect:
 	ld a,003h		;07cb	3e 03		> .
 	out (0f8h),a		;07cd	d3 f8		. .
 	pop af			;07cf	f1		.

@@ -2,6 +2,10 @@
 ; command line: /home/adrian/local/bin/z80dasm -g 0x3c62 -t -v -a -l -S xbios-jumpblock-init.sym -b xbios-4.blk -o xbios-4.txt xbios-4.bin
 
 	org 03c62h
+; PCW 1.15 lower jumpblock in bank 0
+; Note: such small values definitely get picked up
+; as literal constants, sigh.
+;
 JB_jump_bank2_env:	equ 0x0000
 JB_jump_bc_addr:	equ 0x0003
 JB_jump_de_addr:	equ 0x0005
@@ -12,7 +16,7 @@ JB_drive_B_present:	equ 0x0042
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
 ; Used by XBIOS_write_char as a function pointer to
-; call for each character being writeen.
+; call for each character being written.  Two bytes.
 XBIOS_write_char_out_func:	equ 0x5704
 XBIOS_te_viewport_width:	equ 0x5821
 XBIOS_te_viewport_height:	equ 0x5822
@@ -4615,5 +4619,5 @@ sub_56f7h:
 	or a			;5702	b7		.
 	ret			;5703	c9		.
 ; Used by XBIOS_write_char as a function pointer to
-; call for each character being writeen.
+; call for each character being written.  Two bytes.
 XBIOS_write_char_out_func:

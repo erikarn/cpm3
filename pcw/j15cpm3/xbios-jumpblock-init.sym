@@ -83,6 +83,17 @@ XBIOS_ca_sa_var_uart_present: equ 0x1131
 
 ; internal labels - for disassembly
 
+;
+; These 0x11 bytes make up the original NMI
+; routine which is copied into 0x0066.
+;
+XBIOS_nmi_routine_orig: equ 0x074d
+
+;
+; Disconnect the FDD from NMI, and return from NMI.
+;
+XBIOS_fdd_nmi_disconnect_and_retn: equ 0x07cb
+
 XBIOS_dd_init: equ 0x5410
 XBIOS_dd_setup: equ 0x546d
 XBIOS_dd_read_sector: equ 0x5111
