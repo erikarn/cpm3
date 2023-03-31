@@ -90,6 +90,54 @@ XBIOS_ca_sa_var_uart_present: equ 0x1131
 XBIOS_nmi_routine_orig: equ 0x074d
 
 ;
+; Perform initial hardware detection and setup.
+;
+; Configure the initial memory banks in 0x60/0x62,
+; detect the 50/60Hz monitor config.
+;
+; Then, this blanks from XBIOS_jb_hw_setup for
+; 0x02fa bytes (0x07db -> 0x1074).  I wonder if
+; that is used as system state after this code
+; is run.
+;
+XBIOS_jb_hw_setup: equ 0x0d7b
+
+XBIOS_ldir_ret: equ 0x0d6c
+
+;
+; Set the 0x4000 bank to the given value in A.
+;
+; The old bank is returned in A.
+;
+XBIOS_jb_set_bank_4000: equ 0x0c68
+
+;
+; Set the 0x8000 bank to the given value in A.
+;
+; The old bank is returned in A.
+;
+XBIOS_jb_set_bank_8000: equ 0x0c74
+
+;
+; Call the given function on the stack with an alternate
+; bank configuration for 0x4000 and 0x8000.
+;
+; This routine pops the address from the stack;
+; loads 0x4000 bank from 0x1129, loads 0x8000 bank
+; from 0x112a, then calls that routine.
+; It then restores those two banks and returns.
+;
+XBIOS_jb_bank_1_2_config_and_jump: equ 0x0608
+
+;
+; Probe the RAM banks to see which are installed.
+; This starts at RAM bank 0.
+; Returns the number of banks in A.
+; Assume all registers are trashed.
+;
+XBIOS_jb_probe_ram_bank: equ 0x0dc3
+
+;
 ; Disconnect the FDD from NMI, and return from NMI.
 ;
 XBIOS_fdd_nmi_disconnect_and_retn: equ 0x07cb
@@ -310,5 +358,7 @@ XBIOS_write_char_out_func: equ 0x5704
 ; not sure what the format is.
 XBIOS_drive_table: equ 0x5847
 
-
+; XXX TODO: do I have these two around the right way?
+XBIOS_bank_1_2_jump_bc_bank_2: equ 0x1129
+XBIOS_bank_1_2_jump_bc_bank_1: equ 0x112a
 

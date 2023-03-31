@@ -20,6 +20,9 @@ JB_cnt_flyback:	equ 0x0064
 JB_max_flyback:	equ 0x0065
 JB_NMI_handler:	equ 0x0066
 JB_num_banks:	equ 0x007f
+; XXX TODO: do I have these two around the right way?
+XBIOS_bank_1_2_jump_bc_bank_2:	equ 0x1129
+XBIOS_bank_1_2_jump_bc_bank_1:	equ 0x112a
 ; xbios jumpblock memory variables
 XBIOS_ca_sa_var_uart_present:	equ 0x1131
 XBIOS_msg_retrymsg:	equ 0x3d1d
@@ -178,7 +181,7 @@ XBIOS_cd_coldboot:
 	im 1			;010b	ed 56		. V
 	ld hl,08180h		;010d	21 80 81	! . .
 	ld de,08783h		;0110	11 83 87	. . .
-	call sub_0d7bh		;0113	cd 7b 0d	. { .
+	call XBIOS_jb_hw_setup	;0113	cd 7b 0d	. { .
 	call sub_0593h		;0116	cd 93 05	. . .
 	call 040cfh		;0119	cd cf 40	. . @
 	ei			;011c	fb		.
@@ -1521,7 +1524,7 @@ sub_0593h:
 	pop hl			;05d0	e1		.
 	ld bc,JB_jump_bank2_env	;05d1	01 00 00	. . .
 	jp sub_0b42h		;05d4	c3 42 0b	. B .
-	call sub_0608h		;05d7	cd 08 06	. . .
+	call XBIOS_jb_bank_1_2_config_and_jump	;05d7	cd 08 06	. . .
 	ld hl,(01125h)		;05da	2a 25 11	* % .
 	dec l			;05dd	2d		-
 	inc hl			;05de	23		#
@@ -1539,7 +1542,7 @@ sub_0593h:
 	ldir			;05f0	ed b0		. .
 	ret			;05f2	c9		.
 sub_05f3h:
-	call sub_0608h		;05f3	cd 08 06	. . .
+	call XBIOS_jb_bank_1_2_config_and_jump	;05f3	cd 08 06	. . .
 	push hl			;05f6	e5		.
 	ld hl,(01127h)		;05f7	2a 27 11	* ' .
 	dec hl			;05fa	2b		+
@@ -1551,19 +1554,28 @@ l0601h:
 	lddr			;0604	ed b8		. .
 	pop hl			;0606	e1		.
 	ret			;0607	c9		.
-sub_0608h:
+;
+; Call the given function on the stack with an alternate
+; bank configuration for 0x4000 and 0x8000.
+;
+; This routine pops the address from the stack;
+; loads 0x4000 bank from 0x1129, loads 0x8000 bank
+; from 0x112a, then calls that routine.
+; It then restores those two banks and returns.
+;
+XBIOS_jb_bank_1_2_config_and_jump:
 	pop bc			;0608	c1		.
-	ld a,(01129h)		;0609	3a 29 11	: ) .
-	call sub_0c68h		;060c	cd 68 0c	. h .
+	ld a,(XBIOS_bank_1_2_jump_bc_bank_2)	;0609	3a 29 11	: ) .
+	call XBIOS_jb_set_bank_4000	;060c	cd 68 0c	. h .
 	push af			;060f	f5		.
-	ld a,(0112ah)		;0610	3a 2a 11	: * .
-	call sub_0c74h		;0613	cd 74 0c	. t .
+	ld a,(XBIOS_bank_1_2_jump_bc_bank_1)	;0610	3a 2a 11	: * .
+	call XBIOS_jb_set_bank_8000	;0613	cd 74 0c	. t .
 	push af			;0616	f5		.
 	call JB_jump_bc_addr	;0617	cd 03 00	. . .
 	pop af			;061a	f1		.
-	call sub_0c74h		;061b	cd 74 0c	. t .
+	call XBIOS_jb_set_bank_8000	;061b	cd 74 0c	. t .
 	pop af			;061e	f1		.
-	jp sub_0c68h		;061f	c3 68 0c	. h .
+	jp XBIOS_jb_set_bank_4000	;061f	c3 68 0c	. h .
 sub_0622h:
 	push hl			;0622	e5		.
 	push de			;0623	d5		.
@@ -1616,7 +1628,7 @@ sub_0667h:
 	inc hl			;0679	23		#
 	ld d,(hl)		;067a	56		V
 	call sub_069bh		;067b	cd 9b 06	. . .
-	ld (01129h),bc		;067e	ed 43 29 11	. C ) .
+	ld (XBIOS_bank_1_2_jump_bc_bank_2),bc	;067e	ed 43 29 11	. C ) .
 	inc hl			;0682	23		#
 	ld c,(hl)		;0683	4e		N
 	inc hl			;0684	23		#
@@ -1690,7 +1702,7 @@ l06dah:
 	in a,(001h)		;06e3	db 01		. .
 	ld (0112ch),a		;06e5	32 2c 11	2 , .
 	push hl			;06e8	e5		.
-	ld hl,(01129h)		;06e9	2a 29 11	* ) .
+	ld hl,(XBIOS_bank_1_2_jump_bc_bank_2)	;06e9	2a 29 11	* ) .
 l06ech:
 	in a,(000h)		;06ec	db 00		. .
 	add a,a			;06ee	87		.
@@ -1764,7 +1776,7 @@ l074eh:
 	out (001h),a		;0756	d3 01		. .
 	jp l075eh		;0758	c3 5e 07	. ^ .
 l075bh:
-	jp XBIOS_fdd_nmi_disconnect	;075b	c3 cb 07	. . .
+	jp XBIOS_fdd_nmi_disconnect_and_retn	;075b	c3 cb 07	. . .
 l075eh:
 	push bc			;075e	c5		.
 	push de			;075f	d5		.
@@ -1777,7 +1789,7 @@ l0760h:
 	ld a,000h		;0769	3e 00		> .
 	out (001h),a		;076b	d3 01		. .
 	push hl			;076d	e5		.
-	ld hl,(01129h)		;076e	2a 29 11	* ) .
+	ld hl,(XBIOS_bank_1_2_jump_bc_bank_2)	;076e	2a 29 11	* ) .
 l0771h:
 	in a,(000h)		;0771	db 00		. .
 	add a,a			;0773	87		.
@@ -1835,7 +1847,7 @@ l07c9h:
 ;
 ; Disconnect the FDD from NMI, and return from NMI.
 ;
-XBIOS_fdd_nmi_disconnect:
+XBIOS_fdd_nmi_disconnect_and_retn:
 	ld a,003h		;07cb	3e 03		> .
 	out (0f8h),a		;07cd	d3 f8		. .
 	pop af			;07cf	f1		.
@@ -2034,7 +2046,7 @@ l08e9h:
 	or a			;08ee	b7		.
 	jr nz,l08cbh		;08ef	20 da		  .
 	ld (01079h),a		;08f1	32 79 10	2 y .
-	ld hl,(l0d6fh)		;08f4	2a 6f 0d	* o .
+	ld hl,(XBIOS_unknown_20_data_start)	;08f4	2a 6f 0d	* o .
 	ld a,h			;08f7	7c		|
 	or a			;08f8	b7		.
 	jr z,l08c3h		;08f9	28 c8		( .
@@ -2046,7 +2058,7 @@ l08e9h:
 	ld sp,hl		;0904	f9		.
 	jp z,l0837h		;0905	ca 37 08	. 7 .
 	rst 30h			;0908	f7		.
-	ld hl,(l0d6fh)		;0909	2a 6f 0d	* o .
+	ld hl,(XBIOS_unknown_20_data_start)	;0909	2a 6f 0d	* o .
 	ret			;090c	c9		.
 	pop bc			;090d	c1		.
 	push hl			;090e	e5		.
@@ -2087,12 +2099,12 @@ sub_093eh:
 	dec hl			;0940	2b		+
 	dec hl			;0941	2b		+
 	ex de,hl		;0942	eb		.
-	ld hl,(l0d6fh)		;0943	2a 6f 0d	* o .
+	ld hl,(XBIOS_unknown_20_data_start)	;0943	2a 6f 0d	* o .
 	inc h			;0946	24		$
 	dec h			;0947	25		%
 	jr nz,l0953h		;0948	20 09		  .
 	ex de,hl		;094a	eb		.
-	ld (l0d6fh),hl		;094b	22 6f 0d	" o .
+	ld (XBIOS_unknown_20_data_start),hl	;094b	22 6f 0d	" o .
 	inc hl			;094e	23		#
 	ld (hl),d		;094f	72		r
 	jp l097fh		;0950	c3 7f 09	. . .
@@ -2131,7 +2143,7 @@ l0972h:
 	dec hl			;0972	2b		+
 	dec hl			;0973	2b		+
 	ex de,hl		;0974	eb		.
-	ld (l0d6fh),hl		;0975	22 6f 0d	" o .
+	ld (XBIOS_unknown_20_data_start),hl	;0975	22 6f 0d	" o .
 	ld (hl),e		;0978	73		s
 	inc hl			;0979	23		#
 	ld (hl),d		;097a	72		r
@@ -2139,7 +2151,7 @@ l0972h:
 l097ch:
 	call sub_09bah		;097c	cd ba 09	. . .
 l097fh:
-	ld hl,(l0d6fh)		;097f	2a 6f 0d	* o .
+	ld hl,(XBIOS_unknown_20_data_start)	;097f	2a 6f 0d	* o .
 	ld a,h			;0982	7c		|
 	or a			;0983	b7		.
 	ret z			;0984	c8		.
@@ -2170,11 +2182,11 @@ l097fh:
 l09a6h:
 	push de			;09a6	d5		.
 l09a7h:
-	ld hl,(l0d6fh)		;09a7	2a 6f 0d	* o .
+	ld hl,(XBIOS_unknown_20_data_start)	;09a7	2a 6f 0d	* o .
 	ld e,(hl)		;09aa	5e		^
 	inc hl			;09ab	23		#
 	ld d,(hl)		;09ac	56		V
-	ld (l0d6fh),de		;09ad	ed 53 6f 0d	. S o .
+	ld (XBIOS_unknown_20_data_start),de	;09ad	ed 53 6f 0d	. S o .
 	pop de			;09b1	d1		.
 	ld (hl),000h		;09b2	36 00		6 .
 	dec hl			;09b4	2b		+
@@ -2363,13 +2375,13 @@ l0a99h:
 	cp h			;0a9d	bc		.
 	jr nz,l0a99h		;0a9e	20 f9		  .
 l0aa0h:
-	ld hl,(l0d6fh)		;0aa0	2a 6f 0d	* o .
+	ld hl,(XBIOS_unknown_20_data_start)	;0aa0	2a 6f 0d	* o .
 	ex de,hl		;0aa3	eb		.
 	ld (hl),d		;0aa4	72		r
 	dec hl			;0aa5	2b		+
 	ld (hl),e		;0aa6	73		s
 	jp l09a7h		;0aa7	c3 a7 09	. . .
-	ld hl,(l0d6fh)		;0aaa	2a 6f 0d	* o .
+	ld hl,(XBIOS_unknown_20_data_start)	;0aaa	2a 6f 0d	* o .
 	inc hl			;0aad	23		#
 	inc hl			;0aae	23		#
 	inc hl			;0aaf	23		#
@@ -2674,7 +2686,12 @@ l0c63h:
 	ld hl,(JB_cfg_memory_bank_0000)	;0c63	2a 60 00	* ` .
 	exx			;0c66	d9		.
 	ret			;0c67	c9		.
-sub_0c68h:
+;
+; Set the 0x4000 bank to the given value in A.
+;
+; The old bank is returned in A.
+;
+XBIOS_jb_set_bank_4000:
 	push hl			;0c68	e5		.
 	ld hl,(JB_cfg_memory_bank_4000)	;0c69	2a 61 00	* a .
 	ld (JB_cfg_memory_bank_4000),a	;0c6c	32 61 00	2 a .
@@ -2682,7 +2699,12 @@ sub_0c68h:
 	ld a,l			;0c71	7d		}
 	pop hl			;0c72	e1		.
 	ret			;0c73	c9		.
-sub_0c74h:
+;
+; Set the 0x8000 bank to the given value in A.
+;
+; The old bank is returned in A.
+;
+XBIOS_jb_set_bank_8000:
 	push hl			;0c74	e5		.
 	ld hl,(JB_cfg_memory_bank_8000)	;0c75	2a 62 00	* b .
 	ld (JB_cfg_memory_bank_8000),a	;0c78	32 62 00	2 b .
@@ -2859,24 +2881,38 @@ l0d5fh:
 l0d6ah:
 	ei			;0d6a	fb		.
 	ret			;0d6b	c9		.
-l0d6ch:
+XBIOS_ldir_ret:
 	ldir			;0d6c	ed b0		. .
 	ret			;0d6e	c9		.
-l0d6fh:
-	ld (hl),c		;0d6f	71		q
-	dec c			;0d70	0d		.
-	nop			;0d71	00		.
-	nop			;0d72	00		.
-	jr nz,l0d76h		;0d73	20 01		  .
-	nop			;0d75	00		.
-l0d76h:
-	nop			;0d76	00		.
-	nop			;0d77	00		.
+
+; BLOCK 'XBIOS_unknown_20_data' (start 0x0d6f end 0x0d7a)
+XBIOS_unknown_20_data_start:
+	defb 071h		;0d6f	71		q
+	defb 00dh		;0d70	0d		.
+	defb 000h		;0d71	00		.
+	defb 000h		;0d72	00		.
+	defb 020h		;0d73	20		 
+	defb 001h		;0d74	01		.
+	defb 000h		;0d75	00		.
+	defb 000h		;0d76	00		.
+	defb 000h		;0d77	00		.
 l0d78h:
-	nop			;0d78	00		.
-	nop			;0d79	00		.
+	defb 000h		;0d78	00		.
+	defb 000h		;0d79	00		.
+XBIOS_unknown_20_data_end:
 	nop			;0d7a	00		.
-sub_0d7bh:
+;
+; Perform initial hardware detection and setup.
+;
+; Configure the initial memory banks in 0x60/0x62,
+; detect the 50/60Hz monitor config.
+;
+; Then, this blanks from XBIOS_jb_hw_setup for
+; 0x02fa bytes (0x07db -> 0x1074).  I wonder if
+; that is used as system state after this code
+; is run.
+;
+XBIOS_jb_hw_setup:
 	ld (JB_cfg_memory_bank_0000),hl	;0d7b	22 60 00	" ` .
 	ld (JB_cfg_memory_bank_8000),de	;0d7e	ed 53 62 00	. S b .
 	in a,(0f8h)		;0d82	db f8		. .
@@ -2893,21 +2929,27 @@ l0d8bh:
 	ld a,r			;0d99	ed 5f		. _
 	ld (0107ah),a		;0d9b	32 7a 10	2 z .
 	ld (l0d78h),a		;0d9e	32 78 0d	2 x .
-	call sub_0dc3h		;0da1	cd c3 0d	. . .
+	call XBIOS_jb_probe_ram_bank	;0da1	cd c3 0d	. . .
 	cp 010h			;0da4	fe 10		. .
 	jr nz,l0dafh		;0da6	20 07		  .
 	ld a,0f1h		;0da8	3e f1		> .
 	out (0f4h),a		;0daa	d3 f4		. .
-	call sub_0dc3h		;0dac	cd c3 0d	. . .
+	call XBIOS_jb_probe_ram_bank	;0dac	cd c3 0d	. . .
 l0dafh:
 	ld (JB_num_banks),a	;0daf	32 7f 00	2 . .
-	ld hl,sub_0d7bh		;0db2	21 7b 0d	! { .
+	ld hl,XBIOS_jb_hw_setup	;0db2	21 7b 0d	! { .
 	ld (0111ah),hl		;0db5	22 1a 11	" . .
-	ld de,sub_0d7bh+1	;0db8	11 7c 0d	. | .
+	ld de,XBIOS_jb_hw_setup+1	;0db8	11 7c 0d	. | .
 	ld bc,l02f9h		;0dbb	01 f9 02	. . .
 	ld (hl),000h		;0dbe	36 00		6 .
-	jp l0d6ch		;0dc0	c3 6c 0d	. l .
-sub_0dc3h:
+	jp XBIOS_ldir_ret	;0dc0	c3 6c 0d	. l .
+;
+; Probe the RAM banks to see which are installed.
+; This starts at RAM bank 0.
+; Returns the number of banks in A.
+; Assume all registers are trashed.
+;
+XBIOS_jb_probe_ram_bank:
 	ld hl,04000h		;0dc3	21 00 40	! . @
 	ld d,090h		;0dc6	16 90		. .
 l0dc8h:

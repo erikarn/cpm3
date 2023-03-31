@@ -15,6 +15,18 @@ JB_hw_bitflags:	equ 0x0040
 JB_drive_B_present:	equ 0x0042
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
+;
+; Set the 0x4000 bank to the given value in A.
+;
+; The old bank is returned in A.
+;
+XBIOS_jb_set_bank_4000:	equ 0x0c68
+;
+; Set the 0x8000 bank to the given value in A.
+;
+; The old bank is returned in A.
+;
+XBIOS_jb_set_bank_8000:	equ 0x0c74
 ; Used by XBIOS_write_char as a function pointer to
 ; call for each character being written.  Two bytes.
 XBIOS_write_char_out_func:	equ 0x5704
@@ -295,16 +307,16 @@ l3de2h:
 XBIOS_svc_d_changed:
 	push af			;3df0	f5		.
 	ld a,081h		;3df1	3e 81		> .
-	call 00c68h		;3df3	cd 68 0c	. h .
+	call XBIOS_jb_set_bank_4000	;3df3	cd 68 0c	. h .
 	push af			;3df6	f5		.
 	ld a,083h		;3df7	3e 83		> .
-	call 00c74h		;3df9	cd 74 0c	. t .
+	call XBIOS_jb_set_bank_8000	;3df9	cd 74 0c	. t .
 	push af			;3dfc	f5		.
 	call 0ba0ch		;3dfd	cd 0c ba	. . .
 	pop af			;3e00	f1		.
-	call 00c74h		;3e01	cd 74 0c	. t .
+	call XBIOS_jb_set_bank_8000	;3e01	cd 74 0c	. t .
 	pop af			;3e04	f1		.
-	call 00c68h		;3e05	cd 68 0c	. h .
+	call XBIOS_jb_set_bank_4000	;3e05	cd 68 0c	. h .
 	pop af			;3e08	f1		.
 	ret			;3e09	c9		.
 XBIOS_dd_calldriver:
@@ -326,10 +338,10 @@ XBIOS_dd_calldriver:
 	push bc			;3e29	c5		.
 	call 0069bh		;3e2a	cd 9b 06	. . .
 	ld a,c			;3e2d	79		y
-	call 00c68h		;3e2e	cd 68 0c	. h .
+	call XBIOS_jb_set_bank_4000	;3e2e	cd 68 0c	. h .
 	ld (iy-004h),a		;3e31	fd 77 fc	. w .
 	ld a,b			;3e34	78		x
-	call 00c74h		;3e35	cd 74 0c	. t .
+	call XBIOS_jb_set_bank_8000	;3e35	cd 74 0c	. t .
 	ld (iy-003h),a		;3e38	fd 77 fd	. w .
 	pop bc			;3e3b	c1		.
 	push de			;3e3c	d5		.
@@ -340,9 +352,9 @@ l3e41h:
 	pop iy			;3e41	fd e1		. .
 	push af			;3e43	f5		.
 	ld a,(iy-003h)		;3e44	fd 7e fd	. ~ .
-	call 00c74h		;3e47	cd 74 0c	. t .
+	call XBIOS_jb_set_bank_8000	;3e47	cd 74 0c	. t .
 	ld a,(iy-004h)		;3e4a	fd 7e fc	. ~ .
-	call 00c68h		;3e4d	cd 68 0c	. h .
+	call XBIOS_jb_set_bank_4000	;3e4d	cd 68 0c	. h .
 	pop af			;3e50	f1		.
 	ld sp,iy		;3e51	fd f9		. .
 	pop hl			;3e53	e1		.
@@ -1876,11 +1888,11 @@ l4749h:
 sub_474fh:
 	pop bc			;474f	c1		.
 	ld a,082h		;4750	3e 82		> .
-	call 00c74h		;4752	cd 74 0c	. t .
+	call XBIOS_jb_set_bank_8000	;4752	cd 74 0c	. t .
 	push af			;4755	f5		.
 	call JB_jump_bc_addr	;4756	cd 03 00	. . .
 	pop af			;4759	f1		.
-	jp 00c74h		;475a	c3 74 0c	. t .
+	jp XBIOS_jb_set_bank_8000	;475a	c3 74 0c	. t .
 	in a,(0f8h)		;475d	db f8		. .
 	and 010h		;475f	e6 10		. .
 	ld b,020h		;4761	06 20		.  
@@ -3575,7 +3587,7 @@ sub_50e6h:
 	jr l5117h		;50f4	18 21		. !
 	push hl			;50f6	e5		.
 	ld a,083h		;50f7	3e 83		> .
-	call 00c74h		;50f9	cd 74 0c	. t .
+	call XBIOS_jb_set_bank_8000	;50f9	cd 74 0c	. t .
 	call 0fc42h		;50fc	cd 42 fc	. B .
 	ld e,(hl)		;50ff	5e		^
 	inc hl			;5100	23		#
