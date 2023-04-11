@@ -19,6 +19,8 @@ JB_cfg_memory_bank_c000:	equ 0x0063
 JB_cnt_flyback:	equ 0x0064
 JB_max_flyback:	equ 0x0065
 JB_NMI_handler:	equ 0x0066
+; 7a-7b : TBD - looks like memory bank config
+; 7c-7d : TBD - for the NMI handler?
 JB_num_banks:	equ 0x007f
 ; XXX TODO: do I have these two around the right way?
 XBIOS_bank_1_2_jump_bc_bank_2:	equ 0x1129
@@ -32,6 +34,7 @@ XBIOS_km_set_expand:	equ 0x3d70
 XBIOS_km_set_speed:	equ 0x3d73
 XBIOS_km_kt_get:	equ 0x3d76
 XBIOS_km_kt_put:	equ 0x3d79
+XBIOS_internal_cps8256_uart_init:	equ 0x3d7c
 ;
 ; Write the given config byte to the standalone centronics printer port.
 ; (XXX TODO?)
@@ -204,7 +207,7 @@ XBIOS_cd_coldboot:
 	sbc a,a			;0143	9f		.
 	and 001h		;0144	e6 01		. .
 	ld (XBIOS_ca_sa_var_uart_present),a	;0146	32 31 11	2 1 .
-	call nz,03d7ch		;0149	c4 7c 3d	. | =
+	call nz,XBIOS_internal_cps8256_uart_init	;0149	c4 7c 3d	. | =
 	call XBIOS_internal_standalone_cen_config	;014c	cd ae 3d	. . =
 	call XBIOS_dd_init	;014f	cd 10 54	. . T
 	call 053d6h		;0152	cd d6 53	. . S
@@ -213,7 +216,7 @@ XBIOS_cd_coldboot:
 	ld a,(XBIOS_ca_sa_var_uart_present)	;0159	3a 31 11	: 1 .
 	call 03c62h		;015c	cd 62 3c	. b <
 	call 0491eh		;015f	cd 1e 49	. . I
-	call sub_01a2h		;0162	cd a2 01	. . .
+	call XBIOS_jp_announce	;0162	cd a2 01	. . .
 	ld hl,l0513h		;0165	21 13 05	! . .
 	call sub_0175h		;0168	cd 75 01	. u .
 	call 00178h		;016b	cd 78 01	. x .
@@ -247,7 +250,16 @@ XBIOS_cd_version:
 	ld h,000h		;019c	26 00		& .
 	ld bc,0010fh		;019e	01 0f 01	. . .
 	ret			;01a1	c9		.
-sub_01a2h:
+;
+; Announce the hardware configuration.
+;
+; This reads the current system configuration from low
+; memory and prints the hardware configuration to the
+; screen
+;
+; Assume all registers are corrupted.
+;
+XBIOS_jp_announce:
 	ld de,0010fh		;01a2	11 0f 01	. . .
 	ld a,00ah		;01a5	3e 0a		> .
 	call XBIOS_msg_sysmsg	;01a7	cd e8 4d	. . M
@@ -1867,7 +1879,7 @@ XBIOS_fdd_nmi_disconnect_and_retn:
 	and 020h		;07e2	e6 20		.  
 	jr z,l07eeh		;07e4	28 08		( .
 	ld hl,0007ah		;07e6	21 7a 00	! z .
-	call sub_0c25h		;07e9	cd 25 0c	. % .
+	call XBIOS_jb_bank1_2_far_jump	;07e9	cd 25 0c	. % .
 	jr l082dh		;07ec	18 3f		. ?
 l07eeh:
 	in a,(0f4h)		;07ee	db f4		. .
@@ -1939,10 +1951,10 @@ sub_0849h:
 	ld a,(hl)		;084b	7e		~
 	inc hl			;084c	23		#
 	or a			;084d	b7		.
-	jp z,sub_0c25h		;084e	ca 25 0c	. % .
+	jp z,XBIOS_jb_bank1_2_far_jump	;084e	ca 25 0c	. % .
 	ld d,a			;0851	57		W
 	push de			;0852	d5		.
-	call sub_0c25h		;0853	cd 25 0c	. % .
+	call XBIOS_jb_bank1_2_far_jump	;0853	cd 25 0c	. % .
 	pop hl			;0856	e1		.
 	inc b			;0857	04		.
 	djnz sub_0849h		;0858	10 ef		. .
@@ -2038,7 +2050,7 @@ l08dch:
 l08e4h:
 	ei			;08e4	fb		.
 	inc hl			;08e5	23		#
-	call sub_0c25h		;08e6	cd 25 0c	. % .
+	call XBIOS_jb_bank1_2_far_jump	;08e6	cd 25 0c	. % .
 l08e9h:
 	di			;08e9	f3		.
 	ld hl,(01075h)		;08ea	2a 75 10	* u .
@@ -2292,7 +2304,7 @@ l0a31h:
 sub_0a33h:
 	ld de,(JB_cfg_memory_bank_4000)	;0a33	ed 5b 61 00	. [ a .
 	push de			;0a37	d5		.
-	call sub_0c25h		;0a38	cd 25 0c	. % .
+	call XBIOS_jb_bank1_2_far_jump	;0a38	cd 25 0c	. % .
 	pop hl			;0a3b	e1		.
 	ld (JB_cfg_memory_bank_4000),hl	;0a3c	22 61 00	" a .
 	ld a,l			;0a3f	7d		}
@@ -2638,7 +2650,21 @@ sub_0c1bh:
 	ld (hl),a		;0c20	77		w
 	ld hl,JB_jump_de_addr	;0c21	21 05 00	! . .
 	add hl,de		;0c24	19		.
-sub_0c25h:
+;
+; Configure bank1 + bank 2 and jump to address.
+;
+; HL points to a table that is arranged as
+; follows:
+;
+; 2 byte jump address
+; 1 byte memory bank configuration for bank 1
+; 1 byte memory bank configuration for bank 2
+;
+; This routine configures bank 1 + bank 2,
+; updates the memory bank state in low memory and then
+; jumps to the provided jump address.
+;
+XBIOS_jb_bank1_2_far_jump:
 	ld e,(hl)		;0c25	5e		^
 	inc hl			;0c26	23		#
 	ld d,(hl)		;0c27	56		V
@@ -2653,6 +2679,11 @@ sub_0c25h:
 	out (0f2h),a		;0c35	d3 f2		. .
 	ex de,hl		;0c37	eb		.
 	jp (hl)			;0c38	e9		.
+;
+; Store DE and the current bank configuration for
+; bank 1 + 2 in the given table at HL.
+;
+XBIOS_jb_store_de_bank1_2_for_far_jump:
 	ld (hl),e		;0c39	73		s
 	inc hl			;0c3a	23		#
 	ld (hl),d		;0c3b	72		r
@@ -2663,6 +2694,17 @@ sub_0c25h:
 	ld (hl),d		;0c43	72		r
 	inc hl			;0c44	23		#
 	ret			;0c45	c9		.
+;
+; Update HL' with the memory config based on
+; the top two bits of H.
+; 00 - HL' <= bank 0,1 config
+; 01 - HL' <= bank 1,2 config
+; 10 - HL' <= bank 2,3 config
+; 11 - HL' <= bank 3 config, frame flyback counter
+;
+; This doesn't corrupt any registers.
+;
+XBIOS_jb_update_exhl:
 	bit 7,h			;0c46	cb 7c		. |
 	jr z,l0c59h		;0c48	28 0f		( .
 	bit 6,h			;0c4a	cb 74		. t

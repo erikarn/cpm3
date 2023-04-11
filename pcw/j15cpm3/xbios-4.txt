@@ -16,6 +16,11 @@ JB_drive_B_present:	equ 0x0042
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
 ;
+; Store DE and the current bank configuration for
+; bank 1 + 2 in the given table at HL.
+;
+XBIOS_jb_store_de_bank1_2_for_far_jump:	equ 0x0c39
+;
 ; Set the 0x4000 bank to the given value in A.
 ;
 ; The old bank is returned in A.
@@ -188,17 +193,21 @@ XBIOS_km_kt_get:
 	jp XBIOS_internal_km_kt_get	;3d76	c3 e5 42	. . B
 XBIOS_km_kt_put:
 	jp l430dh		;3d79	c3 0d 43	. . C
-	ld hl,l3d85h		;3d7c	21 85 3d	! . =
+XBIOS_internal_cps8256_uart_init:
+	ld hl,cps8256_uart_init_table_start	;3d7c	21 85 3d	! . =
 	ld bc,007e3h		;3d7f	01 e3 07	. . .
 	otir			;3d82	ed b3		. .
 	ret			;3d84	c9		.
-l3d85h:
-	jr l3d8bh		;3d85	18 04		. .
-	ld b,h			;3d87	44		D
-	dec b			;3d88	05		.
-	ld l,b			;3d89	68		h
-	inc bc			;3d8a	03		.
-l3d8bh:
+
+; BLOCK 'cps8256_uart_init_table' (start 0x3d85 end 0x3d8b)
+cps8256_uart_init_table_start:
+	defb 018h		;3d85	18		.
+	defb 004h		;3d86	04		.
+	defb 044h		;3d87	44		D
+	defb 005h		;3d88	05		.
+	defb 068h		;3d89	68		h
+	defb 003h		;3d8a	03		.
+cps8256_uart_init_table_end:
 	pop bc			;3d8b	c1		.
 l3d8ch:
 	call XBIOS_internal_cps8256_cen_is_printer_ready	;3d8c	cd a3 3d	. . =
@@ -649,9 +658,9 @@ l3ff6h:
 	inc hl			;400e	23		#
 	inc hl			;400f	23		#
 	ld de,l406ch		;4010	11 6c 40	. l @
-	call 00c39h		;4013	cd 39 0c	. 9 .
+	call XBIOS_jb_store_de_bank1_2_for_far_jump	;4013	cd 39 0c	. 9 .
 	ld de,l4040h		;4016	11 40 40	. @ @
-	jp 00c39h		;4019	c3 39 0c	. 9 .
+	jp XBIOS_jb_store_de_bank1_2_for_far_jump	;4019	c3 39 0c	. 9 .
 sub_401ch:
 	di			;401c	f3		.
 	ld hl,0587fh		;401d	21 7f 58	! . X
