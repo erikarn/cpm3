@@ -16,6 +16,32 @@ JB_drive_B_present:	equ 0x0042
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
 ;
+; This looks like it tries to allocate some memory
+; from the jumpblock scratch space.
+;
+; It does some simple bounds checking to ensure that
+; allocations don't exceed the scratch space size.
+;
+; * Disables interrupts
+; * Loads DE with what's at XBIOS_scratch_start_addr
+; * adds HL to it, and stores it back at XBIOS_scratch_start_addr
+; * BC = 0xEF8A (FFFF - EF8A = 0x1075, so that's how big the scratch
+;   space is?)
+; * HL = HL + BC
+; * DE <-> HL
+; Enable interrupts
+; Return if NC (ie, I think if it managed to do it?)
+; Else, RST 30 (kernel panic)
+;
+; Saves BC/DE.
+;
+; Returns the allocated address in HL.
+;
+; TODO: actually make EF8A a constant based on how much space?
+; (ie, it /should/ be the space between two symbols...)
+;
+XBIOS_jb_alloc_scratch:	equ 0x0baa
+;
 ; Store DE and the current bank configuration for
 ; bank 1 + 2 in the given table at HL.
 ;
@@ -653,7 +679,7 @@ l3ff6h:
 	rra			;4003	1f		.
 	ret			;4004	c9		.
 	ld hl,0000ah		;4005	21 0a 00	! . .
-	call 00baah		;4008	cd aa 0b	. . .
+	call XBIOS_jb_alloc_scratch	;4008	cd aa 0b	. . .
 	ld (0587dh),hl		;400b	22 7d 58	" } X
 	inc hl			;400e	23		#
 	inc hl			;400f	23		#
@@ -792,7 +818,7 @@ l40f0h:
 	ld (057e2h),a		;40f4	32 e2 57	2 . W
 	ld (057a5h),a		;40f7	32 a5 57	2 . W
 	ld hl,0000eh		;40fa	21 0e 00	! . .
-	call 00baah		;40fd	cd aa 0b	. . .
+	call XBIOS_jb_alloc_scratch	;40fd	cd aa 0b	. . .
 	push hl			;4100	e5		.
 	ld bc,00004h		;4101	01 04 00	. . .
 	add hl,bc		;4104	09		.
@@ -1813,7 +1839,7 @@ sub_46bdh:
 	ret			;46c4	c9		.
 sub_46c5h:
 	ld hl,0000eh		;46c5	21 0e 00	! . .
-	call 00baah		;46c8	cd aa 0b	. . .
+	call XBIOS_jb_alloc_scratch	;46c8	cd aa 0b	. . .
 	ld (0580eh),hl		;46cb	22 0e 58	" . X
 	ld bc,00004h		;46ce	01 04 00	. . .
 	add hl,bc		;46d1	09		.
@@ -2531,7 +2557,7 @@ l4a80h:
 	ld c,a			;4a88	4f		O
 sub_4a89h:
 	ld hl,0000eh		;4a89	21 0e 00	! . .
-	call 00baah		;4a8c	cd aa 0b	. . .
+	call XBIOS_jb_alloc_scratch	;4a8c	cd aa 0b	. . .
 	ld (0581bh),hl		;4a8f	22 1b 58	" . X
 	push hl			;4a92	e5		.
 	ld de,00004h		;4a93	11 04 00	. . .
@@ -4542,6 +4568,10 @@ l5669h:
 	call sub_56ach		;566d	cd ac 56	. . V
 	ld a,c			;5670	79		y
 	jr sub_5653h		;5671	18 e0		. .
+;
+; TBD - figure out what this does
+;
+XBIOS_dd_unknown_1:
 	ld de,(01123h)		;5673	ed 5b 23 11	. [ # .
 	ld a,(de)		;5677	1a		.
 	or a			;5678	b7		.
@@ -4614,6 +4644,10 @@ XBIOS_dd_l_t_off_motor:
 	call nz,sub_56f7h	;56dd	c4 f7 56	. . V
 	pop af			;56e0	f1		.
 	ret			;56e1	c9		.
+;
+; TBD - figure out what this does
+;
+XBIOS_dd_unknown_2:
 	ld hl,05867h		;56e2	21 67 58	! g X
 	ld a,(hl)		;56e5	7e		~
 	cpl			;56e6	2f		/

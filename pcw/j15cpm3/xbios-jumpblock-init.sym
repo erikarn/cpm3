@@ -98,6 +98,79 @@ XBIOS_ca_sa_var_uart_present: equ 0x1131
 XBIOS_jp_announce: equ 0x01a2
 
 ;
+; Not JUST NMI init.
+;
+; This routine:
+; * disables floppy interrupts
+; * sets up the NMI handler
+; * configures 0x7a -> 0x7f as a jump block
+;   jumping to 0x5673 with a specific memory config
+;   (0x83 and 0x81, I think that's for bank2 + bank1)
+; * does some other table config at various addresses
+;   (0x56e2 / 0x83 / 0x81; need to see where that
+;   is programmed in!)
+; * and does an LDIR to copy some data after some hijinx.
+;
+; I /think/ this is doing a bunch of jump table setup.
+; However, I need to go finish figuring out what the
+; other subroutines are doing to fully understand how
+; things are being setup.
+;
+; Interesting addresses:
+;
+; 0x007a -> 0x007f
+; 0x1121 -> 0x1122
+; 0x1123 -> 0x1124
+; 0x1125 -> 0x1126
+; 0x1127 -> 0x1128
+;
+; Subroutines to figure out (that are loaded into
+; jump tables, not CALLed directly)
+;
+; 0x5673 (xbios-4, floppy related?)
+; 0x56e2 (xbios-4, floppy related?)
+;
+;
+XBIOS_jp_init_jumptables: equ 0x0593
+
+;
+; TBD - figure out what this does
+;
+XBIOS_dd_unknown_1: equ 0x5673
+
+;
+; TBD - figure out what this does
+;
+XBIOS_dd_unknown_2: equ 0x56e2
+
+;
+; This looks like it tries to allocate some memory
+; from the jumpblock scratch space.
+;
+; It does some simple bounds checking to ensure that
+; allocations don't exceed the scratch space size.
+;
+; * Disables interrupts
+; * Loads DE with what's at XBIOS_scratch_start_addr
+; * adds HL to it, and stores it back at XBIOS_scratch_start_addr
+; * BC = 0xEF8A (FFFF - EF8A = 0x1075, so that's how big the scratch
+;   space is?)
+; * HL = HL + BC
+; * DE <-> HL
+; Enable interrupts
+; Return if NC (ie, I think if it managed to do it?)
+; Else, RST 30 (kernel panic)
+;
+; Saves BC/DE.
+;
+; Returns the allocated address in HL.
+;
+; TODO: actually make EF8A a constant based on how much space?
+; (ie, it /should/ be the space between two symbols...)
+;
+XBIOS_jb_alloc_scratch: equ 0x0baa
+
+;
 ; These 0x11 bytes make up the original NMI
 ; routine which is copied into 0x0066.
 ;
@@ -417,3 +490,7 @@ XBIOS_drive_table: equ 0x5847
 XBIOS_bank_1_2_jump_bc_bank_2: equ 0x1129
 XBIOS_bank_1_2_jump_bc_bank_1: equ 0x112a
 
+; This is initially setup with the start address of
+; the scratch space available after XBIOS_jp_hw_setup
+; does initial hardware setup.
+XBIOS_scratch_start_addr: equ 0x111a

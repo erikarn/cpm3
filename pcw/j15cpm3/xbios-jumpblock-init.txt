@@ -22,6 +22,10 @@ JB_NMI_handler:	equ 0x0066
 ; 7a-7b : TBD - looks like memory bank config
 ; 7c-7d : TBD - for the NMI handler?
 JB_num_banks:	equ 0x007f
+; This is initially setup with the start address of
+; the scratch space available after XBIOS_jp_hw_setup
+; does initial hardware setup.
+XBIOS_scratch_start_addr:	equ 0x111a
 ; XXX TODO: do I have these two around the right way?
 XBIOS_bank_1_2_jump_bc_bank_2:	equ 0x1129
 XBIOS_bank_1_2_jump_bc_bank_1:	equ 0x112a
@@ -80,8 +84,16 @@ XBIOS_dd_setup:	equ 0x546d
 XBIOS_dd_l_seek:	equ 0x550e
 XBIOS_dd_l_read:	equ 0x5617
 XBIOS_dd_l_write:	equ 0x5620
+;
+; TBD - figure out what this does
+;
+XBIOS_dd_unknown_1:	equ 0x5673
 XBIOS_dd_l_on_motor:	equ 0x56be
 XBIOS_dd_l_t_off_motor:	equ 0x56d6
+;
+; TBD - figure out what this does
+;
+XBIOS_dd_unknown_2:	equ 0x56e2
 XBIOS_dd_l_off_motor:	equ 0x56ea
 
 dd_init:
@@ -185,12 +197,12 @@ XBIOS_cd_coldboot:
 	ld hl,08180h		;010d	21 80 81	! . .
 	ld de,08783h		;0110	11 83 87	. . .
 	call XBIOS_jb_hw_setup	;0113	cd 7b 0d	. { .
-	call sub_0593h		;0116	cd 93 05	. . .
+	call XBIOS_jp_init_jumptables	;0116	cd 93 05	. . .
 	call 040cfh		;0119	cd cf 40	. . @
 	ei			;011c	fb		.
 	pop de			;011d	d1		.
 	ld hl,0000eh		;011e	21 0e 00	! . .
-	call sub_0baah		;0121	cd aa 0b	. . .
+	call XBIOS_jb_alloc_scratch	;0121	cd aa 0b	. . .
 	push hl			;0124	e5		.
 	ld bc,00004h		;0125	01 04 00	. . .
 	add hl,bc		;0128	09		.
@@ -1509,27 +1521,61 @@ XBIOS_filler_2_ff_start:
 	defb 0ffh		;0591	ff		.
 XBIOS_filler_2_ff_end:
 	rst 38h			;0592	ff		.
-sub_0593h:
+;
+; Not JUST NMI init.
+;
+; This routine:
+; * disables floppy interrupts
+; * sets up the NMI handler
+; * configures 0x7a -> 0x7f as a jump block
+;   jumping to 0x5673 with a specific memory config
+;   (0x83 and 0x81, I think that's for bank2 + bank1)
+; * does some other table config at various addresses
+;   (0x56e2 / 0x83 / 0x81; need to see where that
+;   is programmed in!)
+; * and does an LDIR to copy some data after some hijinx.
+;
+; I /think/ this is doing a bunch of jump table setup.
+; However, I need to go finish figuring out what the
+; other subroutines are doing to fully understand how
+; things are being setup.
+;
+; Interesting addresses:
+;
+; 0x007a -> 0x007f
+; 0x1121 -> 0x1122
+; 0x1123 -> 0x1124
+; 0x1125 -> 0x1126
+; 0x1127 -> 0x1128
+;
+; Subroutines to figure out (that are loaded into
+; jump tables, not CALLed directly)
+;
+; 0x5673 (xbios-4, floppy related?)
+; 0x56e2 (xbios-4, floppy related?)
+;
+;
+XBIOS_jp_init_jumptables:
 	ld a,004h		;0593	3e 04		> .
 	out (0f8h),a		;0595	d3 f8		. .
 	ld hl,XBIOS_nmi_routine_orig	;0597	21 4d 07	! M .
 	ld de,JB_NMI_handler	;059a	11 66 00	. f .
 	ld bc,00011h		;059d	01 11 00	. . .
 	ldir			;05a0	ed b0		. .
-	ld hl,05673h		;05a2	21 73 56	! s V
+	ld hl,XBIOS_dd_unknown_1	;05a2	21 73 56	! s V
 	ld (0007ah),hl		;05a5	22 7a 00	" z .
 	ld hl,08381h		;05a8	21 81 83	! . .
 	ld (0007ch),hl		;05ab	22 7c 00	" | .
 	ld hl,JB_jump_bc_addr	;05ae	21 03 00	! . .
-	call sub_0baah		;05b1	cd aa 0b	. . .
+	call XBIOS_jb_alloc_scratch	;05b1	cd aa 0b	. . .
 	ld (01123h),hl		;05b4	22 23 11	" # .
 	ld hl,0000eh		;05b7	21 0e 00	! . .
-	call sub_0baah		;05ba	cd aa 0b	. . .
+	call XBIOS_jb_alloc_scratch	;05ba	cd aa 0b	. . .
 	ld (01121h),hl		;05bd	22 21 11	" ! .
 	push hl			;05c0	e5		.
 	ld de,00004h		;05c1	11 04 00	. . .
 	add hl,de		;05c4	19		.
-	ld de,056e2h		;05c5	11 e2 56	. . V
+	ld de,XBIOS_dd_unknown_2	;05c5	11 e2 56	. . V
 	ld bc,08381h		;05c8	01 81 83	. . .
 	ld a,002h		;05cb	3e 02		> .
 	call sub_09e4h		;05cd	cd e4 09	. . .
@@ -2563,13 +2609,38 @@ l0ba1h:
 	sub e			;0ba7	93		.
 	ld d,a			;0ba8	57		W
 	ret			;0ba9	c9		.
-sub_0baah:
+;
+; This looks like it tries to allocate some memory
+; from the jumpblock scratch space.
+;
+; It does some simple bounds checking to ensure that
+; allocations don't exceed the scratch space size.
+;
+; * Disables interrupts
+; * Loads DE with what's at XBIOS_scratch_start_addr
+; * adds HL to it, and stores it back at XBIOS_scratch_start_addr
+; * BC = 0xEF8A (FFFF - EF8A = 0x1075, so that's how big the scratch
+;   space is?)
+; * HL = HL + BC
+; * DE <-> HL
+; Enable interrupts
+; Return if NC (ie, I think if it managed to do it?)
+; Else, RST 30 (kernel panic)
+;
+; Saves BC/DE.
+;
+; Returns the allocated address in HL.
+;
+; TODO: actually make EF8A a constant based on how much space?
+; (ie, it /should/ be the space between two symbols...)
+;
+XBIOS_jb_alloc_scratch:
 	push de			;0baa	d5		.
 	push bc			;0bab	c5		.
 	di			;0bac	f3		.
-	ld de,(0111ah)		;0bad	ed 5b 1a 11	. [ . .
+	ld de,(XBIOS_scratch_start_addr)	;0bad	ed 5b 1a 11	. [ . .
 	add hl,de		;0bb1	19		.
-	ld (0111ah),hl		;0bb2	22 1a 11	" . .
+	ld (XBIOS_scratch_start_addr),hl	;0bb2	22 1a 11	" . .
 	ld bc,0ef8ah		;0bb5	01 8a ef	. . .
 	add hl,bc		;0bb8	09		.
 	ex de,hl		;0bb9	eb		.
@@ -2980,7 +3051,7 @@ l0d8bh:
 l0dafh:
 	ld (JB_num_banks),a	;0daf	32 7f 00	2 . .
 	ld hl,XBIOS_jb_hw_setup	;0db2	21 7b 0d	! { .
-	ld (0111ah),hl		;0db5	22 1a 11	" . .
+	ld (XBIOS_scratch_start_addr),hl	;0db5	22 1a 11	" . .
 	ld de,XBIOS_jb_hw_setup+1	;0db8	11 7c 0d	. | .
 	ld bc,l02f9h		;0dbb	01 f9 02	. . .
 	ld (hl),000h		;0dbe	36 00		6 .
