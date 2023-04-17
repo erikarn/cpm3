@@ -154,16 +154,22 @@ XBIOS_nmi_routine_orig: equ 0x074d
 ;
 XBIOS_fdd_nmi_disconnect_and_retn: equ 0x07cb
 
-XBIOS_jb_unknown_0b42: equ 0x0b42
+XBIOS_jb_unknown_sub_09e0: equ 0x09e0
+
+XBIOS_jb_unknown_sub_0aca: equ 0x0aca
+
+XBIOS_jb_unknown_sub_0ad0: equ 0x0ad0
+
+XBIOS_jb_unknown_sub_0b42: equ 0x0b42
 
 ;
 ; TBD - what's this, it's treating 0x1101,2 as magical?
 ;
-XBIOS_jb_unknown_0b47: equ 0x0b47
+XBIOS_jb_unknown_sub_0b47: equ 0x0b47
 
-XBIOS_jb_unknown_0b56: equ 0x0b56
+XBIOS_jb_unknown_sub_0b56: equ 0x0b56
 
-XBIOS_jb_unknown_0b5b: equ 0x0b5b
+XBIOS_jb_unknown_sub_0b5b: equ 0x0b5b
 
 ;
 ; This looks like it tries to allocate some memory
@@ -211,6 +217,10 @@ XBIOS_jb_bank1_2_far_jump: equ 0x0c25
 ;
 ; Store DE and the current bank configuration for
 ; bank 1 + 2 in the given table at HL.
+;
+; HL will be incremented to point to the address
+; after the table, so you can chain calls to
+; this function to populate multiple table entries.
 ;
 XBIOS_jb_store_de_bank1_2_for_far_jump: equ 0x0c39
 
@@ -427,6 +437,58 @@ XBIOS_internal_standalone_cen_wait_write_byte: equ 0x3db5
 ;
 XBIOS_internal_standalone_cen_config: equ 0x3dae
 
+;
+; Write H, L then H to the IO port C.
+; Then read from C, XOR with L, AND 0xF8 and
+; return the result in A.
+;
+; My guess is it's writing the control register H
+; to the given DART control register in C, then
+; reading writing L, and seeing if the bits in L
+; are still set given the mask 0xF8.
+;
+XBIOS_unknown_dart_status_write_read_check: equ 0x3f2c
+
+;
+; Allocate 0xa scratchpad bytes, store address at 0x587d
+; initialise table config for far jumps to 406c, 4040
+;
+; My guess is this is the CPS8256 DART ISR/buffer init routine.
+;
+XBIOS_unknown_sub_4005: equ 0x4005
+
+XBIOS_unknown_sub_401c: equ 0x401c
+
+;
+; Enable CPS8256 DART RX interrupt on all characters
+;
+; Writes 0x18 to register 0x1 @ the CPS826 DART @ 0xE1
+;
+XBIOS_cps8256_dart_enable_rx_interrupts: equ 0x403c
+
+;
+; Disable CPS8256 DART RX interrupts.
+;
+; Writes 0x0 to register 0x1 @ the CPS826 DART @ 0xE1
+;
+XBIOS_cps8256_dart_disable_rx_interrupts: equ 0x4040
+
+;
+; Read the CPS8256 DART status, check for interrupt pending
+; on channel A.
+;
+; If no interrupt, return w/ Z flag set and B=0xFF.
+;
+; TBD: If interrupt, there's a bunch more processing that happens.
+; That definitely needs fleshing out.  Is this the RX buffer reading
+; routine, or?
+;
+XBIOS_unknown_sub_406c: equ 0x406c
+
+XBIOS_unknown_sub_40ad: equ 0x40ad
+
+XBIOS_unknown_sub_40cf: equ 0x40cf
+
 XBIOS_internal_km_set_expand: equ 0x41ae
 
 XBIOS_internal_km_kt_get: equ 0x42e5
@@ -566,4 +628,9 @@ XBIOS_te_viewport_cursor_row: equ 0x5829
 ; not sure what the format is.
 XBIOS_drive_table: equ 0x5847
 
+; initialised by code at 0x4005; not sure what for yet
+; First two bytes are unknown
+; Next four bytes are a jump to 0x406c (handle CPS8256 DART RX interrupts?)
+; Next four bytes are a jump to 0x4040 (disable CPS8256 DART RX interrupts)
+XBIOS_unknown_scratch_addr_587d: equ 0x587d
 

@@ -76,7 +76,13 @@ XBIOS_dd_calldriver:	equ 0x3e0a
 XBIOS_ca_sa_baud:	equ 0x3e7e
 XBIOS_ca_sa_init:	equ 0x3ebd
 XBIOS_ca_sa_params:	equ 0x3f4e
+;
+; Allocate 0xa scratchpad bytes, store address at 0x587d
+; initialise table config for far jumps to 406c, 4040
+;
+XBIOS_unknown_sub_4005:	equ 0x4005
 XBIOS_ca_sa_intstatus:	equ 0x40bd
+XBIOS_unknown_sub_40cf:	equ 0x40cf
 XBIOS_te_reset:	equ 0x492b
 XBIOS_te_ask:	equ 0x4af3
 XBIOS_te_set_ink:	equ 0x4d3a
@@ -220,7 +226,7 @@ XBIOS_cd_coldboot:
 	ld de,08783h		;0110	11 83 87	. . .
 	call XBIOS_jb_hw_setup	;0113	cd 7b 0d	. { .
 	call XBIOS_jp_init_jumptables	;0116	cd 93 05	. . .
-	call 040cfh		;0119	cd cf 40	. . @
+	call XBIOS_unknown_sub_40cf	;0119	cd cf 40	. . @
 	ei			;011c	fb		.
 	pop de			;011d	d1		.
 	ld hl,0000eh		;011e	21 0e 00	! . .
@@ -229,11 +235,11 @@ XBIOS_cd_coldboot:
 	ld bc,00004h		;0125	01 04 00	. . .
 	add hl,bc		;0128	09		.
 	ld a,002h		;0129	3e 02		> .
-	call sub_09e0h		;012b	cd e0 09	. . .
+	call XBIOS_jb_unknown_sub_09e0	;012b	cd e0 09	. . .
 	pop hl			;012e	e1		.
 	ld bc,l0a0ah		;012f	01 0a 0a	. . .
-	call XBIOS_jb_unknown_0b42	;0132	cd 42 0b	. B .
-	call 04005h		;0135	cd 05 40	. . @
+	call XBIOS_jb_unknown_sub_0b42	;0132	cd 42 0b	. B .
+	call XBIOS_unknown_sub_4005	;0135	cd 05 40	. . @
 	ld a,0ffh		;0138	3e ff		> .
 	ld de,JB_jump_bank2_env	;013a	11 00 00	. . .
 	ld hl,00808h		;013d	21 08 08	! . .
@@ -1603,7 +1609,7 @@ XBIOS_jp_init_jumptables:
 	call sub_09e4h		;05cd	cd e4 09	. . .
 	pop hl			;05d0	e1		.
 	ld bc,JB_jump_bank2_env	;05d1	01 00 00	. . .
-	jp XBIOS_jb_unknown_0b42	;05d4	c3 42 0b	. B .
+	jp XBIOS_jb_unknown_sub_0b42	;05d4	c3 42 0b	. B .
 	call XBIOS_jb_bank_1_2_config_and_jump	;05d7	cd 08 06	. . .
 	ld hl,(XBIOS_scratch_unknown_1125)	;05da	2a 25 11	* % .
 	dec l			;05dd	2d		-
@@ -2300,7 +2306,7 @@ sub_09bah:
 	inc hl			;09dd	23		#
 	ld (hl),d		;09de	72		r
 	ret			;09df	c9		.
-sub_09e0h:
+XBIOS_jb_unknown_sub_09e0:
 	ld bc,(JB_cfg_memory_bank_4000)	;09e0	ed 4b 61 00	. K a .
 sub_09e4h:
 	push hl			;09e4	e5		.
@@ -2479,8 +2485,10 @@ l0ac2h:
 	call c,sub_0c1bh	;0ac5	dc 1b 0c	. . .
 	ei			;0ac8	fb		.
 	ret			;0ac9	c9		.
+XBIOS_jb_unknown_sub_0aca:
 	ld de,010ffh		;0aca	11 ff 10	. . .
 	jp l0d50h		;0acd	c3 50 0d	. P .
+XBIOS_jb_unknown_sub_0ad0:
 	ld de,010ffh		;0ad0	11 ff 10	. . .
 	jr l0ac2h		;0ad3	18 ed		. .
 	di			;0ad5	f3		.
@@ -2566,13 +2574,13 @@ l0b3ah:
 	jr nz,l0b26h		;0b3e	20 e6		  .
 	pop bc			;0b40	c1		.
 	ret			;0b41	c9		.
-XBIOS_jb_unknown_0b42:
+XBIOS_jb_unknown_sub_0b42:
 	ld de,XBIOS_scratch_unknown_1103	;0b42	11 03 11	. . .
 	jr l0b4ah		;0b45	18 03		. .
 ;
 ; TBD - what's this, it's treating 0x1101,2 as magical?
 ;
-XBIOS_jb_unknown_0b47:
+XBIOS_jb_unknown_sub_0b47:
 	ld de,XBIOS_scratch_unknown_1101	;0b47	11 01 11	. . .
 l0b4ah:
 	push hl			;0b4a	e5		.
@@ -2585,10 +2593,10 @@ l0b4ah:
 	ei			;0b51	fb		.
 	pop hl			;0b52	e1		.
 	jp l0d50h		;0b53	c3 50 0d	. P .
-XBIOS_jb_unknown_0b56:
+XBIOS_jb_unknown_sub_0b56:
 	ld de,XBIOS_scratch_unknown_1103	;0b56	11 03 11	. . .
 	jr l0b5eh		;0b59	18 03		. .
-XBIOS_jb_unknown_0b5b:
+XBIOS_jb_unknown_sub_0b5b:
 	ld de,XBIOS_scratch_unknown_1101	;0b5b	11 01 11	. . .
 l0b5eh:
 	call l0d5fh		;0b5e	cd 5f 0d	. _ .
@@ -2781,6 +2789,10 @@ XBIOS_jb_bank1_2_far_jump:
 ;
 ; Store DE and the current bank configuration for
 ; bank 1 + 2 in the given table at HL.
+;
+; HL will be incremented to point to the address
+; after the table, so you can chain calls to
+; this function to populate multiple table entries.
 ;
 XBIOS_jb_store_de_bank1_2_for_far_jump:
 	ld (hl),e		;0c39	73		s

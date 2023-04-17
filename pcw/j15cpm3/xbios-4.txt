@@ -15,10 +15,12 @@ JB_hw_bitflags:	equ 0x0040
 JB_drive_B_present:	equ 0x0042
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
+XBIOS_jb_unknown_sub_0aca:	equ 0x0aca
+XBIOS_jb_unknown_sub_0ad0:	equ 0x0ad0
 ;
 ; TBD - what's this, it's treating 0x1101,2 as magical?
 ;
-XBIOS_jb_unknown_0b47:	equ 0x0b47
+XBIOS_jb_unknown_sub_0b47:	equ 0x0b47
 ;
 ; This looks like it tries to allocate some memory
 ; from the jumpblock scratch space.
@@ -48,6 +50,10 @@ XBIOS_jb_alloc_scratch:	equ 0x0baa
 ;
 ; Store DE and the current bank configuration for
 ; bank 1 + 2 in the given table at HL.
+;
+; HL will be incremented to point to the address
+; after the table, so you can chain calls to
+; this function to populate multiple table entries.
 ;
 XBIOS_jb_store_de_bank1_2_for_far_jump:	equ 0x0c39
 ;
@@ -83,6 +89,8 @@ XBIOS_internal_ca_sa_reg_a:	equ 0x5872
 ; XBIOS_ca_sa_params state
 XBIOS_internal_ca_sa_parity:	equ 0x5874
 XBIOS_internal_ca_sa_tx_data_bits:	equ 0x5876
+; initialised by code at 0x4005; not sure what for yet
+XBIOS_unknown_scratch_addr_587d:	equ 0x587d
 
 	push af			;3c62	f5		.
 	ld hl,058e0h		;3c63	21 e0 58	! . X
@@ -544,19 +552,29 @@ l3ef8h:
 	inc c			;3f0f	0c		.
 	inc c			;3f10	0c		.
 	ld hl,002a5h		;3f11	21 a5 02	! . .
-	call sub_3f2ch		;3f14	cd 2c 3f	. , ?
+	call XBIOS_unknown_dart_status_write_read_check	;3f14	cd 2c 3f	. , ?
 	ld l,05ah		;3f17	2e 5a		. Z
-	call z,sub_3f2ch	;3f19	cc 2c 3f	. , ?
+	call z,XBIOS_unknown_dart_status_write_read_check	;3f19	cc 2c 3f	. , ?
 	ret nz			;3f1c	c0		.
 	ld a,(XBIOS_internal_ca_sa_reg_a)	;3f1d	3a 72 58	: r X
 	and 002h		;3f20	e6 02		. .
 	push af			;3f22	f5		.
 	call z,sub_4036h	;3f23	cc 36 40	. 6 @
 	pop af			;3f26	f1		.
-	call nz,sub_401ch	;3f27	c4 1c 40	. . @
+	call nz,XBIOS_unknown_sub_401c	;3f27	c4 1c 40	. . @
 	scf			;3f2a	37		7
 	ret			;3f2b	c9		.
-sub_3f2ch:
+;
+; Write H, L then H to the IO port C.
+; Then read from C, XOR with L, AND 0xF8 and
+; return the result in A.
+;
+; My guess is it's writing the control register H
+; to the given DART control register in C, then
+; reading writing L, and seeing if the bits in L
+; are still set given the mask 0xF8.
+;
+XBIOS_unknown_dart_status_write_read_check:
 	out (c),h		;3f2c	ed 61		. a
 	out (c),l		;3f2e	ed 69		. i
 	out (c),h		;3f30	ed 61		. a
@@ -694,16 +712,21 @@ l3ff6h:
 	ei			;4002	fb		.
 	rra			;4003	1f		.
 	ret			;4004	c9		.
+;
+; Allocate 0xa scratchpad bytes, store address at 0x587d
+; initialise table config for far jumps to 406c, 4040
+;
+XBIOS_unknown_sub_4005:
 	ld hl,0000ah		;4005	21 0a 00	! . .
 	call XBIOS_jb_alloc_scratch	;4008	cd aa 0b	. . .
-	ld (0587dh),hl		;400b	22 7d 58	" } X
+	ld (XBIOS_unknown_scratch_addr_587d),hl	;400b	22 7d 58	" } X
 	inc hl			;400e	23		#
 	inc hl			;400f	23		#
-	ld de,l406ch		;4010	11 6c 40	. l @
+	ld de,XBIOS_unknown_sub_406c	;4010	11 6c 40	. l @
 	call XBIOS_jb_store_de_bank1_2_for_far_jump	;4013	cd 39 0c	. 9 .
-	ld de,l4040h		;4016	11 40 40	. @ @
+	ld de,XBIOS_cps8256_dart_disable_rx_interrupts	;4016	11 40 40	. @ @
 	jp XBIOS_jb_store_de_bank1_2_for_far_jump	;4019	c3 39 0c	. 9 .
-sub_401ch:
+XBIOS_unknown_sub_401c:
 	di			;401c	f3		.
 	ld hl,0587fh		;401d	21 7f 58	! . X
 	ld (hl),000h		;4020	36 00		6 .
@@ -711,16 +734,26 @@ sub_401ch:
 	ld (05879h),hl		;4025	22 79 58	" y X
 	ld l,061h		;4028	2e 61		. a
 	ld (0587bh),hl		;402a	22 7b 58	" { X
-	call sub_403ch		;402d	cd 3c 40	. < @
-	ld hl,(0587dh)		;4030	2a 7d 58	* } X
-	jp 00acah		;4033	c3 ca 0a	. . .
+	call XBIOS_cps8256_dart_enable_rx_interrupts	;402d	cd 3c 40	. < @
+	ld hl,(XBIOS_unknown_scratch_addr_587d)	;4030	2a 7d 58	* } X
+	jp XBIOS_jb_unknown_sub_0aca	;4033	c3 ca 0a	. . .
 sub_4036h:
-	ld hl,(0587dh)		;4036	2a 7d 58	* } X
-	jp 00ad0h		;4039	c3 d0 0a	. . .
-sub_403ch:
+	ld hl,(XBIOS_unknown_scratch_addr_587d)	;4036	2a 7d 58	* } X
+	jp XBIOS_jb_unknown_sub_0ad0	;4039	c3 d0 0a	. . .
+;
+; Enable CPS8256 DART RX interrupt on all characters
+;
+; Writes 0x18 to register 0x1 @ the CPS826 DART @ 0xE1
+;
+XBIOS_cps8256_dart_enable_rx_interrupts:
 	ld a,018h		;403c	3e 18		> .
 	jr l4041h		;403e	18 01		. .
-l4040h:
+;
+; Disable CPS8256 DART RX interrupts.
+;
+; Writes 0x0 to register 0x1 @ the CPS826 DART @ 0xE1
+;
+XBIOS_cps8256_dart_disable_rx_interrupts:
 	xor a			;4040	af		.
 l4041h:
 	ld c,0e1h		;4041	0e e1		. .
@@ -739,9 +772,9 @@ l4050h:
 	inc (hl)		;4056	34		4
 	jr l4050h		;4057	18 f7		. .
 l4059h:
-	call sub_40adh		;4059	cd ad 40	. . @
+	call XBIOS_unknown_sub_40ad	;4059	cd ad 40	. . @
 	di			;405c	f3		.
-	call sub_403ch		;405d	cd 3c 40	. < @
+	call XBIOS_cps8256_dart_enable_rx_interrupts	;405d	cd 3c 40	. < @
 	ld a,(hl)		;4060	7e		~
 	ld hl,0587bh		;4061	21 7b 58	! { X
 	inc (hl)		;4064	34		4
@@ -750,7 +783,16 @@ l4059h:
 	pop af			;4069	f1		.
 	ei			;406a	fb		.
 	ret			;406b	c9		.
-l406ch:
+;
+; Read the CPS8256 DART status, check for interrupt pending
+; on channel A.
+;
+; If no interrupt, return w/ Z flag set and B=0xFF.
+;
+; TBD: If interrupt, there's a bunch more processing that happens.
+; That definitely needs fleshing out.
+;
+XBIOS_unknown_sub_406c:
 	ld c,0e1h		;406c	0e e1		. .
 	in a,(c)		;406e	ed 78		. x
 	and 002h		;4070	e6 02		. .
@@ -763,7 +805,7 @@ l4075h:
 	ld hl,0587bh		;407a	21 7b 58	! { X
 	dec (hl)		;407d	35		5
 	jr z,l408eh		;407e	28 0e		( .
-	call sub_40adh		;4080	cd ad 40	. . @
+	call XBIOS_unknown_sub_40ad	;4080	cd ad 40	. . @
 	ex de,hl		;4083	eb		.
 	call sub_3fabh		;4084	cd ab 3f	. . ?
 	ld (de),a		;4087	12		.
@@ -772,7 +814,7 @@ l4075h:
 	jr l4075h		;408c	18 e7		. .
 l408eh:
 	inc (hl)		;408e	34		4
-	call l4040h		;408f	cd 40 40	. @ @
+	call XBIOS_cps8256_dart_disable_rx_interrupts	;408f	cd 40 40	. @ @
 l4092h:
 	call sub_4099h		;4092	cd 99 40	. . @
 	ld b,000h		;4095	06 00		. .
@@ -788,7 +830,7 @@ sub_4099h:
 	ld e,000h		;40a8	1e 00		. .
 l40aah:
 	jp sub_3f95h		;40aa	c3 95 3f	. . ?
-sub_40adh:
+XBIOS_unknown_sub_40ad:
 	inc hl			;40ad	23		#
 	ld e,(hl)		;40ae	5e		^
 	ld d,000h		;40af	16 00		. .
@@ -815,6 +857,7 @@ XBIOS_ca_sa_intstatus:
 	ld (hl),000h		;40cb	36 00		6 .
 	ei			;40cd	fb		.
 	ret			;40ce	c9		.
+XBIOS_unknown_sub_40cf:
 	call sub_431bh		;40cf	cd 1b 43	. . C
 	ld hl,01e02h		;40d2	21 02 1e	! . .
 	call XBIOS_internal_km_set_speed	;40d5	cd 7a 44	. z D
@@ -844,7 +887,7 @@ l40f0h:
 	call 009e4h		;410d	cd e4 09	. . .
 	pop hl			;4110	e1		.
 	ld bc,00202h		;4111	01 02 02	. . .
-	jp XBIOS_jb_unknown_0b47	;4114	c3 47 0b	. G .
+	jp XBIOS_jb_unknown_sub_0b47	;4114	c3 47 0b	. G .
 l4117h:
 	push hl			;4117	e5		.
 	push bc			;4118	c5		.
@@ -2584,7 +2627,7 @@ sub_4a89h:
 	call 009e4h		;4a9f	cd e4 09	. . .
 	pop hl			;4aa2	e1		.
 	ld bc,JB_jump_bank2_env	;4aa3	01 00 00	. . .
-	jp XBIOS_jb_unknown_0b47	;4aa6	c3 47 0b	. G .
+	jp XBIOS_jb_unknown_sub_0b47	;4aa6	c3 47 0b	. G .
 l4aa9h:
 	ld hl,(0581bh)		;4aa9	2a 1b 58	* . X
 	inc hl			;4aac	23		#
