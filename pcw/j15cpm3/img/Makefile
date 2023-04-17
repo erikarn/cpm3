@@ -39,3 +39,14 @@ j15cpm3.emt: $(BINFILES)
 
 # TODO: assembling emt file
 # TODO: verifying how big each chunk is so things don't overflow
+
+# From John - taking the CP/M 3 build .SPR files and relocating them
+# for the PCW:
+#
+# resbdos.bin:    resbdos3.spr sprlocate flip128
+#         ./sprlocate 0xf600 0xfc00 0x8c00 $< | ./flip128 > $@
+#
+# bnkbdos.bin:    bnkbdos3.spr sprlocate flip128
+#         ./sprlocate 0x8c00 0xfc00 0x8c00 $< | ./flip128 > $@
+#
+# Need to triple check the offset/sizes though, so be careful.
