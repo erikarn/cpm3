@@ -81,10 +81,9 @@ msg_insert: equ 0x00fe
 msg_sysmsg: equ 0x0101
 kl_movemem: equ 0x0104
 
-; xbios jumpblock memory variables
-XBIOS_ca_sa_var_uart_present: equ 0x1131
+; ==========================================================================
 
-; internal labels - for disassembly
+; xbios-jumpblock-init
 
 ;
 ; Announce the hardware configuration.
@@ -134,14 +133,37 @@ XBIOS_jp_announce: equ 0x01a2
 XBIOS_jp_init_jumptables: equ 0x0593
 
 ;
-; TBD - figure out what this does
+; Call the given function on the stack with an alternate
+; bank configuration for 0x4000 and 0x8000.
 ;
-XBIOS_dd_unknown_1: equ 0x5673
+; This routine pops the address from the stack;
+; loads 0x4000 bank from 0x1129, loads 0x8000 bank
+; from 0x112a, then calls that routine.
+; It then restores those two banks and returns.
+;
+XBIOS_jb_bank_1_2_config_and_jump: equ 0x0608
 
 ;
-; TBD - figure out what this does
+; These 0x11 bytes make up the original NMI
+; routine which is copied into 0x0066.
 ;
-XBIOS_dd_unknown_2: equ 0x56e2
+XBIOS_nmi_routine_orig: equ 0x074d
+
+;
+; Disconnect the FDD from NMI, and return from NMI.
+;
+XBIOS_fdd_nmi_disconnect_and_retn: equ 0x07cb
+
+XBIOS_jb_unknown_0b42: equ 0x0b42
+
+;
+; TBD - what's this, it's treating 0x1101,2 as magical?
+;
+XBIOS_jb_unknown_0b47: equ 0x0b47
+
+XBIOS_jb_unknown_0b56: equ 0x0b56
+
+XBIOS_jb_unknown_0b5b: equ 0x0b5b
 
 ;
 ; This looks like it tries to allocate some memory
@@ -169,27 +191,6 @@ XBIOS_dd_unknown_2: equ 0x56e2
 ; (ie, it /should/ be the space between two symbols...)
 ;
 XBIOS_jb_alloc_scratch: equ 0x0baa
-
-;
-; These 0x11 bytes make up the original NMI
-; routine which is copied into 0x0066.
-;
-XBIOS_nmi_routine_orig: equ 0x074d
-
-;
-; Perform initial hardware detection and setup.
-;
-; Configure the initial memory banks in 0x60/0x62,
-; detect the 50/60Hz monitor config.
-;
-; Then, this blanks from XBIOS_jb_hw_setup for
-; 0x02fa bytes (0x07db -> 0x1074).  I wonder if
-; that is used as system state after this code
-; is run.
-;
-XBIOS_jb_hw_setup: equ 0x0d7b
-
-XBIOS_ldir_ret: equ 0x0d6c
 
 ;
 ; Configure bank1 + bank 2 and jump to address.
@@ -239,16 +240,22 @@ XBIOS_jb_set_bank_4000: equ 0x0c68
 ;
 XBIOS_jb_set_bank_8000: equ 0x0c74
 
+XBIOS_kl_movemem: equ 0x0c80
+
+XBIOS_ldir_ret: equ 0x0d6c
+
 ;
-; Call the given function on the stack with an alternate
-; bank configuration for 0x4000 and 0x8000.
+; Perform initial hardware detection and setup.
 ;
-; This routine pops the address from the stack;
-; loads 0x4000 bank from 0x1129, loads 0x8000 bank
-; from 0x112a, then calls that routine.
-; It then restores those two banks and returns.
+; Configure the initial memory banks in 0x60/0x62,
+; detect the 50/60Hz monitor config.
 ;
-XBIOS_jb_bank_1_2_config_and_jump: equ 0x0608
+; Then, this blanks from XBIOS_jb_hw_setup for
+; 0x02fa bytes (0x07db -> 0x1074).  I wonder if
+; that is used as system state after this code
+; is run.
+;
+XBIOS_jb_hw_setup: equ 0x0d7b
 
 ;
 ; Probe the RAM banks to see which are installed.
@@ -258,29 +265,6 @@ XBIOS_jb_bank_1_2_config_and_jump: equ 0x0608
 ;
 XBIOS_jb_probe_ram_bank: equ 0x0dc3
 
-;
-; Disconnect the FDD from NMI, and return from NMI.
-;
-XBIOS_fdd_nmi_disconnect_and_retn: equ 0x07cb
-
-XBIOS_dd_init: equ 0x5410
-XBIOS_dd_setup: equ 0x546d
-XBIOS_dd_read_sector: equ 0x5111
-XBIOS_dd_write_sector: equ 0x513e
-XBIOS_dd_check_sector: equ 0x5149
-XBIOS_dd_format: equ 0x5157
-XBIOS_dd_login: equ 0x519d
-XBIOS_dd_sel_format: equ 0x51f6
-XBIOS_dd_drive_status: equ 0x53de
-XBIOS_dd_read_id: equ 0x5125
-XBIOS_dd_l_dpb: equ 0x524a
-XBIOS_dd_l_xdpb: equ 0x5208
-XBIOS_dd_l_on_motor: equ 0x56be
-XBIOS_dd_l_t_off_motor: equ 0x56d6
-XBIOS_dd_l_off_motor: equ 0x56ea
-XBIOS_dd_l_read: equ 0x5617
-XBIOS_dd_l_write: equ 0x5620
-XBIOS_dd_l_seek: equ 0x550e
 
 XBIOS_ca_sa_init: equ 0x3ebd
 XBIOS_ca_sa_baud: equ 0x3e7e
@@ -294,12 +278,6 @@ XBIOS_te_set_ink: equ 0x4d3a
 XBIOS_te_set_border: equ 0x4d45
 XBIOS_te_set_speed: equ 0x4d48
 
-XBIOS_km_set_expand: equ 0x3d70
-XBIOS_km_set_key: equ 0x3d6d
-XBIOS_km_kt_get: equ 0x3d76
-XBIOS_km_kt_put: equ 0x3d79
-XBIOS_km_set_speed: equ 0x3d73
-
 XBIOS_cd_version: equ 0x0197
 XBIOS_cd_info: equ 0x017b
 
@@ -311,38 +289,12 @@ XBIOS_dd_calldriver: equ 0x3e0a
 XBIOS_msg_retrymsg: equ 0x3d1d
 XBIOS_msg_insert: equ 0x3d44
 XBIOS_msg_sysmsg: equ 0x4de8
-XBIOS_kl_movemem: equ 0x0c80
 
 
 ; xbios-4
 
 ; functions
 
-XBIOS_internal_km_set_key: equ 0x447e
-XBIOS_internal_km_set_expand: equ 0x41ae
-XBIOS_internal_km_set_speed: equ 0x447a
-XBIOS_internal_km_kt_get: equ 0x42e5
-
-; Fetch the drive capability flags for Drive A or B.
-;
-; call: C=0 for drive A, C=1 for drive B
-; ret: drive HW flags in bits 0..3, 5 of A.
-;
-XBIOS_internal_drive_get_capabilities: equ 0x5369
-
-;
-; Fetch the drive information table for the
-; given drive.
-; It only supports C=0..3 as it masks
-; it with 0x3 first before doing the table
-; lookup math.
-;
-; Note: it uses the table at 0x5847.
-;
-; call: C=0 .. 3 for drives A..D
-; return: drive information address in HL.
-;
-XBIOS_internal_drive_get_info: equ 0x54fe
 
 ; sys msg related funcs to figure out
 ; XBIOS_msg_sysmsg
@@ -355,33 +307,6 @@ XBIOS_internal_drive_get_info: equ 0x54fe
 ; 4e45: is this loading some offset value and adding it to hl,
 ; then doing some expansion?
 
-;
-; Write the space character via XBIOS_write_char.
-;
-; Corrupts: A.
-XBIOS_write_space: equ 0x4f30
-
-;
-; Write the given character in A.
-;
-; It uses whatever function is in 0x5704 to do the work;
-; so callers need to initialise that address first with
-; a routine to actually output the character.
-;
-; Saves: BC, DE, HL.
-; Corrupts: AF.
-;
-XBIOS_write_char: equ 0x4f32
-
-;
-; Write the given string pointed to at HL to the current
-; output device via XBIOS_write_char.
-;
-; The string isn't expanded with tokens, and is terminated.
-; with 0xff.
-; Corrupts: HL at least, likely AF, BC, DE too.
-;
-XBIOS_write_str_no_expansion: equ 0x4f40
 
 ; XBIOS_msg_sysmsg:
 ; stores 0xba09 -> 0x5704, and then uses this to write to
@@ -395,11 +320,75 @@ XBIOS_write_str_no_expansion: equ 0x4f40
 ; 0x4d90 -> 0x4de7 - .. what's this? it doesn't look
 ; like valid code?
 
+; 3d8c: looks like a UART init routine? See what it's
+; calling and what HL is pointing to
+
+; 3f2c: outputting h, l and h to an IO port, then
+; reading from it, and AND'ing 0xf8.  See what's calling it,
+; I wonder if it's a printer or UART. (eg 0x02, 0xa5, 0x02 sent
+; to the register as called from around 3f12.
+
+; look at XBIOS_cd_info as it probes the drives, reads the
+; hw state flags, etc.  Annotate those.
+
+; This is initially setup with the start address of
+; the scratch space available after XBIOS_jp_hw_setup
+; does initial hardware setup.
+XBIOS_scratch_start_addr: equ 0x111a
+
+; What's 0x1101-0x1102 ?
+XBIOS_scratch_unknown_1101: equ 0x1101
+
+; What's 0x1103-0x1104 ?
+XBIOS_scratch_unknown_1103: equ 0x1103
+
+; What's 0x1106 ?
+XBIOS_scratch_unknown_1106: equ 0x1106
+
+; What's 0x1107-0x1108 ?
+XBIOS_scratch_unknown_1107: equ 0x1107
+
+; What's 0x1109-0x110a ?
+XBIOS_scratch_unknown_1109: equ 0x1109
+
+; 0x1121 -> 0x1122
+XBIOS_scratch_unknown_1121: equ 0x1121
+
+; 0x1123 -> 0x1124
+XBIOS_scratch_unknown_1123: equ 0x1123
+
+; 0x1125 -> 0x1126
+XBIOS_scratch_unknown_1125: equ 0x1125
+
+; 0x1127 -> 0x1128
+XBIOS_scratch_unknown_1127: equ 0x1127
+
+; XXX TODO: do I have these two around the right way?
+XBIOS_bank_1_2_jump_bc_bank_2: equ 0x1129
+XBIOS_bank_1_2_jump_bc_bank_1: equ 0x112a
+
+XBIOS_ca_sa_var_uart_present: equ 0x1131
+
+
+; ==========================================================================
+;
+; xbios-4
+
+XBIOS_km_set_key: equ 0x3d6d
+
+XBIOS_km_set_expand: equ 0x3d70
+
+XBIOS_km_kt_get: equ 0x3d76
+
+XBIOS_km_kt_put: equ 0x3d79
+
+XBIOS_km_set_speed: equ 0x3d73
+
 ;
 ; Initialise the UART at 0xe3.
 ;
 ; This writes a set of configuration bytes to the UART.
-
+;
 XBIOS_internal_cps8256_uart_init: equ 0x3d7c
 
 ;
@@ -438,41 +427,113 @@ XBIOS_internal_standalone_cen_wait_write_byte: equ 0x3db5
 ;
 XBIOS_internal_standalone_cen_config: equ 0x3dae
 
-; 3d8c: looks like a UART init routine? See what it's
-; calling and what HL is pointing to
+XBIOS_internal_km_set_expand: equ 0x41ae
 
-; 3f2c: outputting h, l and h to an IO port, then
-; reading from it, and AND'ing 0xf8.  See what's calling it,
-; I wonder if it's a printer or UART. (eg 0x02, 0xa5, 0x02 sent
-; to the register as called from around 3f12.
+XBIOS_internal_km_kt_get: equ 0x42e5
 
-; look at XBIOS_cd_info as it probes the drives, reads the
-; hw state flags, etc.  Annotate those.
+XBIOS_internal_km_set_speed: equ 0x447a
 
-; variables
+XBIOS_internal_km_set_key: equ 0x447e
+
+;
+; Write the space character via XBIOS_write_char.
+;
+; Corrupts: A.
+XBIOS_write_space: equ 0x4f30
+
+;
+; Write the given character in A.
+;
+; It uses whatever function is in 0x5704 to do the work;
+; so callers need to initialise that address first with
+; a routine to actually output the character.
+;
+; Saves: BC, DE, HL.
+; Corrupts: AF.
+;
+XBIOS_write_char: equ 0x4f32
+
+;
+; Write the given string pointed to at HL to the current
+; output device via XBIOS_write_char.
+;
+; The string isn't expanded with tokens, and is terminated.
+; with 0xff.
+; Corrupts: HL at least, likely AF, BC, DE too.
+;
+XBIOS_write_str_no_expansion: equ 0x4f40
+
+XBIOS_dd_read_sector: equ 0x5111
+
+XBIOS_dd_read_id: equ 0x5125
+
+XBIOS_dd_write_sector: equ 0x513e
+
+XBIOS_dd_check_sector: equ 0x5149
+
+XBIOS_dd_format: equ 0x5157
+
+XBIOS_dd_login: equ 0x519d
+
+XBIOS_dd_sel_format: equ 0x51f6
+
+XBIOS_dd_l_xdpb: equ 0x5208
+
+XBIOS_dd_l_dpb: equ 0x524a
+
+; Fetch the drive capability flags for Drive A or B.
+;
+; call: C=0 for drive A, C=1 for drive B
+; ret: drive HW flags in bits 0..3, 5 of A.
+;
+XBIOS_internal_drive_get_capabilities: equ 0x5369
+
+XBIOS_dd_drive_status: equ 0x53de
+
+XBIOS_dd_init: equ 0x5410
+
+XBIOS_dd_setup: equ 0x546d
+
+;
+; Fetch the drive information table for the
+; given drive.
+; It only supports C=0..3 as it masks
+; it with 0x3 first before doing the table
+; lookup math.
+;
+; Note: it uses the table at 0x5847.
+;
+; call: C=0 .. 3 for drives A..D
+; return: drive information address in HL.
+;
+XBIOS_internal_drive_get_info: equ 0x54fe
+
+XBIOS_dd_l_seek: equ 0x550e
+
+XBIOS_dd_l_read: equ 0x5617
+
+XBIOS_dd_l_write: equ 0x5620
+
+;
+; TBD - figure out what this does
+;
+XBIOS_dd_unknown_sub_5673: equ 0x5673
 
 
-; XBIOS_ca_sa_params state
-XBIOS_internal_ca_sa_stopbits: equ 0x5875
-XBIOS_internal_ca_sa_parity: equ 0x5874
-XBIOS_internal_ca_sa_tx_data_bits: equ 0x5876
-XBIOS_internal_ca_sa_rx_data_bits: equ 0x5877
-; unknown
-XBIOS_internal_ca_sa_reg_bc: equ 0x5870
-; unknown
-XBIOS_internal_ca_sa_reg_a: equ 0x5872
+
+XBIOS_dd_l_on_motor: equ 0x56be
+
+XBIOS_dd_l_t_off_motor: equ 0x56d6
+
+;
+; TBD - figure out what this does
+;
+XBIOS_dd_unknown_sub_56e2: equ 0x56e2
+
+XBIOS_dd_l_off_motor: equ 0x56ea
 
 
-XBIOS_te_viewport_left: equ 0x5825
-XBIOS_te_viewport_top: equ 0x5826
-XBIOS_te_viewport_width: equ 0x5821
-XBIOS_te_viewport_height: equ 0x5822
-XBIOS_te_viewport_cursor_col: equ 0x5828
-XBIOS_te_viewport_cursor_row: equ 0x5829
-
-
-; unknown memory addresses (not yet in the disassembly,
-; but referenced somewhere.)
+; ==========================================================================
 
 ; Note: 0x5703 is currently the /end/ of the disassembly
 ; of xbios-4.bin.  0x5704 (the first variable) starts
@@ -482,15 +543,27 @@ XBIOS_te_viewport_cursor_row: equ 0x5829
 ; call for each character being written.  Two bytes.
 XBIOS_write_char_out_func: equ 0x5704
 
+; unknown
+XBIOS_internal_ca_sa_reg_bc: equ 0x5870
+; unknown
+XBIOS_internal_ca_sa_reg_a: equ 0x5872
+
+; XBIOS_ca_sa_params state
+XBIOS_internal_ca_sa_parity: equ 0x5874
+XBIOS_internal_ca_sa_stopbits: equ 0x5875
+XBIOS_internal_ca_sa_tx_data_bits: equ 0x5876
+XBIOS_internal_ca_sa_rx_data_bits: equ 0x5877
+
+
+XBIOS_te_viewport_width: equ 0x5821
+XBIOS_te_viewport_height: equ 0x5822
+XBIOS_te_viewport_left: equ 0x5825
+XBIOS_te_viewport_top: equ 0x5826
+XBIOS_te_viewport_cursor_col: equ 0x5828
+XBIOS_te_viewport_cursor_row: equ 0x5829
+
 ; Drive table - used by XBIOS_internal_drive_get_info ;
 ; not sure what the format is.
 XBIOS_drive_table: equ 0x5847
 
-; XXX TODO: do I have these two around the right way?
-XBIOS_bank_1_2_jump_bc_bank_2: equ 0x1129
-XBIOS_bank_1_2_jump_bc_bank_1: equ 0x112a
 
-; This is initially setup with the start address of
-; the scratch space available after XBIOS_jp_hw_setup
-; does initial hardware setup.
-XBIOS_scratch_start_addr: equ 0x111a

@@ -16,6 +16,10 @@ JB_drive_B_present:	equ 0x0042
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
 ;
+; TBD - what's this, it's treating 0x1101,2 as magical?
+;
+XBIOS_jb_unknown_0b47:	equ 0x0b47
+;
 ; This looks like it tries to allocate some memory
 ; from the jumpblock scratch space.
 ;
@@ -58,6 +62,12 @@ XBIOS_jb_set_bank_4000:	equ 0x0c68
 ; The old bank is returned in A.
 ;
 XBIOS_jb_set_bank_8000:	equ 0x0c74
+; What's 0x1101-0x1102 ?
+XBIOS_scratch_unknown_1101:	equ 0x1101
+; 0x1121 -> 0x1122
+XBIOS_scratch_unknown_1121:	equ 0x1121
+; 0x1123 -> 0x1124
+XBIOS_scratch_unknown_1123:	equ 0x1123
 ; Used by XBIOS_write_char as a function pointer to
 ; call for each character being written.  Two bytes.
 XBIOS_write_char_out_func:	equ 0x5704
@@ -70,6 +80,7 @@ XBIOS_te_viewport_cursor_col:	equ 0x5828
 XBIOS_internal_ca_sa_reg_bc:	equ 0x5870
 ; unknown
 XBIOS_internal_ca_sa_reg_a:	equ 0x5872
+; XBIOS_ca_sa_params state
 XBIOS_internal_ca_sa_parity:	equ 0x5874
 XBIOS_internal_ca_sa_tx_data_bits:	equ 0x5876
 
@@ -219,6 +230,11 @@ XBIOS_km_kt_get:
 	jp XBIOS_internal_km_kt_get	;3d76	c3 e5 42	. . B
 XBIOS_km_kt_put:
 	jp l430dh		;3d79	c3 0d 43	. . C
+;
+; Initialise the UART at 0xe3.
+;
+; This writes a set of configuration bytes to the UART.
+;
 XBIOS_internal_cps8256_uart_init:
 	ld hl,cps8256_uart_init_table_start	;3d7c	21 85 3d	! . =
 	ld bc,007e3h		;3d7f	01 e3 07	. . .
@@ -828,7 +844,7 @@ l40f0h:
 	call 009e4h		;410d	cd e4 09	. . .
 	pop hl			;4110	e1		.
 	ld bc,00202h		;4111	01 02 02	. . .
-	jp 00b47h		;4114	c3 47 0b	. G .
+	jp XBIOS_jb_unknown_0b47	;4114	c3 47 0b	. G .
 l4117h:
 	push hl			;4117	e5		.
 	push bc			;4118	c5		.
@@ -894,7 +910,7 @@ l4171h:
 	ld bc,00103h		;4171	01 03 01	. . .
 	ld a,(de)		;4174	1a		.
 	ld bc,0011ah		;4175	01 1a 01	. . .
-	ld de,01101h		;4178	11 01 11	. . .
+	ld de,XBIOS_scratch_unknown_1101	;4178	11 01 11	. . .
 	ld bc,00113h		;417b	01 13 01	. . .
 	inc de			;417e	13		.
 	ld bc,00110h		;417f	01 10 01	. . .
@@ -2568,7 +2584,7 @@ sub_4a89h:
 	call 009e4h		;4a9f	cd e4 09	. . .
 	pop hl			;4aa2	e1		.
 	ld bc,JB_jump_bank2_env	;4aa3	01 00 00	. . .
-	jp 00b47h		;4aa6	c3 47 0b	. G .
+	jp XBIOS_jb_unknown_0b47	;4aa6	c3 47 0b	. G .
 l4aa9h:
 	ld hl,(0581bh)		;4aa9	2a 1b 58	* . X
 	inc hl			;4aac	23		#
@@ -4551,7 +4567,7 @@ l5647h:
 	out (0f8h),a		;5650	d3 f8		. .
 	ld a,(hl)		;5652	7e		~
 sub_5653h:
-	ld hl,(01123h)		;5653	2a 23 11	* # .
+	ld hl,(XBIOS_scratch_unknown_1123)	;5653	2a 23 11	* # .
 	ld (hl),000h		;5656	36 00		6 .
 	di			;5658	f3		.
 	call sub_56ach		;5659	cd ac 56	. . V
@@ -4571,8 +4587,8 @@ l5669h:
 ;
 ; TBD - figure out what this does
 ;
-XBIOS_dd_unknown_1:
-	ld de,(01123h)		;5673	ed 5b 23 11	. [ # .
+XBIOS_dd_unknown_sub_5673:
+	ld de,(XBIOS_scratch_unknown_1123)	;5673	ed 5b 23 11	. [ # .
 	ld a,(de)		;5677	1a		.
 	or a			;5678	b7		.
 	ld hl,05868h		;5679	21 68 58	! h X
@@ -4647,7 +4663,7 @@ XBIOS_dd_l_t_off_motor:
 ;
 ; TBD - figure out what this does
 ;
-XBIOS_dd_unknown_2:
+XBIOS_dd_unknown_sub_56e2:
 	ld hl,05867h		;56e2	21 67 58	! g X
 	ld a,(hl)		;56e5	7e		~
 	cpl			;56e6	2f		/
@@ -4665,7 +4681,7 @@ sub_56f6h:
 	xor a			;56f6	af		.
 sub_56f7h:
 	push hl			;56f7	e5		.
-	ld hl,(01121h)		;56f8	2a 21 11	* ! .
+	ld hl,(XBIOS_scratch_unknown_1121)	;56f8	2a 21 11	* ! .
 	inc hl			;56fb	23		#
 	inc hl			;56fc	23		#
 	ld (hl),a		;56fd	77		w
