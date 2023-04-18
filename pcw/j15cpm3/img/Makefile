@@ -36,6 +36,11 @@ fid-loader.bin: fid-loader.z80
 
 j15cpm3.emt: $(BINFILES)
 
+bdos-banked.bin: bnkbdos3.spr
+	./sprlocate 0x8c00 0xfc00 0x8c00 $< > $@
+
+bdos-resident.bin: resbdos3.spr
+	./sprlocate 0xf600 0xfc00 0x8c00 $< > $@
 
 # TODO: assembling emt file
 # TODO: verifying how big each chunk is so things don't overflow
