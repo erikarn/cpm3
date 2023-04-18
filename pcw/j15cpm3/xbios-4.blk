@@ -4,3 +4,15 @@ unknown_1_blk: start 0x4d90 end 0x4de7 type bytedata
 
 ; Default UART register programming for CPS8256
 cps8256_uart_init_table: start 0x3d85 end 0x3d8b type bytedata
+
+; Drive configuration blocks
+
+;
+; Default configuration block for drive A
+;
+floppy_drive_param_block_A: start 0x5402 end 0x5408 type bytedata
+
+;
+; Default configuration block for drive B
+;
+floppy_drive_param_block_B: start 0x5409 end 0x540f type bytedata

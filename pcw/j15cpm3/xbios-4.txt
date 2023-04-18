@@ -82,6 +82,10 @@ XBIOS_te_viewport_height:	equ 0x5822
 XBIOS_te_viewport_left:	equ 0x5825
 XBIOS_te_viewport_top:	equ 0x5826
 XBIOS_te_viewport_cursor_col:	equ 0x5828
+; Type of drive for drive B ? Or is it A and B, in
+; different nybbles? (Drive B being bits 0..3?)
+;
+XBIOS_drive_types_present:	equ 0x584e
 ; unknown
 XBIOS_internal_ca_sa_reg_bc:	equ 0x5870
 ; unknown
@@ -90,8 +94,12 @@ XBIOS_internal_ca_sa_reg_a:	equ 0x5872
 XBIOS_internal_ca_sa_parity:	equ 0x5874
 XBIOS_internal_ca_sa_tx_data_bits:	equ 0x5876
 ; initialised by code at 0x4005; not sure what for yet
+; First two bytes are unknown
+; Next four bytes are a jump to 0x406c (handle CPS8256 DART RX interrupts?)
+; Next four bytes are a jump to 0x4040 (disable CPS8256 DART RX interrupts)
 XBIOS_unknown_scratch_addr_587d:	equ 0x587d
 
+XBIOS_unknown_sub_3c62:
 	push af			;3c62	f5		.
 	ld hl,058e0h		;3c63	21 e0 58	! . X
 	ld b,010h		;3c66	06 10		. .
@@ -716,6 +724,8 @@ l3ff6h:
 ; Allocate 0xa scratchpad bytes, store address at 0x587d
 ; initialise table config for far jumps to 406c, 4040
 ;
+; My guess is this is the CPS8256 DART ISR/buffer init routine.
+;
 XBIOS_unknown_sub_4005:
 	ld hl,0000ah		;4005	21 0a 00	! . .
 	call XBIOS_jb_alloc_scratch	;4008	cd aa 0b	. . .
@@ -790,7 +800,8 @@ l4059h:
 ; If no interrupt, return w/ Z flag set and B=0xFF.
 ;
 ; TBD: If interrupt, there's a bunch more processing that happens.
-; That definitely needs fleshing out.
+; That definitely needs fleshing out.  Is this the RX buffer reading
+; routine, or?
 ;
 XBIOS_unknown_sub_406c:
 	ld c,0e1h		;406c	0e e1		. .
@@ -1476,6 +1487,7 @@ l446ch:
 	inc hl			;4471	23		#
 	adc a,(hl)		;4472	8e		.
 	ret			;4473	c9		.
+XBIOS_unknown_sub_4474:
 	ld a,0ffh		;4474	3e ff		> .
 	ld (057d2h),a		;4476	32 d2 57	2 . W
 	ret			;4479	c9		.
@@ -2393,6 +2405,7 @@ l4913h:
 	cp e			;491b	bb		.
 	pop bc			;491c	c1		.
 	nop			;491d	00		.
+XBIOS_unknown_sub_491e:
 	call sub_46c5h		;491e	cd c5 46	. . F
 	call sub_4a89h		;4921	cd 89 4a	. . J
 	call sub_4f4ah		;4924	cd 4a 4f	. J O
@@ -3743,7 +3756,7 @@ sub_515eh:
 l5160h:
 	ld hl,XBIOS_dd_l_write	;5160	21 20 56	!   V
 sub_5163h:
-	call sub_54efh		;5163	cd ef 54	. . T
+	call XBIOS_dd_unknown_sub_54ef	;5163	cd ef 54	. . T
 	call 00622h		;5166	cd 22 06	. " .
 	call XBIOS_dd_l_on_motor	;5169	cd be 56	. . V
 	call sub_5370h		;516c	cd 70 53	. p S
@@ -3884,7 +3897,7 @@ l5217h:
 	ld a,(hl)		;5234	7e		~
 	ld (ix+018h),a		;5235	dd 77 18	. w .
 	ld hl,dd_init		;5238	21 80 00	! . .
-	call sub_53f1h		;523b	cd f1 53	. . S
+	call XBIOS_shift_hl_left	;523b	cd f1 53	. . S
 	ld (ix+015h),l		;523e	dd 75 15	. u .
 	ld (ix+016h),h		;5241	dd 74 16	. t .
 	ld (ix+019h),060h	;5244	dd 36 19 60	. 6 . `
@@ -3899,13 +3912,13 @@ XBIOS_dd_l_dpb:
 	ld c,(hl)		;5251	4e		N
 	ld (ix+00fh),c		;5252	dd 71 0f	. q .
 	ld a,c			;5255	79		y
-	call sub_53e7h		;5256	cd e7 53	. . S
+	call XBIOS_shift_a_left_minus_1	;5256	cd e7 53	. . S
 	ld (ix+010h),a		;5259	dd 77 10	. w .
 	dec hl			;525c	2b		+
 	ld l,(hl)		;525d	6e		n
 	ld h,b			;525e	60		`
 	ld b,c			;525f	41		A
-	call sub_53f1h		;5260	cd f1 53	. . S
+	call XBIOS_shift_hl_left	;5260	cd f1 53	. . S
 	ld (ix+000h),l		;5263	dd 75 00	. u .
 	ld (ix+001h),h		;5266	dd 74 01	. t .
 	ld hl,00006h		;5269	21 06 00	! . .
@@ -3914,7 +3927,7 @@ XBIOS_dd_l_dpb:
 	ld (ix+002h),c		;526e	dd 71 02	. q .
 	push hl			;5271	e5		.
 	ld a,c			;5272	79		y
-	call sub_53e7h		;5273	cd e7 53	. . S
+	call XBIOS_shift_a_left_minus_1	;5273	cd e7 53	. . S
 	ld (ix+003h),a		;5276	dd 77 03	. w .
 	dec hl			;5279	2b		+
 	ld e,(hl)		;527a	5e		^
@@ -3943,7 +3956,7 @@ l5297h:
 	ld a,c			;529a	79		y
 	sub (ix+00fh)		;529b	dd 96 0f	. . .
 	ld b,a			;529e	47		G
-	call sub_53f8h		;529f	cd f8 53	. . S
+	call XBIOS_shift_hl_right	;529f	cd f8 53	. . S
 	dec hl			;52a2	2b		+
 	ld (ix+005h),l		;52a3	dd 75 05	. u .
 	ld (ix+006h),h		;52a6	dd 74 06	. t .
@@ -3955,12 +3968,12 @@ l5297h:
 l52b0h:
 	ld a,c			;52b0	79		y
 	sub b			;52b1	90		.
-	call sub_53e7h		;52b2	cd e7 53	. . S
+	call XBIOS_shift_a_left_minus_1	;52b2	cd e7 53	. . S
 	ld (ix+004h),a		;52b5	dd 77 04	. w .
 	pop de			;52b8	d1		.
 	push hl			;52b9	e5		.
 	ld b,002h		;52ba	06 02		. .
-	call sub_53f8h		;52bc	cd f8 53	. . S
+	call XBIOS_shift_hl_right	;52bc	cd f8 53	. . S
 	inc hl			;52bf	23		#
 	inc hl			;52c0	23		#
 	ex (sp),hl		;52c1	e3		.
@@ -3989,13 +4002,13 @@ l52d3h:
 	ld b,c			;52e2	41		A
 	inc b			;52e3	04		.
 	inc b			;52e4	04		.
-	call sub_53f1h		;52e5	cd f1 53	. . S
+	call XBIOS_shift_hl_left	;52e5	cd f1 53	. . S
 	push hl			;52e8	e5		.
 	dec hl			;52e9	2b		+
 	ld (ix+007h),l		;52ea	dd 75 07	. u .
 	ld (ix+008h),h		;52ed	dd 74 08	. t .
 	ld b,002h		;52f0	06 02		. .
-	call sub_53f8h		;52f2	cd f8 53	. . S
+	call XBIOS_shift_hl_right	;52f2	cd f8 53	. . S
 	inc hl			;52f5	23		#
 	ld (ix+00bh),l		;52f6	dd 75 0b	. u .
 	ld (ix+00ch),h		;52f9	dd 74 0c	. t .
@@ -4144,17 +4157,30 @@ sub_53c0h:
 	push hl			;53c4	e5		.
 	push de			;53c5	d5		.
 	push bc			;53c6	c5		.
-	call sub_53d1h		;53c7	cd d1 53	. . S
+	call XBIOS_dd_unknown_sub_53d1	;53c7	cd d1 53	. . S
 	pop bc			;53ca	c1		.
 	pop de			;53cb	d1		.
 	call sub_55a2h		;53cc	cd a2 55	. . U
 	pop hl			;53cf	e1		.
 	ret			;53d0	c9		.
-sub_53d1h:
+XBIOS_dd_unknown_sub_53d1:
 	push hl			;53d1	e5		.
 	ld hl,0582eh		;53d2	21 2e 58	! . X
 	ret			;53d5	c9		.
-	ld a,(0584eh)		;53d6	3a 4e 58	: N X
+;
+; Return whether drive B: was detected.
+;
+; Returns whether the drive is present and the drive
+; type byte in A.
+;
+; If a drive is present, A contains the drive type
+; and the carry flag is set.
+;
+; If a drive is not present, A is 0 and the carry
+; flag is cleared.
+;
+XBIOS_dd_drive_type_b:
+	ld a,(XBIOS_drive_types_present)	;53d6	3a 4e 58	: N X
 	and 00fh		;53d9	e6 0f		. .
 	ret z			;53db	c8		.
 	scf			;53dc	37		7
@@ -4163,7 +4189,13 @@ XBIOS_dd_drive_status:
 	call XBIOS_dd_l_on_motor	;53de	cd be 56	. . V
 	call sub_55e9h		;53e1	cd e9 55	. . U
 	jp XBIOS_dd_l_t_off_motor	;53e4	c3 d6 56	. . V
-sub_53e7h:
+;
+; Calculate (A << B) - 1.
+;
+; Initial and return value in HL.
+; Numbers of shift left in B.
+;
+XBIOS_shift_a_left_minus_1:
 	ld b,a			;53e7	47		G
 	or a			;53e8	b7		.
 	ret z			;53e9	c8		.
@@ -4173,7 +4205,14 @@ l53ech:
 	djnz l53ech		;53ed	10 fd		. .
 	dec a			;53ef	3d		=
 	ret			;53f0	c9		.
-sub_53f1h:
+;
+; Shift HL left by 'B' bits.
+;
+; If B is 0, then do nothing (ie, not 256 loops.)
+;
+; Corrupts: A
+;
+XBIOS_shift_hl_left:
 	ld a,b			;53f1	78		x
 	or a			;53f2	b7		.
 	ret z			;53f3	c8		.
@@ -4181,7 +4220,14 @@ l53f4h:
 	add hl,hl		;53f4	29		)
 	djnz l53f4h		;53f5	10 fd		. .
 	ret			;53f7	c9		.
-sub_53f8h:
+; SRL HL - shift right by B bits.
+;
+; This shifts HL right, with a 0 being put
+; into bit 15 (ie, bit 7 of H.)
+;
+; Corrupts A.
+;
+XBIOS_shift_hl_right:
 	ld a,b			;53f8	78		x
 	or a			;53f9	b7		.
 	ret z			;53fa	c8		.
@@ -4190,21 +4236,39 @@ l53fbh:
 	rr l			;53fd	cb 1d		. .
 	djnz l53fbh		;53ff	10 fa		. .
 	ret			;5401	c9		.
-l5402h:
-	ld a,(bc)		;5402	0a		.
-	ld (00fafh),a		;5403	32 af 0f	2 . .
-	inc c			;5406	0c		.
-	rrca			;5407	0f		.
+
+; BLOCK 'floppy_drive_param_block_A' (start 0x5402 end 0x5408)
+floppy_drive_param_block_A_start:
+	defb 00ah		;5402	0a		.
+	defb 032h		;5403	32		2
+	defb 0afh		;5404	af		.
+	defb 00fh		;5405	0f		.
+	defb 00ch		;5406	0c		.
+	defb 00fh		;5407	0f		.
+floppy_drive_param_block_A_end:
 	inc bc			;5408	03		.
-l5409h:
-	ld a,(bc)		;5409	0a		.
-	ld (00f78h),a		;540a	32 78 0f	2 x .
-	inc bc			;540d	03		.
-	rrca			;540e	0f		.
+
+; BLOCK 'floppy_drive_param_block_B' (start 0x5409 end 0x540f)
+floppy_drive_param_block_B_start:
+	defb 00ah		;5409	0a		.
+	defb 032h		;540a	32		2
+	defb 078h		;540b	78		x
+	defb 00fh		;540c	0f		.
+	defb 003h		;540d	03		.
+	defb 00fh		;540e	0f		.
+floppy_drive_param_block_B_end:
 	inc bc			;540f	03		.
+;
+; Initialise the floppy disk driver to the default parameters
+; for A:, and if detected, also B: .
+;
+; Also turns the motors off.
+;
+; Corrupts AF, BC, DE, HL.
+;
 XBIOS_dd_init:
 	ld a,00ah		;5410	3e 0a		> .
-	ld (0584eh),a		;5412	32 4e 58	2 N X
+	ld (XBIOS_drive_types_present),a	;5412	32 4e 58	2 N X
 	nop			;5415	00		.
 	nop			;5416	00		.
 	nop			;5417	00		.
@@ -4213,7 +4277,7 @@ XBIOS_dd_init:
 	call sub_5422h		;541c	cd 22 54	. " T
 	jp XBIOS_dd_l_t_off_motor	;541f	c3 d6 56	. . V
 sub_5422h:
-	ld hl,l5402h		;5422	21 02 54	! . T
+	ld hl,floppy_drive_param_block_A_start	;5422	21 02 54	! . T
 	call XBIOS_dd_setup	;5425	cd 6d 54	. m T
 	call XBIOS_dd_l_off_motor	;5428	cd ea 56	. . V
 	ld c,b			;542b	48		H
@@ -4233,26 +4297,44 @@ l543fh:
 	ret nz			;5445	c0		.
 l5446h:
 	xor a			;5446	af		.
-	ld (0584eh),a		;5447	32 4e 58	2 N X
+	ld (XBIOS_drive_types_present),a	;5447	32 4e 58	2 N X
 	ret			;544a	c9		.
 l544bh:
 	ld hl,JB_hw_bitflags	;544b	21 40 00	! @ .
 	set 0,(hl)		;544e	cb c6		. .
 	ld c,000h		;5450	0e 00		. .
-	call sub_54cdh		;5452	cd cd 54	. . T
+	call XBIOS_dd_unknown_sub_54cd	;5452	cd cd 54	. . T
 	jr c,l5459h		;5455	38 02		8 .
 	and 040h		;5457	e6 40		. @
 l5459h:
 	call z,sub_5466h	;5459	cc 66 54	. f T
 	ld c,002h		;545c	0e 02		. .
-	call sub_54cdh		;545e	cd cd 54	. . T
+	call XBIOS_dd_unknown_sub_54cd	;545e	cd cd 54	. . T
 	jr nc,l5446h		;5461	30 e3		0 .
 	jr nz,l543fh		;5463	20 da		  .
 	dec c			;5465	0d		.
 sub_5466h:
 	ld b,02ah		;5466	06 2a		. *
-	ld de,l5409h		;5468	11 09 54	. . T
+	ld de,floppy_drive_param_block_B_start	;5468	11 09 54	. . T
 	jr l5480h		;546b	18 13		. .
+;
+; Setup the floppy disk driver.
+;
+; In this version (1.11 and later) - if HL is 0, setup
+; a single drive, id in C, pointed to by DE.
+;
+; If HL isn't 0, then HL points to a parameter block.
+;
+; Parameter block:
+;
+; DB motor on timeout, 10ths of a second
+; DB motor off timeout, 10ths of a second
+; DB write current off time in 10 uS units
+; DB head settle time, milliseconds.
+; DB step rate, milliseconds.
+; DB head unload delay in 32ms units.
+; DB (2*head load delay in 4ms units)+non DMA mode.
+;
 XBIOS_dd_setup:
 	ld a,h			;546d	7c		|
 	or l			;546e	b5		.
@@ -4292,7 +4374,7 @@ l5496h:
 	ex de,hl		;549b	eb		.
 	ldir			;549c	ed b0		. .
 	pop hl			;549e	e1		.
-sub_549fh:
+XBIOS_dd_unknown_sub_549f:
 	ld de,00004h		;549f	11 04 00	. . .
 	add hl,de		;54a2	19		.
 	ld a,(hl)		;54a3	7e		~
@@ -4314,24 +4396,24 @@ sub_549fh:
 l54b7h:
 	call sub_55c9h		;54b7	cd c9 55	. . U
 	ld a,003h		;54ba	3e 03		> .
-	call sub_56ach		;54bc	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;54bc	cd ac 56	. . V
 	ld a,l			;54bf	7d		}
-	call c,sub_56ach	;54c0	dc ac 56	. . V
+	call c,XBIOS_dd_unknown_sub_56ac	;54c0	dc ac 56	. . V
 	ld a,h			;54c3	7c		|
-	call c,sub_56ach	;54c4	dc ac 56	. . V
+	call c,XBIOS_dd_unknown_sub_56ac	;54c4	dc ac 56	. . V
 	jr nc,l54b7h		;54c7	30 ee		0 .
 	ld (05865h),hl		;54c9	22 65 58	" e X
 	ret			;54cc	c9		.
-sub_54cdh:
-	call sub_554ah		;54cd	cd 4a 55	. J U
+XBIOS_dd_unknown_sub_54cd:
+	call XBIOS_dd_unknown_sub_554a	;54cd	cd 4a 55	. J U
 	ld b,032h		;54d0	06 32		. 2
-	call sub_55e6h		;54d2	cd e6 55	. . U
+	call XBIOS_dd_unknown_sub_55e6	;54d2	cd e6 55	. . U
 	or a			;54d5	b7		.
 	bit 4,a			;54d6	cb 67		. g
 	ret z			;54d8	c8		.
 	call XBIOS_dd_l_off_motor	;54d9	cd ea 56	. . V
 	ld b,004h		;54dc	06 04		. .
-	call sub_55e6h		;54de	cd e6 55	. . U
+	call XBIOS_dd_unknown_sub_55e6	;54de	cd e6 55	. . U
 	ld hl,05863h		;54e1	21 63 58	! c X
 	ld b,(hl)		;54e4	46		F
 	ld (hl),005h		;54e5	36 05		6 .
@@ -4340,13 +4422,13 @@ sub_54cdh:
 	and 010h		;54eb	e6 10		. .
 	scf			;54ed	37		7
 	ret			;54ee	c9		.
-sub_54efh:
+XBIOS_dd_unknown_sub_54ef:
 	push hl			;54ef	e5		.
 	push de			;54f0	d5		.
 	push bc			;54f1	c5		.
 	push af			;54f2	f5		.
 	call XBIOS_internal_drive_get_info	;54f3	cd fe 54	. . T
-	call sub_549fh		;54f6	cd 9f 54	. . T
+	call XBIOS_dd_unknown_sub_549f	;54f6	cd 9f 54	. . T
 	pop af			;54f9	f1		.
 	pop bc			;54fa	c1		.
 	pop de			;54fb	d1		.
@@ -4381,10 +4463,10 @@ XBIOS_internal_drive_get_info:
 XBIOS_dd_l_seek:
 	push hl			;550e	e5		.
 	call XBIOS_internal_drive_get_info	;550f	cd fe 54	. . T
-	call sub_5517h		;5512	cd 17 55	. . U
+	call XBIOS_dd_unknown_sub_5517	;5512	cd 17 55	. . U
 	pop hl			;5515	e1		.
 	ret			;5516	c9		.
-sub_5517h:
+XBIOS_dd_unknown_sub_5517:
 	ld b,00fh		;5517	06 0f		. .
 l5519h:
 	bit 6,(hl)		;5519	cb 76		. v
@@ -4392,7 +4474,7 @@ l5519h:
 	inc hl			;551d	23		#
 	ld (hl),000h		;551e	36 00		6 .
 	dec hl			;5520	2b		+
-	call sub_554dh		;5521	cd 4d 55	. M U
+	call XBIOS_dd_unknown_sub_554d	;5521	cd 4d 55	. M U
 	jr nc,l553eh		;5524	30 18		0 .
 l5526h:
 	set 6,(hl)		;5526	cb f6		. .
@@ -4405,10 +4487,10 @@ l5528h:
 	ret z			;552d	c8		.
 	or a			;552e	b7		.
 	jr nz,l5536h		;552f	20 05		  .
-	call sub_554dh		;5531	cd 4d 55	. M U
+	call XBIOS_dd_unknown_sub_554d	;5531	cd 4d 55	. M U
 	jr l5539h		;5534	18 03		. .
 l5536h:
-	call sub_555fh		;5536	cd 5f 55	. _ U
+	call XBIOS_dd_unknown_sub_555f	;5536	cd 5f 55	. _ U
 l5539h:
 	jr nc,l5543h		;5539	30 08		0 .
 	inc hl			;553b	23		#
@@ -4416,7 +4498,7 @@ l5539h:
 	ret			;553d	c9		.
 l553eh:
 	push de			;553e	d5		.
-	call nz,sub_555bh	;553f	c4 5b 55	. [ U
+	call nz,XBIOS_dd_unknown_sub_555b	;553f	c4 5b 55	. [ U
 	pop de			;5542	d1		.
 l5543h:
 	res 6,(hl)		;5543	cb b6		. .
@@ -4424,25 +4506,25 @@ l5543h:
 	djnz l5519h		;5546	10 d1		. .
 	cp a			;5548	bf		.
 	ret			;5549	c9		.
-sub_554ah:
+XBIOS_dd_unknown_sub_554a:
 	call XBIOS_internal_drive_get_info	;554a	cd fe 54	. . T
-sub_554dh:
-	call sub_5551h		;554d	cd 51 55	. Q U
+XBIOS_dd_unknown_sub_554d:
+	call XBIOS_dd_unknown_sub_5551	;554d	cd 51 55	. Q U
 	ret z			;5550	c8		.
-sub_5551h:
+XBIOS_dd_unknown_sub_5551:
 	ld a,007h		;5551	3e 07		> .
-	call sub_56ach		;5553	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;5553	cd ac 56	. . V
 	ld a,c			;5556	79		y
 	and 003h		;5557	e6 03		. .
 	jr l5574h		;5559	18 19		. .
-sub_555bh:
+XBIOS_dd_unknown_sub_555b:
 	ld d,(ix+012h)		;555b	dd 56 12	. V .
 	dec d			;555e	15		.
-sub_555fh:
+XBIOS_dd_unknown_sub_555f:
 	ld a,00fh		;555f	3e 0f		> .
-	call sub_56ach		;5561	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;5561	cd ac 56	. . V
 	ld a,c			;5564	79		y
-	call sub_56ach		;5565	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;5565	cd ac 56	. . V
 	ld a,d			;5568	7a		z
 	bit 7,(ix+011h)		;5569	dd cb 11 7e	. . . ~
 	jr nz,l5574h		;556d	20 05		  .
@@ -4531,15 +4613,15 @@ l55cbh:
 	ret			;55de	c9		.
 sub_55dfh:
 	ld a,008h		;55df	3e 08		> .
-	call sub_56ach		;55e1	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;55e1	cd ac 56	. . V
 	jr l55fch		;55e4	18 16		. .
-sub_55e6h:
+XBIOS_dd_unknown_sub_55e6:
 	call sub_5587h		;55e6	cd 87 55	. . U
 sub_55e9h:
 	ld a,004h		;55e9	3e 04		> .
-	call sub_56ach		;55eb	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;55eb	cd ac 56	. . V
 	ld a,c			;55ee	79		y
-	call sub_56ach		;55ef	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;55ef	cd ac 56	. . V
 	call sub_55f9h		;55f2	cd f9 55	. . U
 	inc hl			;55f5	23		#
 	ld a,(hl)		;55f6	7e		~
@@ -4604,7 +4686,7 @@ sub_5640h:
 l5647h:
 	ld a,(hl)		;5647	7e		~
 	inc hl			;5648	23		#
-	call sub_56ach		;5649	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;5649	cd ac 56	. . V
 	djnz l5647h		;564c	10 f9		. .
 	ld a,002h		;564e	3e 02		> .
 	out (0f8h),a		;5650	d3 f8		. .
@@ -4613,7 +4695,7 @@ sub_5653h:
 	ld hl,(XBIOS_scratch_unknown_1123)	;5653	2a 23 11	* # .
 	ld (hl),000h		;5656	36 00		6 .
 	di			;5658	f3		.
-	call sub_56ach		;5659	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;5659	cd ac 56	. . V
 	jr nc,l5665h		;565c	30 07		0 .
 	call 00a8dh		;565e	cd 8d 0a	. . .
 	ld hl,0ffe0h		;5661	21 e0 ff	! . .
@@ -4624,7 +4706,7 @@ l5665h:
 l5669h:
 	and 040h		;5669	e6 40		. @
 	or 00ah			;566b	f6 0a		. .
-	call sub_56ach		;566d	cd ac 56	. . V
+	call XBIOS_dd_unknown_sub_56ac	;566d	cd ac 56	. . V
 	ld a,c			;5670	79		y
 	jr sub_5653h		;5671	18 e0		. .
 ;
@@ -4664,7 +4746,7 @@ l5696h:
 	ld b,0ffh		;56a5	06 ff		. .
 	ld hl,05868h		;56a7	21 68 58	! h X
 	jr l5696h		;56aa	18 ea		. .
-sub_56ach:
+XBIOS_dd_unknown_sub_56ac:
 	push bc			;56ac	c5		.
 	ld b,a			;56ad	47		G
 l56aeh:

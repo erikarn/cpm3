@@ -198,6 +198,12 @@ XBIOS_jb_unknown_sub_0b5b: equ 0x0b5b
 ;
 XBIOS_jb_alloc_scratch: equ 0x0baa
 
+; Destination address modified by code
+XBIOS_self_modify_call_0c0f: equ 0x0c0f
+
+; Destination address modified by code
+XBIOS_self_modify_call_0c14: equ 0x0c14
+
 ;
 ; Configure bank1 + bank 2 and jump to address.
 ;
@@ -384,6 +390,8 @@ XBIOS_ca_sa_var_uart_present: equ 0x1131
 ;
 ; xbios-4
 
+XBIOS_unknown_sub_3c62: equ 0x3c62
+
 XBIOS_km_set_key: equ 0x3d6d
 
 XBIOS_km_set_expand: equ 0x3d70
@@ -493,9 +501,13 @@ XBIOS_internal_km_set_expand: equ 0x41ae
 
 XBIOS_internal_km_kt_get: equ 0x42e5
 
+XBIOS_unknown_sub_4474: equ 0x4474
+
 XBIOS_internal_km_set_speed: equ 0x447a
 
 XBIOS_internal_km_set_key: equ 0x447e
+
+XBIOS_unknown_sub_491e: equ 0x491e
 
 ;
 ; Write the space character via XBIOS_write_char.
@@ -550,11 +562,85 @@ XBIOS_dd_l_dpb: equ 0x524a
 ;
 XBIOS_internal_drive_get_capabilities: equ 0x5369
 
+XBIOS_dd_unknown_sub_53d1: equ 0x53d1
+
+;
+; Return whether drive B: was detected.
+;
+; Returns whether the drive is present and the drive
+; type byte in A.
+;
+; If a drive is present, A contains the drive type
+; and the carry flag is set.
+;
+; If a drive is not present, A is 0 and the carry
+; flag is cleared.
+;
+XBIOS_dd_drive_type_b: equ 0x53d6
+
 XBIOS_dd_drive_status: equ 0x53de
 
+;
+; Calculate (A << B) - 1.
+;
+; Initial and return value in HL.
+; Numbers of shift left in B.
+;
+XBIOS_shift_a_left_minus_1: equ 0x53e7
+
+;
+; Shift HL left by 'B' bits.
+;
+; If B is 0, then do nothing (ie, not 256 loops.)
+;
+; Corrupts: A
+;
+XBIOS_shift_hl_left: equ 0x53f1
+
+; SRL HL - shift right by B bits.
+;
+; This shifts HL right, with a 0 being put
+; into bit 15 (ie, bit 7 of H.)
+;
+; Corrupts A.
+;
+XBIOS_shift_hl_right: equ 0x53f8
+
+;
+; Initialise the floppy disk driver to the default parameters
+; for A:, and if detected, also B: .
+;
+; Also turns the motors off.
+;
+; Corrupts AF, BC, DE, HL.
+;
 XBIOS_dd_init: equ 0x5410
 
+;
+; Setup the floppy disk driver.
+;
+; In this version (1.11 and later) - if HL is 0, setup
+; a single drive, id in C, pointed to by DE.
+;
+; If HL isn't 0, then HL points to a parameter block.
+;
+; Parameter block:
+;
+; DB motor on timeout, 10ths of a second
+; DB motor off timeout, 10ths of a second
+; DB write current off time in 10 uS units
+; DB head settle time, milliseconds.
+; DB step rate, milliseconds.
+; DB head unload delay in 32ms units.
+; DB (2*head load delay in 4ms units)+non DMA mode.
+;
 XBIOS_dd_setup: equ 0x546d
+
+XBIOS_dd_unknown_sub_549f: equ 0x549f
+
+XBIOS_dd_unknown_sub_54cd: equ 0x54cd
+
+XBIOS_dd_unknown_sub_54ef: equ 0x54ef
 
 ;
 ; Fetch the drive information table for the
@@ -572,6 +658,20 @@ XBIOS_internal_drive_get_info: equ 0x54fe
 
 XBIOS_dd_l_seek: equ 0x550e
 
+XBIOS_dd_unknown_sub_5517: equ 0x5517
+
+XBIOS_dd_unknown_sub_554a: equ 0x554a
+
+XBIOS_dd_unknown_sub_554d: equ 0x554d
+
+XBIOS_dd_unknown_sub_5551: equ 0x5551
+
+XBIOS_dd_unknown_sub_555b: equ 0x555b
+
+XBIOS_dd_unknown_sub_555f: equ 0x555f
+
+XBIOS_dd_unknown_sub_55e6: equ 0x55e6
+
 XBIOS_dd_l_read: equ 0x5617
 
 XBIOS_dd_l_write: equ 0x5620
@@ -581,7 +681,7 @@ XBIOS_dd_l_write: equ 0x5620
 ;
 XBIOS_dd_unknown_sub_5673: equ 0x5673
 
-
+XBIOS_dd_unknown_sub_56ac: equ 0x56ac
 
 XBIOS_dd_l_on_motor: equ 0x56be
 
@@ -627,6 +727,12 @@ XBIOS_te_viewport_cursor_row: equ 0x5829
 ; Drive table - used by XBIOS_internal_drive_get_info ;
 ; not sure what the format is.
 XBIOS_drive_table: equ 0x5847
+
+; Type of drive for drive B ? Or is it A and B, in
+; different nybbles? (Drive B being bits 0..3?)
+;
+XBIOS_drive_types_present: equ 0x584e
+
 
 ; initialised by code at 0x4005; not sure what for yet
 ; First two bytes are unknown
