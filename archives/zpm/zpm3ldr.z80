@@ -55,12 +55,12 @@
 ;| There are several minor variations of the scheme described above.	|
 ; ----------------------------------------------------------------------
 
-;	.Z80
+	.Z80
 
-false:	equ	0
-true:	equ	~false
+false	equ	0
+true	equ	not false
 
-mods:	equ	false		; Allow modifications from original
+mods	equ	false		; Allow modifications from original
 ;		.....		; (disassembled) code.  Setting this
 				; false will generate ZPM3LDR.REL
 				; identical to the original distributed
@@ -71,20 +71,20 @@ mods:	equ	false		; Allow modifications from original
 				; to make them subject to conditional
 				; assembly.
 
-test:	equ	false		; Subordinate conditionals
-tight:	equ	false		;  /	(Leave these alone.  Set them
-fxGuard:	equ false	; /	 below if you want to.)
+test	defl	false		; Subordinate conditionals
+tight	defl	false		;  /	(Leave these alone.  Set them
+fxGuard	defl	false		; /	 below if you want to.)
 
-if	mods			; Selectively enable specific changes ...
+   if	mods			; Selectively enable specific changes ...
 
-test:	equ true 		; . Load TEST.SYS rather than CPM3.SYS
-tight:	equ	false		; . Optimise code and data space
-fxGuard:	equ	true	; . Protect BDOS function number from being
+test	defl	true 		; . Load TEST.SYS rather than CPM3.SYS
+tight	defl	false		; . Optimise code and data space
+fxGuard	defl	true		; . Protect BDOS function number from being
 				;   overwritten.
-endif
+   endif
 
-cr:	equ	13
-lf:	equ	10
+cr	equ	13
+lf	equ	10
 
 ;-------------------------------------------------------------------------
 
@@ -96,7 +96,7 @@ loader:				; CODE XREF: sub_38+187-j
 	; Just some binary file identification otherwise not used.
 	db	'ZPM3 Loader by Simeon Cran.'
 
-    if	~mods
+    if	not mods
 	db	0,0		; Two wasted bytes?
     endif
 
@@ -111,19 +111,23 @@ cpm3FCB:			; DATA XREF: sub_38+5C9-o
     endif
 
     if	tight
-tail:	equ	24
+tail	equ	24
     else
-tail:	equ	36		; So many?  24 should suffice.
+tail	equ	36		; So many?  24 should suffice.
     endif
-	ds tail, 0
+	rept	tail
+	db	0
+	endm
 
 Copyright:
 	; This should match the notice in the first sector of CPM3.SYS
 	db	'Copyright (C) 1982, Digital Research',0,0
 
-cprtLen:	equ	$ - Copyright	; jrs 27/1/2014
+cprtLen	equ	$ - Copyright	; jrs 27/1/2014
 
-	ds	10, 0; Space to allow for OEM patching.
+	rept	10
+	db	0		; Space to allow for OEM patching.
+	endm
 
 ;-------------------------------------------------------------------------
 
@@ -173,7 +177,7 @@ start:				; CODE XREF: sub_38:loader-j
 	call	coldbt
 	call	resetDiskSystem
 	ld	de, signon
-	call	printDE
+	call	print$DE
 	ld	c, 15		; Open file function
 	ld	de, cpm3FCB
 	call	ldrBDOS
@@ -206,7 +210,7 @@ checkCopyright:			; CODE XREF: sub_38+5FC-j
 goodCopy:			; CODE XREF: sub_38+5F8-j
 	call	readProc	; Read the memory map record
 	ld	de, 80h		; Display it
-	call	printDE
+	call	print$DE
 	ld	a, (resLen)	; Load resident	portion
 	ld	h, a
 	ld	a, (memTop)
@@ -290,7 +294,7 @@ break:				; CODE XREF: sub_38+632-p
 
 ;--------------------------------------------------------------------------
 
-    if	~tight
+    if	not tight
 	dw	0		; This is a four-level stack used during
 	dw	0		; the early stages of ZPM3LDR. There are
 	dw	0		; two unused bytes following the smallStack
@@ -320,14 +324,17 @@ osEntry:			; DATA XREF: sub_38:loc_66D-t
 ;-------------------------------------------------------------------------
 
 serial:				; CP/M 3 serial number
-	ds	6, 0		; Not set or used anywhere.
+	rept	6
+	db	0		; Not set or used anywhere.
+	endm
 				; Why not put the initial stack here
 				; so it could have another 3 levels?
-if	tight
-;	; 5 * word
-	ds	10, 0		; 8-level stack with no cost in code size
+    if	tight
+	rept	5
+	defw	0		; 8-level stack with no cost in code size
+	endm
 smallStack:
-endif
+    endif
 
 ;-------------------------------------------------------------------------
 ;			Basic Disk Operating System
@@ -429,7 +436,7 @@ notBS:				; CODE XREF: conout+17-j
 ; End of function conout
 
 
-print:				; CODE XREF: printDE+9-p
+print:				; CODE XREF: print$DE+9-p
 	ld	a, c
 	cp	9
 	jp	nz, conout
@@ -444,12 +451,12 @@ tabExp:				; CODE XREF: print+10-j
 ; End of function print
 
 
-printDE:			; CODE XREF: sub_38+5C4-p sub_38+60A-p
+print$DE:			; CODE XREF: sub_38+5C4-p sub_38+60A-p
 				; DATA XREF: ...
 	ld	c, e
 	ld	b, d
 
-printBC:			; CODE XREF: printDE+D-j
+print$BC:			; CODE XREF: print$DE+D-j
 				; rdBuff:msgStop-p
 	ld	a, (bc)
 	cp	'$'
@@ -459,8 +466,8 @@ printBC:			; CODE XREF: printDE+D-j
 	ld	c, a
 	call	print
 	pop	bc
-	jp	printBC
-; End of function printDE
+	jp	print$BC
+; End of function print$DE
 
 ;--------------------------------------------------------------------------
 
@@ -496,7 +503,7 @@ readErr:			; CODE XREF: rdBuff+8-j
 	ld	bc, errReadDsk
 
 msgStop:			; CODE XREF: curSelect-3D8-j
-	call	printBC
+	call	print$BC
 	di
 	halt
 
@@ -1650,7 +1657,7 @@ goBack1:			; CODE XREF: seg000:0C69-j
 
 retMon:
 	ld	sp, 0		; CODE XREF: seg000:0C50-j seg000:0C5D-j
-entSP:	equ	retMon+1	; DATA XREF: ldrBDOS+25-w
+entSP	equ	retMon+1	; DATA XREF: ldrBDOS+25-w
 	ld	hl, (aRet)
 	ld	a, l
 	ld	b, h
@@ -1912,7 +1919,7 @@ funcTab:			; DATA XREF: ldrBDOS+37-o
 	dw	justRet		;  6 - dconio
 	dw	justRet		;  7 - auxist
 	dw	justRet		;  8 - auxost
-	dw	printDE		;  9 - strout
+	dw	print$DE	;  9 - strout
 	dw	justRet		; 10 - strinp
 	dw	justRet		; 11 - const
 	dw	justRet		; 12 - getver
@@ -1958,29 +1965,30 @@ funcTab:			; DATA XREF: ldrBDOS+37-o
 	; calculation which follows may extend that by quite a lot.  The
 	; loader sets the working stack to "coldbt".
 
-;	; 22 * word
-	ds	44, 0
+	rept	22
+	defw	0
+	endm
 
 endldr:
-	org	loader+((($-loader)+255) & 0FF00h)-1
+	org	loader+((($-loader)+255) and 0FF00h)-1
 
 	db	0
 
-;	org	loader+(((endldr-loader)+255) & 0FF00h
+;	org	loader+(((endldr-loader)+255) and 0FF00h
 
 ; Bios equates
 
-biospg:	equ	$
+biospg	equ	$
 
-coldbt:	equ	biospg+00	; 00. cold boot
-conoutf:	equ	biospg+12	; 04. console output function
-homef:	equ	biospg+24	; 08. disk home function
-seldskf:	equ	biospg+27	; 09. select disk function
-setTrkF:	equ	biospg+30	; 10. set track function
-setSecF:	equ	biospg+33	; 11. set sector function
-setDMAf:	equ	biospg+36	; 12. set dma function
-sectran:	equ	biospg+48	; 16. sector translate
-movef:	equ	biospg+75	; 25. memory move function
-readf:	equ	biospg+39	; 13. read disk function
+coldbt	equ	biospg+00	; 00. cold boot
+conoutf	equ	biospg+12	; 04. console output function
+homef	equ	biospg+24	; 08. disk home function
+seldskf	equ	biospg+27	; 09. select disk function
+settrkf	equ	biospg+30	; 10. set track function
+setsecf	equ	biospg+33	; 11. set sector function
+setdmaf	equ	biospg+36	; 12. set dma function
+sectran	equ	biospg+48	; 16. sector translate
+movef	equ	biospg+75	; 25. memory move function
+readf	equ	biospg+39	; 13. read disk function
 
 	end
