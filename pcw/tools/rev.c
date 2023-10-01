@@ -6,6 +6,17 @@
 #include <fcntl.h>
 #include <string.h>
 
+/*
+ * This utility reverses the file contents in 128 byte chunks.
+ *
+ * It's designed to turn CP/M bios/bdos/ccp files, which are
+ * loaded from last block to first block, into the proper sequencing
+ * for building.
+ *
+ * It can also be used to reverse them again as part of building
+ * bootable images.
+ */
+
 int
 write_region(const char *buf, int start, int size, const char *file)
 {
@@ -49,12 +60,22 @@ iterate_file(const char *buf, int size, const char *dst)
 	close(fd);
 }
 
+void usage()
+{
+	printf("Usage:\n");
+	printf("rev <srcfile> <destfile>\n");
+	exit(127);
+}
+
 int
 main(int argc, const char *argv[])
 {
 	struct stat sb;
 	char *buf = NULL;
 	int fd = -1, ret, size;
+
+	if (argc < 3)
+		usage();
 
 	/* Read buffer */
 	fd = open(argv[1], O_RDONLY);
