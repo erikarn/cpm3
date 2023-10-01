@@ -1,0 +1,35 @@
+; this is what offsets I've figured out so far.
+; some areas are easier than others to establish as "mostly correct",
+; like the BIOS/BDOS bits.  I'm also pretty sure about the character
+; set area.  But others, not so sure.
+;
+0x0000,0x006b,bootstrap-1.bin
+; no gap
+0x006b,0x0126,bootstrap-2.bin
+; gap from 0x0191 -> 0x01b0
+; all 0xff's in the source file, so ok
+0x01b0,0x0d85,xbios-jumpblock-init.bin
+; no gap
+0x0f35,0x1aa2,xbios-4.bin
+; no gap
+0x29d7,0x0727,fid-loader.bin
+; no gap
+0x30fe,0x0040,zero-page.bin
+; no gap
+0x313e,0x27c0,dot-matrix-printer.bin
+; no gap
+0x58fe,0x0800,charset.bin
+; no gap
+0x60fe,0x0c80,ccp.bin
+; gap at 6d7e/6d7f? both 0xff
+; reversed in 128 byte sectors
+0x6d80,0x0280,bios-resident-rev.bin
+; no gap
+; reversed in 128 byte sectors
+0x7000,0x0600,bdos-resident-rev.bin
+; no gap
+; reversed in 128 byte sectors
+0x7600,0x0480,bios-banked-rev.bin
+; no gap
+; reversed in 128 byte sectors
+0x7a80,0x2e00,bdos-banked-rev.bin
