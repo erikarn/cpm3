@@ -1,5 +1,5 @@
 ; z80dasm 1.2.0
-; command line: /home/adrian/local/bin/z80dasm -v -g 0x0080 -t -a -l -o xbios-jumpblock-init.txt -S xbios-jumpblock-init.sym -b xbios-jumpblock-init.blk xbios-jumpblock-init.bin
+; command line: /home/adrian/local/bin/z80dasm -v -g 0x0080 -t -a -l -o xbios-jumpblock-init.txt -S xbios-jumpblock-init.sym -b xbios-jumpblock-init.blk bin/xbios-jumpblock-init.bin
 
 	org 00080h
 ; PCW 1.15 lower jumpblock in bank 0
