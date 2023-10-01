@@ -88,6 +88,14 @@ read_iterate_config(const char *buf, int size, const char *confname)
 	fclose(fp);
 }
 
+void
+usage(void)
+{
+	printf("Usage:\n");
+	printf("disassemble <source bin> <filemap.txt>\n");
+	exit(127);
+}
+
 int
 main(int argc, const char *argv[])
 {
@@ -95,8 +103,11 @@ main(int argc, const char *argv[])
 	char *buf = NULL;
 	int fd = -1, ret, size;
 
+	if (argc < 3)
+		usage();
+
 	/* Read buffer */
-	fd = open("J15CPM3.EMT", O_RDONLY);
+	fd = open(argv[1], O_RDONLY);
 	if (fd < 0) {
 		err(1, "fopen");
 	}
@@ -120,7 +131,7 @@ main(int argc, const char *argv[])
 	close(fd); fd = -1;
 
 	/* Next, read in the config file with offsets */
-	read_iterate_config(buf, size, "file-memmap.txt");
+	read_iterate_config(buf, size, argv[2]);
 
 	/* Done! */
 	free(buf);
