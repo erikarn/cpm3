@@ -1,21 +1,24 @@
 
 all: j15cpm3.emt
 
+clean:
+	$(RM) *emt
 
 # Bin files that we generate from source
 BINFILES=	bootstrap-1.bin bootstrap-2.bin fid-loader.bin
 BINFILES+=	bios-resident-rev.bin
 
 # Bin files that are binary data
-BINFILES+=	../bin/dot-matrix-printer.bin ../bin/charset.bin
+BINFILES+=	dot-matrix-printer.bin charset.bin
 
 # Bin files that we currently don't have reverse engineered
 # source code for.
 
-BINFILES+=	../bin/xbios-jumpblock-init.bin
-BINFILES+=	../bin/xbios-4.bin
-BINFILES+=	../bin/zero-page.bin
-BINFILES+=	../bin/bios-banked-rev.bin
+BINFILES+=	xbios-jumpblock-init.bin
+BINFILES+=	xbios-4.bin
+BINFILES+=	zero-page.bin
+BINFILES+=	padding-1.bin padding-2.bin
+BINFILES+=	bios-banked-rev.bin
 
 # Bin files from a CP/M 3 build, thrown through the
 # relocation / reordering process
@@ -26,7 +29,7 @@ BINFILES+=	../bin/bios-banked-rev.bin
 # (And I've already unflipped them to make disassembly easier,
 # hence the trip through 'rev' here.)
 #
-BINFILES+=	../bin/ccp.bin
+BINFILES+=	ccp.bin
 BINFILES+=	bdos-banked-rev.bin bdos-resident-rev.bin
 
 # Binaries needing reversing in the CP/M load style.
