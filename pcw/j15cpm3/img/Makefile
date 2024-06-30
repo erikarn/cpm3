@@ -7,17 +7,17 @@ clean:
 # Bin files that we generate from source
 BINFILES=	bootstrap-1.bin bootstrap-2.bin fid-loader.bin
 BINFILES+=	bios-resident-rev.bin
+BINFILES+=	zero-page.bin
 
 # Bin files that are binary data
 BINFILES+=	dot-matrix-printer.bin charset.bin
+BINFILES+=	padding-1.bin padding-2.bin
 
 # Bin files that we currently don't have reverse engineered
 # source code for.
 
 BINFILES+=	xbios-jumpblock-init.bin
 BINFILES+=	xbios-4.bin
-BINFILES+=	zero-page.bin
-BINFILES+=	padding-1.bin padding-2.bin
 BINFILES+=	bios-banked-rev.bin
 
 # Bin files from a CP/M 3 build, thrown through the
@@ -58,6 +58,9 @@ bootstrap-2.bin: ../src/bootstrap-2.z80
 
 fid-loader.bin: ../src/fid-loader.z80
 	z80asm -i ../src/fid-loader.z80 -o fid-loader.bin
+
+zero-page.bin: ../src/zero-page.z80
+	z80asm -i ../src/zero-page.z80 -o zero-page.bin
 
 # TODO: assembling emt file
 # TODO: verifying how big each chunk is so things don't overflow
