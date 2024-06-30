@@ -8,6 +8,7 @@
 0x006b,0x0126,bootstrap-2.bin
 ; gap from 0x0191 -> 0x01b0
 ; all 0xff's in the source file, so ok
+0x0191,0x1f,padding-1.bin
 0x01b0,0x0d85,xbios-jumpblock-init.bin
 ; no gap
 0x0f35,0x1aa2,xbios-4.bin
@@ -22,6 +23,7 @@
 ; no gap
 0x60fe,0x0c80,ccp.bin
 ; gap at 6d7e/6d7f? both 0xff
+0x6d7e,0x02,padding-2.bin
 ; reversed in 128 byte sectors
 0x6d80,0x0280,bios-resident-rev.bin
 ; no gap
