@@ -149,6 +149,12 @@ XBIOS_jb_bank_1_2_config_and_jump: equ 0x0608
 ;
 XBIOS_nmi_routine_orig: equ 0x074d
 
+; The Hardware interrupt handler.
+;
+; Also accessed by RST 38.
+;
+XBIOS_int_handler: equ 0x07d3
+
 ;
 ; Disconnect the FDD from NMI, and return from NMI.
 ;
@@ -197,6 +203,45 @@ XBIOS_jb_unknown_sub_0b5b: equ 0x0b5b
 ; (ie, it /should/ be the space between two symbols...)
 ;
 XBIOS_jb_alloc_scratch: equ 0x0baa
+
+; Jump to a function in the CP/M "bank2" environment.
+; The address is inline, following the RST.
+;
+; It is accessed by RST 00.
+;
+XBIOS_jb_jump_func_bank2: equ 0x0bbf
+
+; Jump into a function in the CP/M "screen' environment.
+; The address is inline, following the RST.
+;
+; It is accessed by RST 08.
+;
+XBIOS_jb_jump_func_scr: equ 0x0bcd
+
+; Jump into code; the word after the RST instruction
+; is an address pointing to the following information:
+;
+; DEFW address
+; DEFB bank to page into at 0x4000
+; DEFB bank to page into at 0x8000
+;
+; It is accessed by RST 20.
+;
+XBIOS_jb_long_jump: equ 0x0be2
+
+; Jump into code similar to XBIOS_jb_long_jump, but
+; the data is inline after the RST.
+;
+; It is accessed by RST 28.
+;
+XBIOS_jb_long_jump_inline: equ 0x0bed
+
+; Jump into code similar to XBIOS_jb_long_jump, but
+; the data is pointed to by HL.
+;
+; It is accessed by JMP 0x002B.
+;
+XBIOS_jb_long_jump_hl: equ 0x0bec
 
 ; Destination address modified by code
 XBIOS_self_modify_call_0c0f: equ 0x0c0f
