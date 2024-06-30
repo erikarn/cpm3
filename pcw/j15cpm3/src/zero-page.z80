@@ -1,0 +1,104 @@
+
+org 0x0000
+
+; Jump to a function in the CP/M bank2 environment.
+; The address is inline, following the RST.
+;
+rst_00:
+        jp 0x0bbf
+
+jumpblk_jump_bc:
+        push bc
+        ret
+
+jumpblk_jump_de:
+        push de
+        ret
+
+jumpblk_jump_at_hl:
+        jp (hl)
+
+; Jump to a function in the CP/M "screen" environment.
+; The address is inline, following the RST.
+;
+rst_08:
+jumpblk_jump_scr:
+        jp 0x0bcd
+
+jumpblk_jump_at_ix:
+        jp (ix)
+
+jumpblk_jump_at_iy:
+        jp (iy)
+        nop
+
+; Does nothing? Until J21CPM3 ?
+rst_10:
+        jp 0x0be0
+        nop
+        nop
+        nop
+        nop
+        nop
+
+; Does nothing? Until J21CPM3 ?
+rst_18:
+        jp 0x0be1
+        nop
+        nop
+        nop
+        nop
+        nop
+
+
+; jump into code; word after the RST instruction
+; is an address pointing to the following info:
+;
+; DEFW	address
+; DEFB	bank to page in at 4000h
+; DEFB	bank to page in at 8000h
+;
+rst_20:
+jumpblk_long_jump:
+        jp 0x0be2
+        nop
+        nop
+        nop
+        nop
+        nop
+
+
+; Similar to rst_20, but the data is inline
+; after the RST.
+;
+rst_28:
+jumpblk_long_jump_inline:
+        jp 0x0bed
+
+; Similar to rst_20, but the data is pointed to
+; by HL.
+;
+jumpblk_long_jump_hl:
+        jp 0x0bec
+        nop
+        nop
+
+rst_30:
+jumpblk_kernel_panic:
+        di
+        jr rst_30
+
+jumpblk_break:
+
+defm 'BREAK'
+
+; Hardware interrupt handler
+;
+rst_38:
+jumpblk_irq:
+	JP 0x07D3
+
+jumpblk_3b:
+
+defm 'Patch'
+
