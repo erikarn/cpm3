@@ -130,13 +130,18 @@ main(int argc, const char *argv[])
 {
 	int fd;
 
-	fd = open("DEST.EMS", O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	if (argc < 3) {
+		printf("Usage: %s <config file> <dest file>\n", argv[0]);
+		exit(127);
+	}
+
+	fd = open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd < 0) {
 		err(1, "open");
 	}
 	/* Read in the config file with offsets */
 	/* This will do the bulk of the real work. */
-	read_iterate_config(fd, "file-memmap.txt");
+	read_iterate_config(fd, argv[1]);
 
 	/* Done! */
 	close(fd);
