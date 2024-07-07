@@ -18,7 +18,7 @@ is 0xa87f, 43146 bytes.
 * blank &c000->&ffff from pages &84 -> &90
 
 * &c000->&ffff &88 (ccp, buffers, more bios)
-  which is &4000 -> &7fff in SELMEM 3
+  which is &4000 -> &7fff in SELMEM 2
 
 * file &60fe/&0c80 -> &ed80		&88	SELRAM 2	? @ &6d80 (ccp.com?)
 * file &313e/&27c0 -> &c440		&88	SELRAM 2	(from john) dot matrix printer driver @ &4440
