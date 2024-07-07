@@ -143,6 +143,31 @@ XBIOS_jp_init_jumptables: equ 0x0593
 ;
 XBIOS_jb_bank_1_2_config_and_jump: equ 0x0608
 
+XBIOS_jb_unknown_0622: equ 0x0622
+XBIOS_jb_unknown_0633: equ 0x0633
+XBIOS_jb_unknown_0647: equ 0x0647
+
+;
+; Store "JP XBIOS_jb_unknown_NMI_handler" at 0x66 (NMI entry point.)
+;
+; TODO: does a bunch of other work too!
+;
+; Called by XBIOS_dd_l_read.
+;
+XBIOS_jb_unknown_0662: equ 0x0662
+
+XBIOS_jb_unknown_0667: equ 0x0667
+XBIOS_jb_unknown_069b: equ 0x069b
+XBIOS_jb_unknown_06b9: equ 0x06b9
+
+;
+; This LOOKS like another NMI handler.
+; I'm not yet sure why this becomes the NMI entrypoint
+; instead of XBIOS_nmi_routine_orig; I need to look
+; at the bank 0 shenanigans in more detail.
+;
+XBIOS_jb_unknown_NMI_handler: equ 0x06cc
+
 ;
 ; These 0x11 bytes make up the original NMI
 ; routine which is copied into 0x0066.
