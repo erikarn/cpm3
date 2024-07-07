@@ -22,7 +22,6 @@ JB_NMI_handler:	equ 0x0066
 ; 7a-7b : TBD - looks like memory bank config
 ; 7c-7d : TBD - for the NMI handler?
 JB_num_banks:	equ 0x007f
-XBIOS_jb_unknown_0178:	equ 0x0178
 ; Destination address modified by code
 XBIOS_self_modify_call_0c14:	equ 0x0c14
 ; What's 0x1101-0x1102 ?
@@ -240,7 +239,7 @@ km_set_speed:
 cd_version:
 	jp XBIOS_cd_version	;00e3	c3 97 01	. . .
 cd_info:
-	jp XBIOS_cd_info	;00e6	c3 7b 01	. { .
+	jp XBIOS_defw_0179_end	;00e6	c3 7b 01	. { .
 scr_run_routine:
 	rst 8			;00e9	cf		.
 	inc bc			;00ea	03		.
@@ -306,15 +305,30 @@ XBIOS_cd_coldboot:
 	call XBIOS_jp_announce	;0162	cd a2 01	. . .
 	ld hl,l0513h		;0165	21 13 05	! . .
 	call XBIOS_jb_unknown_0175	;0168	cd 75 01	. u .
-	call XBIOS_jb_unknown_0178	;016b	cd 78 01	. x .
+	call XBIOS_defw_0176_end	;016b	cd 78 01	. x .
 	call XBIOS_unknown_km_sub_4474	;016e	cd 74 44	. t D
 	ld a,(XBIOS_ca_sa_var_uart_present)	;0171	3a 31 11	: 1 .
 	ret			;0174	c9		.
+;
+; RST 0 call - likely a jump into the printer driver.
+;
 XBIOS_jb_unknown_0175:
 	rst 0			;0175	c7		.
-	ld de,0c745h		;0176	11 45 c7	. E .
-	ld b,b			;0179	40		@
-	ld b,h			;017a	44		D
+
+; BLOCK 'XBIOS_defw_0176' (start 0x0176 end 0x0178)
+XBIOS_defw_0176_start:
+	defw 04511h		;0176	11 45		. E
+XBIOS_defw_0176_end:
+;
+; RST 0 call - a jump into the printer driver @ 0x4440.
+;
+XBIOS_jb_unknown_0178:
+	rst 0			;0178	c7		.
+
+; BLOCK 'XBIOS_defw_0179' (start 0x0179 end 0x017b)
+XBIOS_defw_0179_start:
+	defw 04440h		;0179	40 44		@ D
+XBIOS_defw_0179_end:
 XBIOS_cd_info:
 	ld c,000h		;017b	0e 00		. .
 	call XBIOS_internal_drive_get_capabilities	;017d	cd 69 53	. i S
