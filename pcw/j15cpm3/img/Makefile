@@ -33,17 +33,17 @@ BINFILES+=	ccp.bin
 BINFILES+=	bdos-banked-rev.bin bdos-resident-rev.bin
 
 # Binaries needing reversing in the CP/M load style.
-bdos-banked-rev.bin: ../bin/bdos-banked.bin
-	../bin/rev ../bin/bdos-banked.bin bdos-banked-rev.bin
+bdos-banked-rev.bin: bdos-banked.bin
+	../../tools/rev bdos-banked.bin bdos-banked-rev.bin
+
+bdos-resident-rev.bin: bdos-resident.bin
+	../../tools/rev bdos-resident.bin bdos-resident-rev.bin
 
 bios-banked-rev.bin: ../bin/bios-banked.bin
-	../bin/rev ../bin/bios-banked.bin bios-banked-rev.bin
-
-bdos-resident-rev.bin: ../bin/bdos-resident.bin
-	../bin/rev ../bin/bdos-resident.bin bdos-resident-rev.bin
+	../../tools/rev ../bin/bios-banked.bin bios-banked-rev.bin
 
 bios-resident-rev.bin: bios-resident.bin
-	../bin/rev bios-resident.bin bios-resident-rev.bin
+	../../tools/rev bios-resident.bin bios-resident-rev.bin
 
 # Things I have disassembled!
 
@@ -65,14 +65,14 @@ zero-page.bin: ../src/zero-page.z80
 # TODO: assembling emt file
 # TODO: verifying how big each chunk is so things don't overflow
 j15cpm3.emt: $(BINFILES)
-	../bin/assemble ../orig/file-memmap.txt j15cpm3.emt
+	../../tools/assemble ../orig/file-memmap.txt j15cpm3.emt
 
 # Eventually these should come from a CPM/3 build!
 bdos-banked.bin: bnkbdos3.spr
-	./sprlocate 0x8c00 0xfc00 0x8c00 $< > $@
+	../../tools/sprlocate 0x8c00 0xfc00 0x8c00 $< > $@
 
 bdos-resident.bin: resbdos3.spr
-	./sprlocate 0xf600 0xfc00 0x8c00 $< > $@
+	../../tools/sprlocate 0xf600 0xfc00 0x8c00 $< > $@
 
 
 # From John - taking the CP/M 3 build .SPR files and relocating them
