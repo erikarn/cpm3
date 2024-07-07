@@ -1,5 +1,9 @@
 ; Note: use github.com/erikarn/z80dasm - maybe the ahc_local branch
 ;
+
+;XBIOS_defw_0176: start 0x0176 end 0x0178 type worddata
+;XBIOS_defw_0179: start 0x0179 end 0x017b type worddata
+
 XBIOS_drive_not_ready_str: start 0x0242 end 0x0250 type stringdata
 XBIOS_write_protected_str: start 0x0251 end 0x0265 type stringdata
 XBIOS_seek_fail_str: start 0x0266 end 0x0272 type stringdata

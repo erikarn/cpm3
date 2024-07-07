@@ -22,6 +22,7 @@ JB_NMI_handler:	equ 0x0066
 ; 7a-7b : TBD - looks like memory bank config
 ; 7c-7d : TBD - for the NMI handler?
 JB_num_banks:	equ 0x007f
+XBIOS_jb_unknown_0178:	equ 0x0178
 ; Destination address modified by code
 XBIOS_self_modify_call_0c14:	equ 0x0c14
 ; What's 0x1101-0x1102 ?
@@ -88,7 +89,7 @@ XBIOS_ca_sa_params:	equ 0x3f4e
 XBIOS_unknown_sub_4005:	equ 0x4005
 XBIOS_ca_sa_intstatus:	equ 0x40bd
 XBIOS_unknown_sub_40cf:	equ 0x40cf
-XBIOS_unknown_sub_4474:	equ 0x4474
+XBIOS_unknown_km_sub_4474:	equ 0x4474
 XBIOS_unknown_sub_491e:	equ 0x491e
 XBIOS_te_reset:	equ 0x492b
 XBIOS_te_ask:	equ 0x4af3
@@ -304,12 +305,12 @@ XBIOS_cd_coldboot:
 	call XBIOS_unknown_sub_491e	;015f	cd 1e 49	. . I
 	call XBIOS_jp_announce	;0162	cd a2 01	. . .
 	ld hl,l0513h		;0165	21 13 05	! . .
-	call sub_0175h		;0168	cd 75 01	. u .
-	call 00178h		;016b	cd 78 01	. x .
-	call XBIOS_unknown_sub_4474	;016e	cd 74 44	. t D
+	call XBIOS_jb_unknown_0175	;0168	cd 75 01	. u .
+	call XBIOS_jb_unknown_0178	;016b	cd 78 01	. x .
+	call XBIOS_unknown_km_sub_4474	;016e	cd 74 44	. t D
 	ld a,(XBIOS_ca_sa_var_uart_present)	;0171	3a 31 11	: 1 .
 	ret			;0174	c9		.
-sub_0175h:
+XBIOS_jb_unknown_0175:
 	rst 0			;0175	c7		.
 	ld de,0c745h		;0176	11 45 c7	. E .
 	ld b,b			;0179	40		@

@@ -81,6 +81,9 @@ msg_insert: equ 0x00fe
 msg_sysmsg: equ 0x0101
 kl_movemem: equ 0x0104
 
+XBIOS_jb_unknown_0175: equ 0x0175
+XBIOS_jb_unknown_0178: equ 0x0178
+
 ; ==========================================================================
 
 ; xbios-jumpblock-init
@@ -571,11 +574,14 @@ XBIOS_internal_km_set_expand: equ 0x41ae
 
 XBIOS_internal_km_kt_get: equ 0x42e5
 
-XBIOS_unknown_sub_4474: equ 0x4474
+XBIOS_unknown_km_sub_4440: equ 0x4440
+XBIOS_unknown_km_sub_4474: equ 0x4474
 
 XBIOS_internal_km_set_speed: equ 0x447a
 
 XBIOS_internal_km_set_key: equ 0x447e
+
+XBIOS_unknown_sub_4511: equ 0x4511
 
 XBIOS_unknown_sub_491e: equ 0x491e
 

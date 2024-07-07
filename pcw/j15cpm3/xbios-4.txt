@@ -1372,7 +1372,7 @@ l43abh:
 	ld (hl),c		;43ae	71		q
 	cpl			;43af	2f		/
 	and c			;43b0	a1		.
-	call nz,sub_4440h	;43b1	c4 40 44	. @ D
+	call nz,XBIOS_unknown_km_sub_4440	;43b1	c4 40 44	. @ D
 	inc hl			;43b4	23		#
 	inc de			;43b5	13		.
 	ld a,l			;43b6	7d		}
@@ -1462,7 +1462,7 @@ sub_4436h:
 sub_443dh:
 	rst 0			;443d	c7		.
 	sub 045h		;443e	d6 45		. E
-sub_4440h:
+XBIOS_unknown_km_sub_4440:
 	push hl			;4440	e5		.
 	push de			;4441	d5		.
 	push bc			;4442	c5		.
@@ -1499,7 +1499,7 @@ l446ch:
 	inc hl			;4471	23		#
 	adc a,(hl)		;4472	8e		.
 	ret			;4473	c9		.
-XBIOS_unknown_sub_4474:
+XBIOS_unknown_km_sub_4474:
 	ld a,0ffh		;4474	3e ff		> .
 	ld (057d2h),a		;4476	32 d2 57	2 . W
 	ret			;4479	c9		.
@@ -1599,6 +1599,7 @@ l4503h:
 sub_450dh:
 	call sub_474fh		;450d	cd 4f 47	. O G
 	ld a,l			;4510	7d		}
+XBIOS_unknown_sub_4511:
 	sub e			;4511	93		.
 	inc a			;4512	3c		<
 	ld b,a			;4513	47		G
