@@ -1708,7 +1708,7 @@ XBIOS_jb_bank_1_2_config_and_jump:
 	call XBIOS_jb_set_bank_8000	;061b	cd 74 0c	. t .
 	pop af			;061e	f1		.
 	jp XBIOS_jb_set_bank_4000	;061f	c3 68 0c	. h .
-sub_0622h:
+XBIOS_jb_unknown_0622:
 	push hl			;0622	e5		.
 	push de			;0623	d5		.
 	push bc			;0624	c5		.
@@ -1721,6 +1721,7 @@ sub_0622h:
 	pop de			;0630	d1		.
 	pop hl			;0631	e1		.
 	ret			;0632	c9		.
+XBIOS_jb_unknown_0633:
 	push af			;0633	f5		.
 	or a			;0634	b7		.
 	call sub_05f3h		;0635	cd f3 05	. . .
@@ -1735,9 +1736,10 @@ sub_0622h:
 	pop af			;0644	f1		.
 	pop hl			;0645	e1		.
 	ret			;0646	c9		.
+XBIOS_jb_unknown_0647:
 	ld a,(XBIOS_nmi_routine_orig)	;0647	3a 4d 07	: M .
 	ld de,(l074eh)		;064a	ed 5b 4e 07	. [ N .
-	call sub_0667h		;064e	cd 67 06	. g .
+	call XBIOS_jb_unknown_0667	;064e	cd 67 06	. g .
 	scf			;0651	37		7
 	call sub_05f3h		;0652	cd f3 05	. . .
 	ld a,(0112bh)		;0655	3a 2b 11	: + .
@@ -1745,13 +1747,21 @@ sub_0622h:
 	ld a,(0112ch)		;065b	3a 2c 11	: , .
 	ld (0076ah),a		;065e	32 6a 07	2 j .
 	ret			;0661	c9		.
+;
+; Store "JP XBIOS_jb_unknown_NMI_handler" at 0x66 (NMI entry point.)
+;
+; TODO: does a bunch of other work too!
+;
+; Called by XBIOS_dd_l_read.
+;
+XBIOS_jb_unknown_0662:
 	ld a,0c3h		;0662	3e c3		> .
-	ld de,l06cch		;0664	11 cc 06	. . .
-sub_0667h:
+	ld de,XBIOS_jb_unknown_NMI_handler	;0664	11 cc 06	. . .
+XBIOS_jb_unknown_0667:
 	ld (JB_NMI_handler),a	;0667	32 66 00	2 f .
 	ld (00067h),de		;066a	ed 53 67 00	. S g .
 	push hl			;066e	e5		.
-	call sub_0622h		;066f	cd 22 06	. " .
+	call XBIOS_jb_unknown_0622	;066f	cd 22 06	. " .
 	call sub_0d2ah		;0672	cd 2a 0d	. * .
 	pop hl			;0675	e1		.
 	ld a,(hl)		;0676	7e		~
@@ -1759,7 +1769,7 @@ sub_0667h:
 	ld e,(hl)		;0678	5e		^
 	inc hl			;0679	23		#
 	ld d,(hl)		;067a	56		V
-	call sub_069bh		;067b	cd 9b 06	. . .
+	call XBIOS_jb_unknown_069b	;067b	cd 9b 06	. . .
 	ld (XBIOS_bank_1_2_jump_bc_bank_2),bc	;067e	ed 43 29 11	. C ) .
 	inc hl			;0682	23		#
 	ld c,(hl)		;0683	4e		N
@@ -1778,11 +1788,11 @@ sub_0667h:
 	ld (XBIOS_scratch_unknown_1125),hl	;0696	22 25 11	" % .
 	pop hl			;0699	e1		.
 	ret			;069a	c9		.
-sub_069bh:
+XBIOS_jb_unknown_069b:
 	push hl			;069b	e5		.
 	push de			;069c	d5		.
 	push de			;069d	d5		.
-	call sub_06b9h		;069e	cd b9 06	. . .
+	call XBIOS_jb_unknown_06b9	;069e	cd b9 06	. . .
 	pop af			;06a1	f1		.
 	and 0c0h		;06a2	e6 c0		. .
 	jr z,l06b0h		;06a4	28 0a		( .
@@ -1804,7 +1814,7 @@ l06b0h:
 	set 6,d			;06b5	cb f2		. .
 	pop hl			;06b7	e1		.
 	ret			;06b8	c9		.
-sub_06b9h:
+XBIOS_jb_unknown_06b9:
 	ld de,08786h		;06b9	11 86 87	. . .
 	ld hl,08584h		;06bc	21 84 85	! . .
 	dec a			;06bf	3d		=
@@ -1816,7 +1826,13 @@ sub_06b9h:
 	add a,086h		;06c8	c6 86		. .
 	ld h,a			;06ca	67		g
 	ret			;06cb	c9		.
-l06cch:
+;
+; This LOOKS like another NMI handler.
+; I'm not yet sure why this becomes the NMI entrypoint
+; instead of XBIOS_nmi_routine_orig; I need to look
+; at the bank 0 shenanigans in more detail.
+;
+XBIOS_jb_unknown_NMI_handler:
 	push af			;06cc	f5		.
 	in a,(000h)		;06cd	db 00		. .
 	and 020h		;06cf	e6 20		.  

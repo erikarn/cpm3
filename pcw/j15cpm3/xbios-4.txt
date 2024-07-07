@@ -15,6 +15,18 @@ JB_hw_bitflags:	equ 0x0040
 JB_drive_B_present:	equ 0x0042
 dd_init:	equ 0x0080
 msg_sysmsg:	equ 0x0101
+XBIOS_jb_unknown_0622:	equ 0x0622
+XBIOS_jb_unknown_0633:	equ 0x0633
+XBIOS_jb_unknown_0647:	equ 0x0647
+;
+; Store "JP XBIOS_jb_unknown_NMI_handler" at 0x66 (NMI entry point.)
+;
+; TODO: does a bunch of other work too!
+;
+; Called by XBIOS_dd_l_read.
+;
+XBIOS_jb_unknown_0662:	equ 0x0662
+XBIOS_jb_unknown_069b:	equ 0x069b
 XBIOS_jb_unknown_sub_0aca:	equ 0x0aca
 XBIOS_jb_unknown_sub_0ad0:	equ 0x0ad0
 ;
@@ -403,7 +415,7 @@ XBIOS_dd_calldriver:
 	ld e,(iy-002h)		;3e23	fd 5e fe	. ^ .
 	ld d,(iy-001h)		;3e26	fd 56 ff	. V .
 	push bc			;3e29	c5		.
-	call 0069bh		;3e2a	cd 9b 06	. . .
+	call XBIOS_jb_unknown_069b	;3e2a	cd 9b 06	. . .
 	ld a,c			;3e2d	79		y
 	call XBIOS_jb_set_bank_4000	;3e2e	cd 68 0c	. h .
 	ld (iy-004h),a		;3e31	fd 77 fc	. w .
@@ -3757,7 +3769,7 @@ l5160h:
 	ld hl,XBIOS_dd_l_write	;5160	21 20 56	!   V
 sub_5163h:
 	call XBIOS_dd_unknown_sub_54ef	;5163	cd ef 54	. . T
-	call 00622h		;5166	cd 22 06	. " .
+	call XBIOS_jb_unknown_0622	;5166	cd 22 06	. " .
 	call XBIOS_dd_l_on_motor	;5169	cd be 56	. . V
 	call sub_5370h		;516c	cd 70 53	. p S
 	call XBIOS_dd_l_t_off_motor	;516f	cd d6 56	. . V
@@ -4653,9 +4665,9 @@ l5613h:
 	pop bc			;5615	c1		.
 	ret			;5616	c9		.
 XBIOS_dd_l_read:
-	call 00662h		;5617	cd 62 06	. b .
+	call XBIOS_jb_unknown_0662	;5617	cd 62 06	. b .
 	call sub_5640h		;561a	cd 40 56	. @ V
-	jp 00633h		;561d	c3 33 06	. 3 .
+	jp XBIOS_jb_unknown_0633	;561d	c3 33 06	. 3 .
 XBIOS_dd_l_write:
 	ex de,hl		;5620	eb		.
 	ld hl,JB_jump_hl_addr	;5621	21 07 00	! . .
@@ -4667,7 +4679,7 @@ XBIOS_dd_l_write:
 	ld a,(hl)		;562d	7e		~
 	ex de,hl		;562e	eb		.
 	push af			;562f	f5		.
-	call 00647h		;5630	cd 47 06	. G .
+	call XBIOS_jb_unknown_0647	;5630	cd 47 06	. G .
 	call sub_5640h		;5633	cd 40 56	. @ V
 	pop af			;5636	f1		.
 l5637h:
