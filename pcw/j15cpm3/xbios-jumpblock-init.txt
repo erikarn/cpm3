@@ -3155,7 +3155,7 @@ XBIOS_ldir_ret:
 	ldir			;0d6c	ed b0		. .
 	ret			;0d6e	c9		.
 
-; BLOCK 'XBIOS_unknown_20_data' (start 0x0d6f end 0x0d7a)
+; BLOCK 'XBIOS_unknown_20_data' (start 0x0d6f end 0x0d77)
 XBIOS_unknown_20_data_start:
 	defb 071h		;0d6f	71		q
 	defb 00dh		;0d70	0d		.
@@ -3165,11 +3165,14 @@ XBIOS_unknown_20_data_start:
 	defb 001h		;0d74	01		.
 	defb 000h		;0d75	00		.
 	defb 000h		;0d76	00		.
-	defb 000h		;0d77	00		.
-l0d78h:
+XBIOS_unknown_20_data_end:
+	nop			;0d77	00		.
+
+; BLOCK 'XBIOS_unknown_21_data' (start 0x0d78 end 0x0d7a)
+XBIOS_unknown_21_data_start:
 	defb 000h		;0d78	00		.
 	defb 000h		;0d79	00		.
-XBIOS_unknown_20_data_end:
+XBIOS_unknown_21_data_end:
 	nop			;0d7a	00		.
 ;
 ; Perform initial hardware detection and setup.
@@ -3198,7 +3201,7 @@ l0d8bh:
 	ld (0110ch),hl		;0d96	22 0c 11	" . .
 	ld a,r			;0d99	ed 5f		. _
 	ld (0107ah),a		;0d9b	32 7a 10	2 z .
-	ld (l0d78h),a		;0d9e	32 78 0d	2 x .
+	ld (XBIOS_unknown_21_data_start),a	;0d9e	32 78 0d	2 x .
 	call XBIOS_jb_probe_ram_bank	;0da1	cd c3 0d	. . .
 	cp 010h			;0da4	fe 10		. .
 	jr nz,l0dafh		;0da6	20 07		  .
