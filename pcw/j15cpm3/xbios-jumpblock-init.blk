@@ -80,4 +80,5 @@ XBIOS_filler_2_ff: start 0x051e end 0x0592 type bytedata
 ; strings seem to end at 0x0593
 
 ; Not sure?
-XBIOS_unknown_20_data: start 0x0d6f end 0x0d7a type bytedata
+XBIOS_unknown_20_data: start 0x0d6f end 0x0d77 type bytedata
+XBIOS_unknown_21_data: start 0x0d78 end 0x0d7a type bytedata
