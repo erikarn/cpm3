@@ -50,20 +50,20 @@
 	.Z80
 	dseg
 
-include	bzpm1.z80	; main entry, function distribution, error handling,
+include	BZPM1.Z80	; main entry, function distribution, error handling,
 			; filename parsing, multi-sector handling, basic
 			; character-I/O routines
-include bzpm2.z80	; history buffer handling, command line editor,
+include BZPM2.Z80	; history buffer handling, command line editor,
 			; high-level character I/O routines
-include bzpm3.z80	; basic disk-I/O routines (status checks etc.),
+include BZPM3.Z80	; basic disk-I/O routines (status checks etc.),
 			; physical disk access basics, disk position math,
 			; media change detection, dir & alloc operations
-include bzpm4.z80	; extent handling, directory search, basic FCB
+include BZPM4.Z80	; extent handling, directory search, basic FCB
 			; operations: erase, rename, attr, open, close, read
-include bzpm5.z80	; data buffer check, FCB write, random access,
+include BZPM5.Z80	; data buffer check, FCB write, random access,
 			; drive selection, media change reactions, passwords
-include bzpm6.z80	; date stamps, public BDOS functions, main return
-include bzpm7.z80	; file system data area, BCB & hash handling,
+include BZPM6.Z80	; date stamps, public BDOS functions, main return
+include BZPM7.Z80	; file system data area, BCB & hash handling,
 			; history var's & buffer, global definitions
 
 	end
