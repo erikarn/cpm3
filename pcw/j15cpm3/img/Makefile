@@ -8,9 +8,10 @@ clean:
 BINFILES=	bootstrap-1.bin bootstrap-2.bin fid-loader.bin
 BINFILES+=	bios-resident-rev.bin
 BINFILES+=	zero-page.bin
+BINFILES+=	charset.bin
 
 # Bin files that are binary data
-BINFILES+=	dot-matrix-printer.bin charset.bin
+BINFILES+=	dot-matrix-printer.bin
 BINFILES+=	padding-1.bin padding-2.bin
 
 # Bin files that we currently don't have reverse engineered
@@ -61,6 +62,9 @@ fid-loader.bin: ../src/fid-loader.z80
 
 zero-page.bin: ../src/zero-page.z80
 	z80asm -i ../src/zero-page.z80 -o zero-page.bin
+
+charset.bin: ../src/charset.z80
+	z80asm -i ../src/charset.z80 -o charset.bin
 
 # TODO: assembling emt file
 # TODO: verifying how big each chunk is so things don't overflow
