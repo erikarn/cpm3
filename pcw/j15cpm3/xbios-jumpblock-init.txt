@@ -24,20 +24,37 @@ JB_NMI_handler:	equ 0x0066
 JB_num_banks:	equ 0x007f
 ; Destination address modified by code
 XBIOS_self_modify_call_0c14:	equ 0x0c14
+; 0x1075 -> 0x1076
+XBIOS_scratch_unknown_1075:	equ 0x1075
+; 0x1077 -> 0x1078
+XBIOS_scratch_unknown_1077:	equ 0x1077
+; 0x1079
+XBIOS_scratch_unknown_1079:	equ 0x1079
+; 0x107a
+XBIOS_scratch_unknown_107a:	equ 0x107a
+; 0x10fb -> 0x10fc
+XBIOS_scratch_unknown_10fb:	equ 0x10fb
+; 0x10fd -> 0x10fe
+XBIOS_scratch_unknown_10fd:	equ 0x10fd
+; 0x10ff -> 0x1100
+XBIOS_scratch_unknown_10ff:	equ 0x10ff
 ; What's 0x1101-0x1102 ?
 XBIOS_scratch_unknown_1101:	equ 0x1101
 ; What's 0x1103-0x1104 ?
 XBIOS_scratch_unknown_1103:	equ 0x1103
+XBIOS_scratch_unknown_1105:	equ 0x1105
 ; What's 0x1106 ?
 XBIOS_scratch_unknown_1106:	equ 0x1106
 ; What's 0x1107-0x1108 ?
 XBIOS_scratch_unknown_1107:	equ 0x1107
 ; What's 0x1109-0x110a ?
 XBIOS_scratch_unknown_1109:	equ 0x1109
+XBIOS_scratch_unknown_110c:	equ 0x110c
 ; This is initially setup with the start address of
 ; the scratch space available after XBIOS_jp_hw_setup
 ; does initial hardware setup.
 XBIOS_scratch_start_addr:	equ 0x111a
+XBIOS_scratch_unknown_111e:	equ 0x111e
 ; 0x1121 -> 0x1122
 XBIOS_scratch_unknown_1121:	equ 0x1121
 ; 0x1123 -> 0x1124
@@ -49,6 +66,14 @@ XBIOS_scratch_unknown_1127:	equ 0x1127
 ; XXX TODO: do I have these two around the right way?
 XBIOS_bank_1_2_jump_bc_bank_2:	equ 0x1129
 XBIOS_bank_1_2_jump_bc_bank_1:	equ 0x112a
+; 0x112b -> 0x112c
+XBIOS_scratch_unknown_112b:	equ 0x112b
+XBIOS_scratch_unknown_112c:	equ 0x112c
+XBIOS_scratch_unknown_112d:	equ 0x112d
+XBIOS_scratch_unknown_112e:	equ 0x112e
+; 0x112f -> 0x1134
+XBIOS_scratch_unknown_112f:	equ 0x112f
+XBIOS_scratch_unknown_1130:	equ 0x1130
 XBIOS_ca_sa_var_uart_present:	equ 0x1131
 XBIOS_unknown_sub_3c62:	equ 0x3c62
 XBIOS_msg_retrymsg:	equ 0x3d1d
@@ -1636,6 +1661,7 @@ XBIOS_filler_2_ff_end:
 ; 0x1123 -> 0x1124
 ; 0x1125 -> 0x1126
 ; 0x1127 -> 0x1128
+; 0x112f -> 0x1134
 ;
 ; Subroutines to figure out (that are loaded into
 ; jump tables, not CALLed directly)
@@ -1693,7 +1719,7 @@ sub_05f3h:
 	push hl			;05f6	e5		.
 	ld hl,(XBIOS_scratch_unknown_1127)	;05f7	2a 27 11	* ' .
 	dec hl			;05fa	2b		+
-	ld de,0112fh		;05fb	11 2f 11	. / .
+	ld de,XBIOS_scratch_unknown_112f	;05fb	11 2f 11	. / .
 	jr c,l0601h		;05fe	38 01		8 .
 	ex de,hl		;0600	eb		.
 l0601h:
@@ -1727,7 +1753,7 @@ XBIOS_jb_unknown_0622:
 	push hl			;0622	e5		.
 	push de			;0623	d5		.
 	push bc			;0624	c5		.
-	ld hl,01130h		;0625	21 30 11	! 0 .
+	ld hl,XBIOS_scratch_unknown_1130	;0625	21 30 11	! 0 .
 	ld a,(hl)		;0628	7e		~
 	or a			;0629	b7		.
 	ld (hl),0ffh		;062a	36 ff		6 .
@@ -1743,7 +1769,7 @@ XBIOS_jb_unknown_0633:
 	pop af			;0638	f1		.
 	push hl			;0639	e5		.
 	push af			;063a	f5		.
-	ld hl,01130h		;063b	21 30 11	! 0 .
+	ld hl,XBIOS_scratch_unknown_1130	;063b	21 30 11	! 0 .
 	xor a			;063e	af		.
 	cp (hl)			;063f	be		.
 	ld (hl),a		;0640	77		w
@@ -1757,9 +1783,9 @@ XBIOS_jb_unknown_0647:
 	call XBIOS_jb_unknown_0667	;064e	cd 67 06	. g .
 	scf			;0651	37		7
 	call sub_05f3h		;0652	cd f3 05	. . .
-	ld a,(0112bh)		;0655	3a 2b 11	: + .
+	ld a,(XBIOS_scratch_unknown_112b)	;0655	3a 2b 11	: + .
 	ld (0006eh),a		;0658	32 6e 00	2 n .
-	ld a,(0112ch)		;065b	3a 2c 11	: , .
+	ld a,(XBIOS_scratch_unknown_112c)	;065b	3a 2c 11	: , .
 	ld (0076ah),a		;065e	32 6a 07	2 j .
 	ret			;0661	c9		.
 ;
@@ -1853,7 +1879,7 @@ XBIOS_jb_unknown_NMI_handler:
 	and 020h		;06cf	e6 20		.  
 	jr z,l0746h		;06d1	28 73		( s
 	in a,(001h)		;06d3	db 01		. .
-	ld (0112bh),a		;06d5	32 2b 11	2 + .
+	ld (XBIOS_scratch_unknown_112b),a	;06d5	32 2b 11	2 + .
 	push bc			;06d8	c5		.
 	push de			;06d9	d5		.
 l06dah:
@@ -1863,7 +1889,7 @@ l06dah:
 	and 040h		;06df	e6 40		. @
 	jr z,l0744h		;06e1	28 61		( a
 	in a,(001h)		;06e3	db 01		. .
-	ld (0112ch),a		;06e5	32 2c 11	2 , .
+	ld (XBIOS_scratch_unknown_112c),a	;06e5	32 2c 11	2 , .
 	push hl			;06e8	e5		.
 	ld hl,(XBIOS_bank_1_2_jump_bc_bank_2)	;06e9	2a 29 11	* ) .
 l06ech:
@@ -1873,7 +1899,7 @@ l06ech:
 	and 040h		;06f1	e6 40		. @
 	jr z,l073ah		;06f3	28 45		( E
 	in a,(001h)		;06f5	db 01		. .
-	ld (0112dh),a		;06f7	32 2d 11	2 - .
+	ld (XBIOS_scratch_unknown_112d),a	;06f7	32 2d 11	2 - .
 	ld a,l			;06fa	7d		}
 	out (0f1h),a		;06fb	d3 f1		. .
 	ld a,h			;06fd	7c		|
@@ -1885,7 +1911,7 @@ l0700h:
 	and 040h		;0705	e6 40		. @
 	jr z,l073ah		;0707	28 31		( 1
 	in a,(001h)		;0709	db 01		. .
-	ld (0112eh),a		;070b	32 2e 11	2 . .
+	ld (XBIOS_scratch_unknown_112e),a	;070b	32 2e 11	2 . .
 	ld c,001h		;070e	0e 01		. .
 	ld de,(XBIOS_scratch_unknown_1125)	;0710	ed 5b 25 11	. [ % .
 	ld b,e			;0714	43		C
@@ -1896,7 +1922,7 @@ l0715h:
 	and 040h		;071a	e6 40		. @
 	jr z,l073ah		;071c	28 1c		( .
 	in a,(001h)		;071e	db 01		. .
-	ld (0112fh),a		;0720	32 2f 11	2 / .
+	ld (XBIOS_scratch_unknown_112f),a	;0720	32 2f 11	2 / .
 	ld hl,(XBIOS_scratch_unknown_1127)	;0723	2a 27 11	* ' .
 l0726h:
 	in a,(000h)		;0726	db 00		. .
@@ -1959,7 +1985,7 @@ l0771h:
 	jr nc,l0771h		;0774	30 fb		0 .
 	and 040h		;0776	e6 40		. @
 	jr z,l07bfh		;0778	28 45		( E
-	ld a,(0112dh)		;077a	3a 2d 11	: - .
+	ld a,(XBIOS_scratch_unknown_112d)	;077a	3a 2d 11	: - .
 	out (001h),a		;077d	d3 01		. .
 	ld a,l			;077f	7d		}
 	out (0f1h),a		;0780	d3 f1		. .
@@ -1971,7 +1997,7 @@ l0785h:
 	jr nc,l0785h		;0788	30 fb		0 .
 	and 040h		;078a	e6 40		. @
 	jr z,l07bfh		;078c	28 31		( 1
-	ld a,(0112eh)		;078e	3a 2e 11	: . .
+	ld a,(XBIOS_scratch_unknown_112e)	;078e	3a 2e 11	: . .
 	out (001h),a		;0791	d3 01		. .
 	ld c,001h		;0793	0e 01		. .
 	ld de,(XBIOS_scratch_unknown_1125)	;0795	ed 5b 25 11	. [ % .
@@ -1982,7 +2008,7 @@ l079ah:
 	jr nc,l079ah		;079d	30 fb		0 .
 	and 040h		;079f	e6 40		. @
 	jr z,l07bfh		;07a1	28 1c		( .
-	ld a,(0112fh)		;07a3	3a 2f 11	: / .
+	ld a,(XBIOS_scratch_unknown_112f)	;07a3	3a 2f 11	: / .
 	out (001h),a		;07a6	d3 01		. .
 	ld hl,(XBIOS_scratch_unknown_1127)	;07a8	2a 27 11	* ' .
 l07abh:
@@ -2055,7 +2081,7 @@ l07ffh:
 l0803h:
 	ld c,a			;0803	4f		O
 	ld (JB_cnt_flyback),a	;0804	32 64 00	2 d .
-	ld hl,(010fdh)		;0807	2a fd 10	* . .
+	ld hl,(XBIOS_scratch_unknown_10fd)	;0807	2a fd 10	* . .
 	ld a,h			;080a	7c		|
 	or a			;080b	b7		.
 	call nz,sub_0849h	;080c	c4 49 08	. I .
@@ -2076,12 +2102,12 @@ l081fh:
 	djnz l081fh		;0822	10 fb		. .
 	jr l082dh		;0824	18 07		. .
 l0826h:
-	ld hl,(010ffh)		;0826	2a ff 10	* . .
+	ld hl,(XBIOS_scratch_unknown_10ff)	;0826	2a ff 10	* . .
 	cp h			;0829	bc		.
 	call nz,sub_0849h	;082a	c4 49 08	. I .
 l082dh:
 	call sub_0847h		;082d	cd 47 08	. G .
-	ld a,(01079h)		;0830	3a 79 10	: y .
+	ld a,(XBIOS_scratch_unknown_1079)	;0830	3a 79 10	: y .
 	dec a			;0833	3d		=
 	jp z,l08bch		;0834	ca bc 08	. . .
 l0837h:
@@ -2134,25 +2160,25 @@ sub_0869h:
 	dec hl			;086a	2b		+
 	ld (hl),000h		;086b	36 00		6 .
 	dec hl			;086d	2b		+
-	ld de,(01075h)		;086e	ed 5b 75 10	. [ u .
+	ld de,(XBIOS_scratch_unknown_1075)	;086e	ed 5b 75 10	. [ u .
 	inc d			;0872	14		.
 	dec d			;0873	15		.
 	jr z,l0883h		;0874	28 0d		( .
 	add a,a			;0876	87		.
 	jr c,l0886h		;0877	38 0d		8 .
-	ld de,(01077h)		;0879	ed 5b 77 10	. [ w .
-	ld (01077h),hl		;087d	22 77 10	" w .
+	ld de,(XBIOS_scratch_unknown_1077)	;0879	ed 5b 77 10	. [ w .
+	ld (XBIOS_scratch_unknown_1077),hl	;087d	22 77 10	" w .
 	ex de,hl		;0880	eb		.
 	jr l0889h		;0881	18 06		. .
 l0883h:
-	ld (01077h),hl		;0883	22 77 10	" w .
+	ld (XBIOS_scratch_unknown_1077),hl	;0883	22 77 10	" w .
 l0886h:
-	ld (01075h),hl		;0886	22 75 10	" u .
+	ld (XBIOS_scratch_unknown_1075),hl	;0886	22 75 10	" u .
 l0889h:
 	ld (hl),e		;0889	73		s
 	inc hl			;088a	23		#
 	ld (hl),d		;088b	72		r
-	ld hl,01079h		;088c	21 79 10	! y .
+	ld hl,XBIOS_scratch_unknown_1079	;088c	21 79 10	! y .
 	set 0,(hl)		;088f	cb c6		. .
 	ret			;0891	c9		.
 	di			;0892	f3		.
@@ -2169,23 +2195,23 @@ sub_0898h:
 	ex (sp),hl		;08a2	e3		.
 	push de			;08a3	d5		.
 	push bc			;08a4	c5		.
-	ld (010fbh),sp		;08a5	ed 73 fb 10	. s . .
-	ld sp,010fbh		;08a9	31 fb 10	1 . .
+	ld (XBIOS_scratch_unknown_10fb),sp	;08a5	ed 73 fb 10	. s . .
+	ld sp,XBIOS_scratch_unknown_10fb	;08a9	31 fb 10	1 . .
 	call sub_08b1h		;08ac	cd b1 08	. . .
 	jr l08e9h		;08af	18 38		. 8
 sub_08b1h:
 	push hl			;08b1	e5		.
-	ld hl,01079h		;08b2	21 79 10	! y .
+	ld hl,XBIOS_scratch_unknown_1079	;08b2	21 79 10	! y .
 	ld (hl),080h		;08b5	36 80		6 .
 	ld hl,JB_jump_bank2_env	;08b7	21 00 00	! . .
 	ei			;08ba	fb		.
 	ret			;08bb	c9		.
 l08bch:
-	ld (010fbh),sp		;08bc	ed 73 fb 10	. s . .
-	ld sp,010fbh		;08c0	31 fb 10	1 . .
+	ld (XBIOS_scratch_unknown_10fb),sp	;08bc	ed 73 fb 10	. s . .
+	ld sp,XBIOS_scratch_unknown_10fb	;08c0	31 fb 10	1 . .
 l08c3h:
 	ld a,080h		;08c3	3e 80		> .
-	ld (01079h),a		;08c5	32 79 10	2 y .
+	ld (XBIOS_scratch_unknown_1079),a	;08c5	32 79 10	2 y .
 	ei			;08c8	fb		.
 	jr l08e9h		;08c9	18 1e		. .
 l08cbh:
@@ -2195,32 +2221,32 @@ l08cbh:
 	inc hl			;08ce	23		#
 	bit 1,(hl)		;08cf	cb 4e		. N
 	jr nz,l08dch		;08d1	20 09		  .
-	ld (01075h),de		;08d3	ed 53 75 10	. S u .
+	ld (XBIOS_scratch_unknown_1075),de	;08d3	ed 53 75 10	. S u .
 	call sub_093eh		;08d7	cd 3e 09	. > .
 	jr l08e9h		;08da	18 0d		. .
 l08dch:
 	inc hl			;08dc	23		#
 	dec (hl)		;08dd	35		5
 	jr nz,l08e4h		;08de	20 04		  .
-	ld (01075h),de		;08e0	ed 53 75 10	. S u .
+	ld (XBIOS_scratch_unknown_1075),de	;08e0	ed 53 75 10	. S u .
 l08e4h:
 	ei			;08e4	fb		.
 	inc hl			;08e5	23		#
 	call XBIOS_jb_bank1_2_far_jump	;08e6	cd 25 0c	. % .
 l08e9h:
 	di			;08e9	f3		.
-	ld hl,(01075h)		;08ea	2a 75 10	* u .
+	ld hl,(XBIOS_scratch_unknown_1075)	;08ea	2a 75 10	* u .
 	ld a,h			;08ed	7c		|
 	or a			;08ee	b7		.
 	jr nz,l08cbh		;08ef	20 da		  .
-	ld (01079h),a		;08f1	32 79 10	2 y .
+	ld (XBIOS_scratch_unknown_1079),a	;08f1	32 79 10	2 y .
 	ld hl,(XBIOS_unknown_20_data_start)	;08f4	2a 6f 0d	* o .
 	ld a,h			;08f7	7c		|
 	or a			;08f8	b7		.
 	jr z,l08c3h		;08f9	28 c8		( .
 	ld de,JB_jump_hl_addr	;08fb	11 07 00	. . .
 	add hl,de		;08fe	19		.
-	ld a,(0107ah)		;08ff	3a 7a 10	: z .
+	ld a,(XBIOS_scratch_unknown_107a)	;08ff	3a 7a 10	: z .
 	cp (hl)			;0902	be		.
 	pop hl			;0903	e1		.
 	ld sp,hl		;0904	f9		.
@@ -2249,7 +2275,7 @@ l08e9h:
 	call sub_09bah		;0924	cd ba 09	. . .
 	inc hl			;0927	23		#
 	inc hl			;0928	23		#
-	ld a,(0107ah)		;0929	3a 7a 10	: z .
+	ld a,(XBIOS_scratch_unknown_107a)	;0929	3a 7a 10	: z .
 	ld (hl),a		;092c	77		w
 	pop hl			;092d	e1		.
 	call sub_0898h		;092e	cd 98 08	. . .
@@ -2257,7 +2283,7 @@ l08e9h:
 	inc hl			;0932	23		#
 l0933h:
 	di			;0933	f3		.
-	ld a,(01079h)		;0934	3a 79 10	: y .
+	ld a,(XBIOS_scratch_unknown_1079)	;0934	3a 79 10	: y .
 	or a			;0937	b7		.
 	jp nz,sub_0869h		;0938	c2 69 08	. i .
 	call sub_0898h		;093b	cd 98 08	. . .
@@ -2343,7 +2369,7 @@ l097fh:
 	exx			;099a	d9		.
 	pop ix			;099b	dd e1		. .
 	pop iy			;099d	fd e1		. .
-	ld (010fbh),sp		;099f	ed 73 fb 10	. s . .
+	ld (XBIOS_scratch_unknown_10fb),sp	;099f	ed 73 fb 10	. s . .
 	ld sp,hl		;09a3	f9		.
 	ei			;09a4	fb		.
 	ret			;09a5	c9		.
@@ -2366,7 +2392,7 @@ sub_09bah:
 	ld hl,JB_jump_bank2_env	;09bc	21 00 00	! . .
 	add hl,sp		;09bf	39		9
 	di			;09c0	f3		.
-	ld sp,(010fbh)		;09c1	ed 7b fb 10	. { . .
+	ld sp,(XBIOS_scratch_unknown_10fb)	;09c1	ed 7b fb 10	. { . .
 	push iy			;09c5	fd e5		. .
 	push ix			;09c7	dd e5		. .
 	exx			;09c9	d9		.
@@ -2435,7 +2461,7 @@ l0a0bh:
 	rra			;0a11	1f		.
 	jp nc,l0933h		;0a12	d2 33 09	. 3 .
 	di			;0a15	f3		.
-	ld a,(01079h)		;0a16	3a 79 10	: y .
+	ld a,(XBIOS_scratch_unknown_1079)	;0a16	3a 79 10	: y .
 	or a			;0a19	b7		.
 	jr nz,l0a21h		;0a1a	20 05		  .
 	call sub_0869h		;0a1c	cd 69 08	. i .
@@ -2478,7 +2504,7 @@ sub_0a47h:
 	di			;0a4c	f3		.
 	ld (hl),a		;0a4d	77		w
 	ex de,hl		;0a4e	eb		.
-	ld de,01075h		;0a4f	11 75 10	. u .
+	ld de,XBIOS_scratch_unknown_1075	;0a4f	11 75 10	. u .
 	jp l0d5fh		;0a52	c3 5f 0d	. _ .
 l0a55h:
 	di			;0a55	f3		.
@@ -2559,24 +2585,24 @@ l0aa0h:
 	ld (hl),001h		;0ab5	36 01		6 .
 	ei			;0ab7	fb		.
 	ret			;0ab8	c9		.
-	ld de,010fdh		;0ab9	11 fd 10	. . .
+	ld de,XBIOS_scratch_unknown_10fd	;0ab9	11 fd 10	. . .
 	jp l0d50h		;0abc	c3 50 0d	. P .
-	ld de,010fdh		;0abf	11 fd 10	. . .
+	ld de,XBIOS_scratch_unknown_10fd	;0abf	11 fd 10	. . .
 l0ac2h:
 	call sub_0d3eh		;0ac2	cd 3e 0d	. > .
 	call c,sub_0c1bh	;0ac5	dc 1b 0c	. . .
 	ei			;0ac8	fb		.
 	ret			;0ac9	c9		.
 XBIOS_jb_unknown_sub_0aca:
-	ld de,010ffh		;0aca	11 ff 10	. . .
+	ld de,XBIOS_scratch_unknown_10ff	;0aca	11 ff 10	. . .
 	jp l0d50h		;0acd	c3 50 0d	. P .
 XBIOS_jb_unknown_sub_0ad0:
-	ld de,010ffh		;0ad0	11 ff 10	. . .
+	ld de,XBIOS_scratch_unknown_10ff	;0ad0	11 ff 10	. . .
 	jr l0ac2h		;0ad3	18 ed		. .
 	di			;0ad5	f3		.
-	ld hl,010fdh		;0ad6	21 fd 10	! . .
+	ld hl,XBIOS_scratch_unknown_10fd	;0ad6	21 fd 10	! . .
 	call sub_0adfh		;0ad9	cd df 0a	. . .
-	ld hl,010ffh		;0adc	21 ff 10	! . .
+	ld hl,XBIOS_scratch_unknown_10ff	;0adc	21 ff 10	! . .
 sub_0adfh:
 	ld e,(hl)		;0adf	5e		^
 	inc hl			;0ae0	23		#
@@ -2590,7 +2616,7 @@ sub_0adfh:
 	pop hl			;0aea	e1		.
 	jr sub_0adfh		;0aeb	18 f2		. .
 sub_0aedh:
-	ld hl,01105h		;0aed	21 05 11	! . .
+	ld hl,XBIOS_scratch_unknown_1105	;0aed	21 05 11	! . .
 	ld a,080h		;0af0	3e 80		> .
 	add a,(hl)		;0af2	86		.
 	daa			;0af3	27		'
@@ -2609,7 +2635,7 @@ l0b00h:
 	ld (hl),a		;0b02	77		w
 	ld a,000h		;0b03	3e 00		> .
 	jr c,l0b00h		;0b05	38 f9		8 .
-	ld hl,0110ch		;0b07	21 0c 11	! . .
+	ld hl,XBIOS_scratch_unknown_110c	;0b07	21 0c 11	! . .
 	ld a,(hl)		;0b0a	7e		~
 	sub c			;0b0b	91		.
 	ld (hl),a		;0b0c	77		w
@@ -2706,7 +2732,7 @@ l0b5eh:
 	ld (XBIOS_scratch_unknown_1107),hl	;0b82	22 07 11	" . .
 	ld l,a			;0b85	6f		o
 	ld h,a			;0b86	67		g
-	ld (01105h),hl		;0b87	22 05 11	" . .
+	ld (XBIOS_scratch_unknown_1105),hl	;0b87	22 05 11	" . .
 	ei			;0b8a	fb		.
 	ret			;0b8b	c9		.
 	call sub_0b98h		;0b8c	cd 98 0b	. . .
@@ -3068,7 +3094,7 @@ l0ce9h:
 	ld bc,l0d5fh		;0cf7	01 5f 0d	. _ .
 l0cfah:
 	ex de,hl		;0cfa	eb		.
-	ld hl,0111eh		;0cfb	21 1e 11	! . .
+	ld hl,XBIOS_scratch_unknown_111e	;0cfb	21 1e 11	! . .
 	push hl			;0cfe	e5		.
 	call sub_0a8dh		;0cff	cd 8d 0a	. . .
 	ex de,hl		;0d02	eb		.
@@ -3077,7 +3103,7 @@ l0cfah:
 	pop hl			;0d09	e1		.
 	jp l0a55h		;0d0a	c3 55 0a	. U .
 sub_0d0dh:
-	ld hl,0111eh		;0d0d	21 1e 11	! . .
+	ld hl,XBIOS_scratch_unknown_111e	;0d0d	21 1e 11	! . .
 	call sub_0a8dh		;0d10	cd 8d 0a	. . .
 	ld de,00002h		;0d13	11 02 00	. . .
 l0d16h:
@@ -3104,7 +3130,7 @@ sub_0d2fh:
 	call sub_0898h		;0d2f	cd 98 08	. . .
 	ld de,0000ah		;0d32	11 0a 00	. . .
 	call l0d16h		;0d35	cd 16 0d	. . .
-	ld hl,0111eh		;0d38	21 1e 11	! . .
+	ld hl,XBIOS_scratch_unknown_111e	;0d38	21 1e 11	! . .
 	jp l0a55h		;0d3b	c3 55 0a	. U .
 sub_0d3eh:
 	ex de,hl		;0d3e	eb		.
@@ -3196,11 +3222,11 @@ XBIOS_jb_hw_setup:
 l0d8bh:
 	ld (JB_max_flyback),a	;0d8b	32 65 00	2 e .
 	ld a,001h		;0d8e	3e 01		> .
-	ld (0111eh),a		;0d90	32 1e 11	2 . .
+	ld (XBIOS_scratch_unknown_111e),a	;0d90	32 1e 11	2 . .
 	ld hl,00a09h		;0d93	21 09 0a	! . .
-	ld (0110ch),hl		;0d96	22 0c 11	" . .
+	ld (XBIOS_scratch_unknown_110c),hl	;0d96	22 0c 11	" . .
 	ld a,r			;0d99	ed 5f		. _
-	ld (0107ah),a		;0d9b	32 7a 10	2 z .
+	ld (XBIOS_scratch_unknown_107a),a	;0d9b	32 7a 10	2 z .
 	ld (XBIOS_unknown_21_data_start),a	;0d9e	32 78 0d	2 x .
 	call XBIOS_jb_probe_ram_bank	;0da1	cd c3 0d	. . .
 	cp 010h			;0da4	fe 10		. .

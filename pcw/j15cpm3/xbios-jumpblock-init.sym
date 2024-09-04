@@ -132,6 +132,7 @@ XBIOS_jp_announce: equ 0x01a2
 ; 0x1123 -> 0x1124
 ; 0x1125 -> 0x1126
 ; 0x1127 -> 0x1128
+; 0x112f -> 0x1134
 ;
 ; Subroutines to figure out (that are loaded into
 ; jump tables, not CALLed directly)
@@ -427,10 +428,36 @@ XBIOS_msg_sysmsg: equ 0x4de8
 ; look at XBIOS_cd_info as it probes the drives, reads the
 ; hw state flags, etc.  Annotate those.
 
+; 0x1075 -> 0x1076
+XBIOS_scratch_unknown_1075: equ 0x1075
+
+; 0x1077 -> 0x1078
+XBIOS_scratch_unknown_1077: equ 0x1077
+
+; 0x1079
+XBIOS_scratch_unknown_1079: equ 0x1079
+
+; 0x107a
+XBIOS_scratch_unknown_107a: equ 0x107a
+
+; 0x10fb -> 0x10fc
+XBIOS_scratch_unknown_10fb: equ 0x10fb
+
+; 0x10fd -> 0x10fe
+XBIOS_scratch_unknown_10fd: equ 0x10fd
+
+; 0x10ff -> 0x1100
+XBIOS_scratch_unknown_10ff: equ 0x10ff
+
+XBIOS_scratch_unknown_1105: equ 0x1105
+XBIOS_scratch_unknown_110c: equ 0x110c
+
 ; This is initially setup with the start address of
 ; the scratch space available after XBIOS_jp_hw_setup
 ; does initial hardware setup.
 XBIOS_scratch_start_addr: equ 0x111a
+
+XBIOS_scratch_unknown_111e: equ 0x111e
 
 ; What's 0x1101-0x1102 ?
 XBIOS_scratch_unknown_1101: equ 0x1101
@@ -459,12 +486,24 @@ XBIOS_scratch_unknown_1125: equ 0x1125
 ; 0x1127 -> 0x1128
 XBIOS_scratch_unknown_1127: equ 0x1127
 
+
 ; XXX TODO: do I have these two around the right way?
 XBIOS_bank_1_2_jump_bc_bank_2: equ 0x1129
 XBIOS_bank_1_2_jump_bc_bank_1: equ 0x112a
 
-XBIOS_ca_sa_var_uart_present: equ 0x1131
+; 0x112b -> 0x112c
+XBIOS_scratch_unknown_112b: equ 0x112b
+XBIOS_scratch_unknown_112c: equ 0x112c
+XBIOS_scratch_unknown_112d: equ 0x112d
+XBIOS_scratch_unknown_112e: equ 0x112e
 
+; 0x112f -> 0x1134
+XBIOS_scratch_unknown_112f: equ 0x112f
+XBIOS_scratch_unknown_1130: equ 0x1130
+XBIOS_ca_sa_var_uart_present: equ 0x1131
+XBIOS_scratch_unknown_1132: equ 0x1132
+XBIOS_scratch_unknown_1133: equ 0x1133
+XBIOS_scratch_unknown_1134: equ 0x1134
 
 ; ==========================================================================
 ;
