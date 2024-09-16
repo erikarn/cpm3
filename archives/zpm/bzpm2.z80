@@ -322,17 +322,46 @@ StringComp:	LD	A,(DE)		; get character from string 1
 		RET	PO		; return if BC is 0 now
 		JR	StringComp	; otherwise loop until it is...
 
+IgnoreCtrl	equ	0		; 1 for ignore Ctrl
+					; 0 for ESC as ^[
+
+	if	NOT IgnoreCtrl	; new Ctrl behavior
+; Output to the console (raw mode, no TAB expansion), check CTRL
+; Done (do I need to save A here?) No
+; increase 'charsprinted' for each output
+COctrl:		PUSH	HL
+		 PUSH	DE
+		  PUSH	BC
+		   LD	A,C
+		   CP	' '
+		   JR	NC,COc2
+		   LD	C,'^'		; its a ctrl char
+		   CALL	OutCon
+		  POP	BC
+		  PUSH	BC
+		   SET	6,C		; set bit6 of ctrl-char
+Coc2:		   CALL	OutCon		; C to output
+		  POP	BC
+		 POP	DE
+		POP	HL
+		RET
+	endif
+
 ; Output a character to the console (raw mode, no TAB expansion)
 ; with preserving all primary registers.
 
-CO:		PUSH	BC
-		PUSH	DE
-		PUSH	HL
-		CALL	OutCon
+CO:		PUSH	HL
+		 PUSH	DE
+		  PUSH	BC
+	if	IgnoreCtrl	; Original Ctrl behavior
+		   CALL	OutCon
+		  POP	BC
+		 POP	DE
 		POP	HL
-		POP	DE
-		POP	BC
 		RET
+	else
+		   JR	COc2	; save 5 bytes (slower by 11tick)
+	endif
 
 ; BDOS Function 10: Get Command Line Buffer.
 ; This function features a built-in command line editor and history.
@@ -444,7 +473,11 @@ ProcessChar:	LD	(CharAtCursor),A ; save character
 		CP	' '
 		JR	NC,ProcessChar1 ; continue processing visible chars
 		CP	CtlCharNum
+	if	IgnoreCtrl	; Original Ctrl behavior
 		RET	NC		; control chars >= ^Z aren't interpr.
+	else			; like cpm3
+		JP	NC,CtlIgnore	; >= ^Z on screen with caret
+	endif
 		OR	A
 		RET	Z		; Null code is ignored.
 		ADD	A,A		; double code (for table access)
@@ -461,12 +494,19 @@ ProcessChar1:	CP	DEL
 		LD	A,(AutoExpFlag)
 		OR	A
 		JR	NZ,ProcessExp	; auto-expand enabled: search history
+	; ignorectrl jumps here
+ProcessCh2:	; output value in C (if fits)
 		LD	A,(IY+0)	; get buffer size (maximum length)
 		CP	(IY+1)		; compare to current length
 		JP	Z,BeepOnNulChar ; size reached: ignore, beep on NUL ??
 		LD	A,(CharAtCursor) ; else get character again
 		LD	C,A
+		; Output and add to buff
+	if	IgnoreCtrl	; Original Ctrl behavior
 		CALL	OutCon		; output char to console
+	else
+		CALL	COctrl		; output (w ctrl hdl)
+	endif
 		LD	A,(CharsAtRight)
 		OR	A
 		CALL	NZ,MoveRight	; if anything is right: "move" it
@@ -553,7 +593,11 @@ ProcessExpLp:	LD	A,(DE)		; get char from history entry
 		JR	Z,ProcessExpExit ; null terminator: all done
 		LD	(HL),A		; else store char in input line
 		LD	C,A
+	if	IgnoreCtrl	; Original Ctrl behavior
 		CALL	CO		; ... and echo to console
+	else
+		CALL	COctrl
+	endif
 		LD	A,(CharsAtRight)
 		INC	A
 		LD	(CharsAtRight),A ; increment right-char count
@@ -586,10 +630,16 @@ ClearAutoExp:	LD	HL,0
 		LD	(AutoExpPtr),HL
 		LD	A,H
 		LD	(AutoExpFlag),A
+	if	IgnoreCtrl	; Original Ctrl behavior
 CtlIgnore:	RET
+	else ; NonSpecial Control-Char (meaning less than space)
+CtlIgnore:	JP	ProcessCh2	; add to buff, display
+	endif
 
 ; Table containing addresses of editing/history function routines
-; for all control keys up to ^Y (codes from ^Z up are ignored).
+; for all control keys up to ^Y (Orig: codes from ^Z up are ignored).
+; Note by Martijn Wehrens, August 2024
+; Change ZPM so it mimic CPM, for instance ESC should show.
 ;
 ; Note by Jon Saxton, August 2011 (updated January 2015)
 ;
@@ -675,69 +725,55 @@ HistoryBug	equ	0		; 1 for original dispatch table
 
 CtlFuncTable:
 
+		DW	0		; null code ignored anyway
+		DW	LeftWord	; ^A: one word left
+		DW	LineBeginEnd	; ^B: to beginning/end of line
+		DW	WarmBootKey	; ^C: reboot if at start of line
+		DW	RightChar	; ^D: right one char
+		DW	PreviousLine	; ^E: get previous line
+		DW	RightWord	; ^F: right one word
+		DW	DeleteChar	; ^G: delete char at cursor
+		DW	BackSpace	; ^H: destructive backspace
+		DW	CtlIgnore	; ^I (TAB) ignored here
+		DW	EnterLine	; ^J (LF): exit editor
+		DW	DeleteToRight	; ^K: delete all to the right
+		DW	CtlIgnore	; ^L ignored
+		DW	EnterLine	; ^M (CR): exit editor
+		DW	CtlIgnore	; ^N ignored
+		DW	CtlIgnore	; ^O ignored
+		DW	TogPrintEcho	; ^P: toggle printer echoing
+		DW	TogAutoPrompt	; ^Q: toggle autoprompt (if enabled)
+		DW	CtlIgnore	; ^R ignored
+		DW	LeftChar	; ^S: left one char
+		DW	DeleteWord	; ^T: delete word at cursor
+		DW	InpAddToHist	; ^U: add line to history
+		DW	DelFromHist	; ^V: clear line, delete from history
 	if	HistoryBug	; Original dispatch table
 
-		DW	0		; null code ignored anyway
-		DW	LeftWord	; ^A: one word left
-		DW	LineBeginEnd	; ^B: to beginning/end of line
-		DW	WarmBootKey	; ^C: reboot if at start of line
-		DW	RightChar	; ^D: right one char
-		DW	PreviousLine	; ^E: get previous line
-		DW	RightWord	; ^F: right one word
-		DW	DeleteChar	; ^G: delete char at cursor
-		DW	BackSpace	; ^H: destructive backspace
-		DW	CtlIgnore	; ^I (TAB) ignored here
-		DW	EnterLine	; ^J (LF): exit editor
-		DW	DeleteToRight	; ^K: delete all to the right
-		DW	CtlIgnore	; ^L ignored
-		DW	EnterLine	; ^M (CR): exit editor
-		DW	CtlIgnore	; ^N ignored
-		DW	CtlIgnore	; ^O ignored
-		DW	TogPrintEcho	; ^P: toggle printer echoing
-		DW	TogAutoPrompt	; ^Q: toggle autoprompt (if enabled)
-		DW	CtlIgnore	; ^R ignored
-		DW	LeftChar	; ^S: left one char
-		DW	DeleteWord	; ^T: delete word at cursor
-		DW	InpAddToHist	; ^U: add line to history
-		DW	DelFromHist	; ^V: clear line, delete from history
 		DW	NextLine	; ^W: get next line from history
 		DW	DeleteToLeft	; ^X: delete all to the left
-		DW	ClearLine	; ^Y: clear line
 
 	else			; Corrected dispatch table
-
-		DW	0		; null code ignored anyway
-		DW	LeftWord	; ^A: one word left
-		DW	LineBeginEnd	; ^B: to beginning/end of line
-		DW	WarmBootKey	; ^C: reboot if at start of line
-		DW	RightChar	; ^D: right one char
-		DW	PreviousLine	; ^E: get previous line
-		DW	RightWord	; ^F: right one word
-		DW	DeleteChar	; ^G: delete char at cursor
-		DW	BackSpace	; ^H: destructive backspace
-		DW	CtlIgnore	; ^I (TAB) ignored here
-		DW	EnterLine	; ^J (LF): exit editor
-		DW	DeleteToRight	; ^K: delete all to the right
-		DW	CtlIgnore	; ^L ignored
-		DW	EnterLine	; ^M (CR): exit editor
-		DW	CtlIgnore	; ^N ignored
-		DW	CtlIgnore	; ^O ignored
-		DW	TogPrintEcho	; ^P: toggle printer echoing
-		DW	TogAutoPrompt	; ^Q: toggle autoprompt (if enabled)
-		DW	CtlIgnore	; ^R ignored
-		DW	LeftChar	; ^S: left one char
-		DW	DeleteWord	; ^T: delete word at cursor
-		DW	InpAddToHist	; ^U: add line to history
-		DW	DelFromHist	; ^V: clear line, delete from history
 
 		; Need to put Nextline on ^X for WordStar compatibility.
 		; That means we have to find a spot for DeleteToLeft.
 		; ^X will do for now but the decision is subject to review.
 		DW	DeleteToLeft	; ^W: delete all to the left
 		DW	NextLine	; ^X: get next line from history
+	endif
 
 		DW	ClearLine	; ^Y: clear line
-	endif
+
+;		; orignally, ^Z-^_ are ignored
+;		; 27-31 linked to 'show caret+char'
+;		DW	CtlIgnore	; 1Ah ^Z
+;		DW	CtlIgnore	; 1Bh ^[ ESC
+;		DW	CtlIgnore	; 1Ch ^\
+;		DW	CtlIgnore	; 1Dh ^]
+;		DW	CtlIgnore	; 1Eh ^^
+;		DW	CtlIgnore	; 1Fh ^_
+;		DW	CtlIgnore	; 20h ^`
+
 
 CtlCharNum	equ	($-CtlFuncTable)/2 ; no. of supported control codes
 
@@ -761,11 +797,8 @@ DeleteWord:	LD	A,(CharsAtRight)
 DelWordDelimR:	DEC	D		; decrement right-char count
 		JP	Z,DeleteToRight ; we're at line end: delete to here
 		DEC	E		; decrement line length
-		LD	A,(HL)		; get character here
 		PUSH	HL
-		LD	HL,DelimTable
-		LD	BC,15
-		CPIR			; check if it's a delimiter
+		 CALL	ChkBufDelim1 	; Z if A,(HL) is a delimiter
 		POP	HL
 		INC	HL		; bump pointer
 		JR	NZ,DelWordDelimR ; loop until a delimiter found
@@ -773,11 +806,8 @@ DelWordDelimR:	DEC	D		; decrement right-char count
 ; Now search the next non-delimiter character, which is the beginning of
 ; the next word in the input line.
 
-DelWordNDelimR: LD	A,(HL)		; get (next) char
-		PUSH	HL
-		LD	HL,DelimTable
-		LD	BC,15
-		CPIR			; check for delimiter again
+DelWordNDelimR: PUSH	HL
+		 CALL	ChkBufDelim1 	; Z if A,(HL) is a delimiter
 		POP	HL
 		JR	NZ,DeleteWord1	; no delimiter: new position found!
 		DEC	D		; decrement right-char count
@@ -796,21 +826,27 @@ DeleteWord1:	LD	(IY+1),E	; save new line length
 		LD	A,(CharsAtRight)
 		SUB	B		; calculate number of chars to delete
 		PUSH	AF		; (for blanking the screen below!)
-		LD	A,B
-		LD	(CharsAtRight),A ; store new right-char count
-		EX	DE,HL		; move target pointer to DE
-		CALL	GetCurCharAdr	; and get current cursor address in HL
-DelWordMoveLp:	LD	A,(DE)
-		LD	(HL),A		; move character backwards
-		LD	C,A
-		CALL	CO		; and echo it on the console
-		INC	HL
-		INC	DE		; bump pointers
-		DJNZ	DelWordMoveLp	; and repeat for remaining rest-of-line
+		 LD	A,B
+		 LD	(CharsAtRight),A ; store new right-char count
+		 EX	DE,HL		; move target pointer to DE
+		 CALL	GetCurCharAdr	; and get current cursor address in HL
+
+	; from (DE) to (HL) for count B
+DelWordMoveLp:	 LD	A,(DE)
+		 LD	(HL),A		; move character backwards
+		 LD	C,A
+	if	IgnoreCtrl	; Original Ctrl behavior
+		 CALL	CO		; and echo it on the console
+	else
+		 CALL	COctrl		; outp C, if ctrlchar ^+C
+	endif
+		 INC	HL
+		 INC	DE		; bump pointers
+		 DJNZ	DelWordMoveLp	; and repeat for remaining rest-of-line
 		POP	BC		; get number of deleted chars into B
 		PUSH	BC
-DelWordSpcLp:	LD	C,' '
-		CALL	CO		; output a space character...
+		LD	C,' '
+DelWordSpcLp:	CALL	CO		; output a space character...
 		DJNZ	DelWordSpcLp	; ... for each to blank the line rest
 		POP	BC		; number of deleted chars in B again
 		LD	A,(CharsAtRight)
@@ -868,6 +904,81 @@ PreviousLine:
 		CALL	ProcessString
 		JP	IncHistPos
 
+; LeftWord = multi LeftChar
+; RightWord = multi rightChar
+; "^G, ^H" DeleteChar, BackSpace:
+;	C=-1, B=rcount, D=' '-1, call (normal out)
+;		2 space, 2 del
+;	C=-1, B=rcount, D=BS, call (back)
+;	charsatright--, iy+1--
+; "^K" DeletetoRight clear forward from HL by cnt:
+;	C=0 (no offset), B=rcount, D=' ', call
+;	C=0 (no offset), B=rcount, D=BS, call
+;	iy+1=charsatleft charsatright=0
+; "^T" DeleteWord: repeat deletechar
+; "^W" DeleteToLeft, clear until HL
+; 	C=-left, B=lcount, D=BS, call (start of line)
+; 	C=0,     B=rcount, D=' '-1, call (write rstr)
+; 	C=0,     B=lcount, D=' ', call (clear rightside)
+; 	C=0,     B=r+lcount, D=BS, call (to start)
+;	move
+;	charsatleft=0, iy+1=charsatleft
+; "^Y" ClearLine
+; function:
+;  - B=nr char to get from buffer
+;	if B=0, return upfront
+;  - C=offset (+ or -) on current pos
+;  - D=' ' or BS or -1 (use from buff: print)
+;  Does: output B times char (account for ctrl)
+; call hl=charpos, subA, b=count, get c(hl) check ' '
+;	if carry then twice, else once:
+;	use D(' ') as C and CO
+;	and loop until B zero
+; with D=BS (backspace B times, account for ctrl)
+
+	if	not IgnoreCtrl	; new Ctrl behavior
+SubCfromHL:	ld	a,l
+		sub	c
+		ld	l,a
+		ret	nc
+		dec	h
+		ret
+
+BufToScreen:	inc	b
+		dec	b
+		ret	z		; Do nothing if B=0
+	; Set HL to point to editing-char + C
+		CALL	GetCurCharAdr	; get current address in HL (A=Lcount)
+		ld	a,c
+		or	a
+		call	p,AddAtoHL	; apply offset (if pos)
+		ld	a,c
+		or	a
+		call	m,SubCfromHL	; apply offset (if neg)
+
+		ld	e,' '-1
+	; output (from D) can be 32 (space,' ') or 8 (BS) or (0x1F)
+BufToScreen1:	ld	a,e		; test (stack=more cycl)
+		ld	c,(HL)		; char from buff
+		call	docodeout	; out 1 or 2 (hl) or D
+		inc	hl		; next pos
+		djnz	buftoscreen1	; loop until B=0
+		ret
+		;
+docodeout:	cp	c		; Cy if (hl) >= ' '
+		jr	c,outone	; output one printable (or D)
+		ld	c,'^'
+		call	outone
+		ld	a,e
+		ld	c,(HL)		; redo char from buff
+		set	6,c		; make printable eg. 1 -> 65
+		; CO will keep bc,de,hl
+outone:		cp	d		; Zero if D=1f
+		jp	z,CO		; output char in C, ret
+		ld	c,d		; D not 1f, change C to D
+		jp	CO		; output spc or bs, ret
+	endif	; ctrl like cpm3
+
 ; Editing command: clear line and delete it from history.
 
 DelFromHist:	LD	HL,(@VInfo)	; get address if input buffer
@@ -888,10 +999,9 @@ ClearLine:	CALL	LeftChar
 
 ; Editing command: delete all to the right of the cursor.
 
-DeleteToRight:	CALL	ClearAutoExp	; line contents will be changed...
-		LD	A,(CharsAtRight)
-		OR	A
+DeleteToRight:	CALL	ClearAutoZRight ; line contents will be changed...
 		RET	Z		; we're at the right end: ignore
+	if	IgnoreCtrl	; orig Ctrl behavior
 		LD	B,A		; no. of char's to delete into B
 		LD	A,(CharsAtLeft)
 		LD	(IY+1),A	; set line length to left-char count
@@ -900,9 +1010,27 @@ DeleteToRight:	CALL	ClearAutoExp	; line contents will be changed...
 DelToRightLp:	CALL	CO
 		DJNZ	DelToRightLp	; overwrite rest of line with blanks
 		CALL	MovCursBack	; go back to cursor position
+	else			; like cpm3
+		ld	c,h		; from curr pos (H=0 from clrauto)
+		ld	b,a		; rcount (from clearauto..)
+		ld	d,' '		; prt spaces
+		push	bc
+		 call	BufToScreen	; does nothing if B=0
+		pop	bc
+		ld	d,BS		; mov back
+		call	BufToScreen	; does nothing if B=0
+		LD	A,(CharsAtLeft)
+		LD	(IY+1),A	; set line length to left-char count
+	endif
 		XOR	A
 		LD	(CharsAtRight),A ; no more chars at right
 		RET
+
+ClearAutoZRight: ; save a few bytes, clear flag, Z if CharsAtRight=0
+		CALL	ClearAutoExp	; clear auto-expansion flgs
+		LD	A,(CharsAtRight)
+		OR	A
+		RET			; Z if no chars right
 
 ; Editing command: add current line to history buffer.
 
@@ -911,13 +1039,12 @@ InpAddToHist:	CALL	AddToHistory
 
 ; Editing command: delete all to the left of the cursor.
 
-DeleteToLeft:	CALL	ClearAutoExp
-		LD	A,(CharsAtRight)
-		OR	A
+DeleteToLeft:	CALL	ClearAutoZRight	; Z if chars at right=0
 		JP	Z,ClearLine	; at right end: clear entire line
 		LD	A,(CharsAtLeft)
 		OR	A
 		RET	Z		; at left end: ignore command
+	if	IgnoreCtrl	; orig Ctrl behavior
 		LD	B,A		; get left char-count into B
 		LD	C,BS
 DelToLeftLp1:	CALL	CO
@@ -946,14 +1073,45 @@ DelToLeftLp2:	INC	HL		; bump pointer
 		DJNZ	DelToLeftLp2	; output new line contents
 		LD	B,C		; remaining total-length to B
 		LD	C,' '
-DelToLeftLp3:	CALL	CO
+DelToLeftLp3:	CALL	CO		;
 		DJNZ	DelToLeftLp3	; overwrite rest of line with blanks
 		LD	B,(IY+1)	; get previous length into B again
-		LD	A,(CharsAtRight)
-		LD	(IY+1),A	; set new line length
 		LD	C,BS
-DelToLeftLp4:	CALL	CO
+DelToLeftLp4:	CALL	CO		;
 		DJNZ	DelToLeftLp4	; move cursor back to line start
+		LD	A,(CharsAtRight)
+	else			; like cpm3
+		ld	b,a		; lcount
+		neg			; A = -a (A=0-A)
+		ld	c,a		; C=-left
+		ld	d,BS
+		call	BufToScreen	; to left of screen
+		ld	a,(charsatright)
+		ld	b,a		; rcount
+		ld	c,0		; +0 rel to curs
+		ld	d,' '-1		; use (HL)
+		call	BufToScreen	; write right-str from start
+		ld	a,(charsatleft)
+		ld	b,a		; lcount
+		ld	c,0		; +0 rel to curs
+		ld	d,' '
+		call	BufToScreen	; clear tail of str
+		LD	b,(IY+1)	; line length
+		ld	c,0
+		ld	d,BS
+		call	BufToScreen	; to begin of line
+		CALL	GetCurCharAdr	; HL=0 curr
+		LD	DE,(@VInfo)
+		INC	DE
+		INC	DE		; target pointer (string start) in DE
+		XOR	A
+		LD	(CharsAtLeft),A ; no more chars left of cursor
+		LD	B,A		; clear B --> move length in BC
+		ld	a,(charsatright)
+		LD	C,a
+		LDIR			; move rest of line to it's start
+	endif
+		LD	(IY+1),A	; set new line length
 		RET
 
 ; Editing command: move right one word.
@@ -1022,10 +1180,9 @@ BackSpace:	LD	A,(CharsAtLeft)
 
 ; Editing command: delete character at cursor position.
 
-DeleteChar:	CALL	ClearAutoExp
-		LD	A,(CharsAtRight)
-		OR	A
+DeleteChar:	CALL	ClearAutoZRight	; Z if charsatright=0
 		RET	Z		; at right end: ignore this command
+	if	IgnoreCtrl	; original Ctrl behavior
 		DEC	(IY+1)		; decrement line length
 		DEC	A
 		LD	(CharsAtRight),A ; ... and right-char count
@@ -1042,6 +1199,8 @@ DeleteChar1:	LD	B,A		; move right-char count into B
 		LD	E,L
 		LD	D,H		; ... into DE also
 		INC	HL		; pointer to next char in HL
+		; repeat B times (rightchar count)
+		; note: ldir needs BC, not B
 DelCharMoveLp:	LD	A,(HL)		; move next character...
 		LD	(DE),A		; ... one position to the left
 		INC	HL
@@ -1060,6 +1219,42 @@ DelCharOutLp:	LD	C,(HL)		; get character
 		DJNZ	DelCharOutLp	; write entire remaining line
 		CALL	SpaceBackSpace	; clear previous last char on screen
 		JP	MovCursBack	; move cursor to current position
+	else			; like cpm3
+		; 'pull in' chars on the right: print from +1
+		ld	c,1		; +1 from cursor
+		dec	a		; one less (to print)
+		ld	b,a		; count chars at right
+		ld	d,01fh		; output-mode (not spc, bs)
+		push	bc
+		 call	BufToScreen	; does nothing if B=0
+		 ld	c,' '
+		 call	co		; 2 spc (clear tail)
+		 call	co
+		 ld	c,BS
+		 call	co
+		 call	co		; and back
+		pop	bc		; recall count
+		ld	d,BS
+		push	bc		; keep B count
+		 call	BufToScreen	; back to curs pos
+		pop	bc
+		; then, apply change to buffer
+		inc	b
+		dec	b
+		jr	z,delchar2	; nothing to move
+		CALL	GetCurCharAdr	; HL=curs-in-buf
+		ld	c,b
+		ld	b,0		; bc=count
+		ld	d,h
+		ld	e,l		; DE=HL
+		inc	hl
+		ldir			; move chars HL to DE
+		; last: admin
+DelChar2:	DEC	(IY+1)		; decrement line length
+		ld	hl,CharsAtRight
+		dec	(hl)		; chars at right
+		ret
+	endif
 
 ; Editing command: move cursor left one character.
 
@@ -1068,9 +1263,8 @@ LeftChar:	LD	A,(CharsAtLeft)
 		RET	Z		; already at left end: ignore
 		DEC	A
 		LD	(CharsAtLeft),A ; store new left-char count
-		LD	A,(CharsAtRight)
-		INC	A
-		LD	(CharsAtRight),A ; increment right-char count
+		LD	HL,CharsAtRight
+		INC	(HL) 		; increment right-char count
 		LD	C,BS
 		CALL	OutCon		; move cursor back (on screen)
 		CALL	GetCurCharAdr	; get current address
@@ -1093,19 +1287,32 @@ RightChar:	LD	A,(CharsAtRight)
 		CALL	GetCurCharAdr	; get current address
 		DEC	HL
 		LD	C,(HL)		; get previous character
+	if	IgnoreCtrl	; Original Ctrl behavior
 		JP	OutCon		; write it to move right onscreen
+	else
+		JP	COctrl		; with ^-handling
+	endif
 
 ; Editing command: ^C pressed at leftmost column causes warm boot.
 
 WarmBootKey:	LD	A,(IY+1)	; current string length
 		OR	A
+	if	IgnoreCtrl	; not Original Ctrl behavior
 		RET	NZ		; >0 : return, warmboot rejected
+	else
+		JP	NZ,CtlIgnore	; not at end, not rejected
+	endif
 		BIT	3,(IX+33H)	; console mode: ^C abort enabled?
 		RET	NZ		; no: return, no warm boot here
+	if	IgnoreCtrl	; Original Ctrl behavior
 		LD	C,'^'
 		CALL	OutCon
 		LD	C,'C'
 		CALL	OutCon		; display "^C" on screen
+	else
+		LD	C,3		; ctrl-C
+		call	COctrl		; with ^-handling
+	endif
 		JP	RebootFFFE	; and reboot with abort code
 
 ; Editing command: toggle autoprompt feature. This is also functional
@@ -1181,7 +1388,11 @@ MoveRightLp:	LD	C,E		; move old char into C
 		INC	HL		; bump pointer
 		LD	E,(HL)		; get next char to E
 		LD	(HL),C		; and store previous char there
+	if	IgnoreCtrl	; Original Ctrl behavior
 		CALL	CO		; echo previous char also
+	else
+		CALL	COctrl		; hdl ^
+	endif
 		DJNZ	MoveRightLp	; continue for rest of line
 
 ; Move cursor position from line end back to where it was before.
@@ -1278,8 +1489,20 @@ OutStrDelim	EQU	$-1		; (address of in-code variable)
 		RET	Z		; return if delimiter reached
 		INC	HL		; point to next char
 		LD	C,A
+			;;MWEH increase charout speed
+SlowPrn	EQU	0	; 1 for orig slow print
+			; 0 for 61 cycles per char less
+
+	if 	SlowPrn		; Original char-out
 		CALL	CO		; display character
 		JR	OutputString	; repeat until delim. char found
+	else
+		; less 1 call, 2 pushpops, JMP instead of JR
+		PUSH	HL
+		 CALL	OutCon
+		POP	HL
+		JP	OutputString	; repeat until delim. char found
+	endif
 
 ; BDOS function 11: Get Console Status.
 
