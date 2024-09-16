@@ -1,0 +1,68 @@
+ZPM has the following behavior:
+
+zpm3.txt:
+"
+The ESCAPE key is ignored by function 10. There has been some 
+lively discussion about this but the decision is final: it stays 
+"
+
+Adding "^"+"char" to the output in all editor-cases is a LOT of work
+But not impossible.
+
+The handling from CPM3.0:
+OS3BDOS.ASM, the "echo" of the characters in the buffer detects ctrl-chars
+
+---------------------------
+	rdech1:
+		;look for a random control character
+		push b! push h ;active values saved
+		mov c,a ;ready to print
+		call ctlout ;may be up-arrow C
+		pop h! pop b! mov a,m ;recall char
+		cpi ctlc ;set flags for reboot test
+---------------------------
+
+In BZPM2.Z80 we find:
+
+---------------------------
+; Line Editing & History: Process a character typed in at the console.
+; Enter with character in A (and IY pointing to input buffer).
+
+ProcessChar:	LD	(CharAtCursor),A ; save character
+		LD	A,(CharsAtLeft)
+		LD	B,A
+		LD	A,(IY+1)	; get current line length
+		SUB	B		; subtract chars at left
+		LD	(CharsAtRight),A ; ...gives chars at right!
+		LD	A,(CharAtCursor) ; get char back into A
+		CP	' '
+		JR	NC,ProcessChar1 ; continue processing visible chars
+		CP	CtlCharNum
+		RET	NC		; control chars >= ^Z aren't interpr.
+---------------------------
+
+So, where original BDOS will 'catch' ctrl-C and only a few CTRL chars,
+ZPM will process ALL ctrl-char with meaning and it will actively
+disregard unused codes:
+Eg.	  DW	CtlIgnore	; ^N ignored
+
+We want the original behavior, so ALL routines that do output in editor
+must pass through the 'is it a CTRL code?' option.
+Note that all editor-CTRL-codes (of course) disappear, but this will
+show eg. ^Z and ^[ (and that is a huge improvement on eg c128)
+
+The editor uses 'CO:' to stack B,D,H and output to BIOS, then
+This gets upgraded with Stack H,D,B, test (again) for < ' ' 
+so we output an additional '^' + the ctrlchar with bit 6 set
+Problems arise when on-screen and bufflen are not identical (eg. clr on riight)
+
+As it turns out, we need a routine to output the chars (with ctrl-handling) or
+the number of spaces (with ctrl-handling) or number of backspaces (with ctrl hdl)
+Such a routine would accept the count in B, an overrule char in D (eg ' ' or BS)
+and walk through the array (HL ofsetted to 'current pos') plus offset C
+For instance: "delete to the right" would be:
+C=0 (from curr pos in buff), B=count-on-right, D=' ', printing the nr of space
+according to the nr of output-chars. Then, the cursor must backup over the same
+C=0 (scan same chars again), B=count-on-right, D=BS, backup to screenpos
+
+The editing commands (deletechar, deleteleft, deleteright)
